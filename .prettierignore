@@ -1,0 +1,13 @@
+.DS_Store
+.AppleDouble
+.LSOverride
+.vscode
+.history
+.idea
+.github
+
+node_modules
+dist
+coverage
+README.md
+tsconfig.json
