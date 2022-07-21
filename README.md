@@ -1,4 +1,4 @@
-# BETA Connector SDK for JavaScript
+# Connector SDK for JavaScript (BETA)
 
 ## Overview
 
