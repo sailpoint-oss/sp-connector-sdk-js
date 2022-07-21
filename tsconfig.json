@@ -1,0 +1,23 @@
+{
+	"extends": "@tsconfig/node16/tsconfig.json",
+	"compilerOptions": {
+		"resolveJsonModule": true,
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"outDir": "dist",
+		"rootDir": ".",
+		"moduleResolution": "node"
+	},
+	"include": [
+		"lib/**/*",
+		"bin/**/*"
+	],
+	"exclude": [
+		"node_modules",
+		"dist",
+		"examples",
+		"coverage",
+		"**/*.spec.ts"
+	]
+}
