@@ -16,7 +16,7 @@ export const logger = pino({
         };
     },
     mixinMergeStrategy(mergeObject:any, mixinObject:any) {
-        return Object.assign(mergeObject, mixinObject)
+        return {...mergeObject, ...mixinObject}
     }
 })
 
