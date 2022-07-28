@@ -4,7 +4,7 @@ import { pipeline, Transform, TransformCallback } from 'stream'
 import path from 'path'
 import { inspect } from 'util'
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
-import { Connector, ConnectorError, ConnectorErrorType, _withConfig } from '../lib'
+import { Connector, ConnectorError, ConnectorErrorType, logger, _withConfig } from '../lib'
 
 
 /**
@@ -96,6 +96,14 @@ const app = express()
 						console.error(err)
 					}
 				})
+
+				// set log-level
+				let showDebugLog = cmd.config['spConnDebugLoggingEnabled'];
+				if (typeof(showDebugLog) === 'boolean' && showDebugLog === true) {
+					logger.level = 'debug';
+				} else {
+					logger.level = 'info';
+				}
 
 				await connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type }, cmd.input, out)
 				out.end()
