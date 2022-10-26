@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --enable-source-maps
+#!/usr/bin/env node --enable-source-maps
 import express from 'express'
 import { pipeline, Transform, TransformCallback } from 'stream'
 import path from 'path'
