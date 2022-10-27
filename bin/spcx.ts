@@ -38,7 +38,9 @@ const spawnTsc = (): ChildProcessWithoutNullStreams => {
 			tsc.stdout.on('data', (data) => console.log(`tsc: ${data}`))
 			tsc.stderr.on('data', (data) => console.error(`tsc: ${data}`))
 		})
-		.once('error', (ignored) => {})
+		.once('error', (err) => {
+			console.error(err)
+		})
 
 	return tsc
 }
