@@ -33,7 +33,7 @@ const port: number = Number(argv[1]) || 3000
  * spawn will fail in pure JS projects as typescript devDependency is expected to be missing
  */
 const spawnTsc = (): ChildProcessWithoutNullStreams => {
-	const tsc = spawn('tsc', ['--inlineSourcemap', 'true', '--sourceMap', 'false', '--watch'])
+	const tsc = spawn(/^win/.test(process.platform) ? 'tsc.cmd' : 'tsc', ['--inlineSourcemap', 'true', '--sourceMap', 'false', '--watch'])
 		.once('spawn', () => {
 			tsc.stdout.on('data', (data) => console.log(`tsc: ${data}`))
 			tsc.stderr.on('data', (data) => console.error(`tsc: ${data}`))
