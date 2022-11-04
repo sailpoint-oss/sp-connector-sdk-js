@@ -19,11 +19,14 @@ interface Command {
 	config: { [configKey: string]: any }
 }
 
+const COMMAND_RUN: string = 'run'
+const COMMAND_PACKAGE: string = 'package'
+
 const argv: string[] = process.argv.slice(2)
 // We are expecting argv similar to: [**/*.js, port?]
 if (!argv[0]) {
 	throw new Error('missing arg: need at least one arg for the command')
-} else if (argv[0] == 'package') {
+} else if (argv[0] == COMMAND_PACKAGE) {
 	packageConnector()
 } else {
 	runDev()
@@ -43,19 +46,24 @@ function packageConnector() {
 	.pipe(stream)
 
 	stream.on('close', () => {
-		console.log('Connector zip file created under dist foler: ' + zipName)
+		console.log('Connector zip file created under dist folder: ' + zipName)
 	})
 	archive.finalize()
 }
 
 // runDev runs a local server to invoke commands to the connector
 function runDev() {
-	if (path.extname(argv[0]) !== '.js') {
-		throw new Error(`invalid arg: ${argv[0]}`)
+	let connectorPath: string = path.resolve(process.cwd(), argv[0])
+	let port: number = Number(argv[1]) || 3000
+
+	if (connectorPath == COMMAND_RUN) {
+		connectorPath = path.resolve(process.cwd(), argv[1])
+		port = Number(argv[2]) || 3000
 	}
-	
-	const connectorPath: string = path.resolve(process.cwd(), argv[0])
-	const port: number = Number(argv[1]) || 3000
+
+	if (path.extname(connectorPath) !== '.js') {
+		throw new Error(`invalid file path: ${connectorPath}`)
+	}
 	
 	/**
 	 * Spawns a child process that runs TypeScript compiler (tsc) with watch option and inlineSourcemap for debugging.
