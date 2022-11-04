@@ -29,11 +29,13 @@
 		"prepare": "npm run build"
 	},
 	"dependencies": {
+		"archiver": "^5.3.1",
 		"express": "^4.17.1",
 		"pino": "^8.5.0"
 	},
 	"devDependencies": {
 		"@tsconfig/node16": "1.0.1",
+		"@types/archiver": "^5.3.1",
 		"@types/express": "^4.17.13",
 		"@types/jest": "^28.1.2",
 		"@types/node": "^16.4.12",
