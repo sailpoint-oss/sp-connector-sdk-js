@@ -56,7 +56,7 @@ function runDev() {
 	let connectorPath: string = path.resolve(process.cwd(), argv[0])
 	let port: number = Number(argv[1]) || 3000
 
-	if (connectorPath == COMMAND_RUN) {
+	if (argv[0] == COMMAND_RUN) {
 		connectorPath = path.resolve(process.cwd(), argv[1])
 		port = Number(argv[2]) || 3000
 	}
