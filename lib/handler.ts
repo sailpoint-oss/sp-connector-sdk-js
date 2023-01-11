@@ -22,6 +22,8 @@ import {
 	StdEntitlementReadInput,
 	StdEntitlementReadOutput,
 	StdTestConnectionOutput,
+	StdChangePasswordInput,
+	StdChangePasswordOutput,
 } from './commands'
 import { Response } from './response'
 
@@ -97,5 +99,10 @@ export type StdTestConnectionHandler = (
 	context: Context,
 	input: undefined,
 	res: Response<StdTestConnectionOutput>
+) => Promise<void>
+export type StdChangePasswordHandler = (
+	context: Context,
+	input: StdChangePasswordInput,
+	res: Response<StdChangePasswordOutput>
 ) => Promise<void>
 export type CommandHandler = (context: Context, input: any, res: Response<any>) => Promise<void>
