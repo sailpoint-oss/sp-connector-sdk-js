@@ -15,6 +15,7 @@ import {
 	StdEntitlementListHandler,
 	StdEntitlementReadHandler,
 	StdTestConnectionHandler,
+	StdChangePasswordHandler,
 } from './handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import { StandardCommand } from './commands'
@@ -146,6 +147,15 @@ export class Connector {
 	stdTestConnection(handler: StdTestConnectionHandler): this {
 		return this.command(StandardCommand.StdTestConnection, handler)
 	}
+
+	/**
+	 * Add a handler for 'std:change-password' command
+	 * @param handler handler
+	 */
+	stdChangePassword(handler: StdChangePasswordHandler): this {
+		return this.command(StandardCommand.StdChangePassword, handler)
+	}
+	
 
 	/**
 	 * Add a handler for a command of specified type

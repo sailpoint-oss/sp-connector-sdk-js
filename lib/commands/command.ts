@@ -17,6 +17,7 @@ export enum StandardCommand {
 	StdEntitlementRead = 'std:entitlement:read',
 	StdSpecRead = 'std:spec:read',
 	StdTestConnection = 'std:test-connection',
+	StdChangePassword = 'std:change-password',
 }
 
 /**
