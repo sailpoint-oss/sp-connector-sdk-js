@@ -7,6 +7,7 @@ import { Writable } from 'stream'
  */
 export interface Response<T> {
 	send(output: T): void
+	saveState(state: any): void
 }
 
 /**
@@ -24,6 +25,26 @@ export class ResponseStream<T> implements Response<T> {
 	 * @param chunk output chunk
 	 */
 	send(chunk: T): void {
-		this._writable.write(chunk)
+		this._writable.write(new RawResponse(chunk))
+	}
+
+	saveState(state: any): void {
+		this._writable.write(new RawResponse(state, ResponseType.State))
+	}
+}
+
+enum ResponseType {
+	Output = 'output',
+	State = 'state'
+}
+
+
+class RawResponse {
+    type: ResponseType
+	data: string
+
+    constructor(data: any, type = ResponseType.Output) {
+       this.data = data
+		this.type = type
 	}
 }
