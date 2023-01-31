@@ -24,6 +24,7 @@ import {
 	StdTestConnectionOutput,
 	StdChangePasswordInput,
 	StdChangePasswordOutput,
+	StdAccountListInput,
 } from './commands'
 import { Response } from './response'
 
@@ -67,8 +68,8 @@ export type StdAccountEnableHandler = (
 ) => Promise<void>
 export type StdAccountListHandler = (
 	context: Context,
-	input: undefined,
-	res: Response<StdAccountListOutput>
+	input: StdAccountListInput,
+	res: Response<StdAccountListOutput | StdAccountEnableOutput>
 ) => Promise<void>
 export type StdAccountReadHandler = (
 	context: Context,
