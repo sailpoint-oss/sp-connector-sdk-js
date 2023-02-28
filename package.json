@@ -1,9 +1,9 @@
 {
 	"name": "@sailpoint/connector-sdk",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"description": "JavaScript framework to build SailPoint Connectors",
 	"author": "SailPoint Technologies, Inc.",
-	"license": "Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved.",
+	"license": "Copyright (c) 2023. SailPoint Technologies, Inc. All rights reserved.",
 	"keywords": [
 		"sailpoint",
 		"connector"

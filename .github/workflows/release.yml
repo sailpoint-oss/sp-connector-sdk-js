@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - '*'
-  pull_request:
-    branches: [ main ]
 
 jobs:
   release:
@@ -26,6 +24,9 @@ jobs:
 
       - name: Run tests
         run: npm ci && npm test
+
+      - name: Set package version
+        run: npm version ${{  github.ref_name }} --no-git-tag-version
 
       - name: Publish to NPM
         uses: JS-DevTools/npm-publish@v1
