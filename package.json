@@ -1,6 +1,5 @@
 {
 	"name": "@sailpoint/connector-sdk",
-	"private": true,
 	"version": "0.0.1",
 	"description": "JavaScript framework to build SailPoint Connectors",
 	"author": "SailPoint Technologies, Inc.",
