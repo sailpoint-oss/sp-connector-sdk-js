@@ -26,7 +26,7 @@ jobs:
         run: npm ci && npm test
 
       - name: Set package version
-        run: npm version ${{  github.ref_name }} --no-git-tag-version
+        run: npm version ${{  github.ref_name }} --no-git-tag-version --allow-same-version
 
       - name: Publish to NPM
         uses: JS-DevTools/npm-publish@v1
