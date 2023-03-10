@@ -1,13 +1,12 @@
-name: PRB
+name: Release
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    tags:
+      - '*'
 
 jobs:
-  node-build:
+  release:
     runs-on: ubuntu-latest
 
     strategy:
@@ -25,3 +24,12 @@ jobs:
 
       - name: Run tests
         run: npm ci && npm test
+
+      - name: Set package version
+        run: npm version ${{  github.ref_name }} --no-git-tag-version --allow-same-version
+
+      - name: Publish to NPM
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public

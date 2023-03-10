@@ -23,7 +23,7 @@ import { ResponseStream } from './response'
 import { Writable } from 'stream'
 import { contextState } from './async-context';
 
-const SDK_VERSION = 0
+const SDK_VERSION = 1
 
 /**
  * Connector to build by attaching handlers for supported commands.
