@@ -16,6 +16,7 @@ export type StdAccountListInput = {
 export type StdAccountListOutput = ObjectOutput & {
 	disabled?: boolean
 	locked?: boolean
+	deleted?: boolean
 	attributes: Attributes
 }
 
