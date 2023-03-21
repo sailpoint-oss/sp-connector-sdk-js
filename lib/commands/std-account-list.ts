@@ -1,13 +1,13 @@
 /* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
 
-import { Attributes, ObjectOutput } from './command'
+import { Attributes, CommandState, ObjectOutput } from './command'
 
 /**
  * Input object of `std:account:list` command
  */
 export type StdAccountListInput = {
 	stateful?: boolean
-	state?: StdAccountListState
+	state?: CommandState
 }
 
 /**
@@ -18,8 +18,4 @@ export type StdAccountListOutput = ObjectOutput & {
 	locked?: boolean
 	deleted?: boolean
 	attributes: Attributes
-}
-
-export type StdAccountListState = {
-	[key: string]: any
 }
