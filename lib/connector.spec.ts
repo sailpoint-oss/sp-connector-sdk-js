@@ -185,7 +185,10 @@ describe('exec handlers', () => {
 			StandardCommand.StdTestConnection,
 			MOCK_CONTEXT,
 			undefined,
-			new PassThrough({ objectMode: true }).on('data', (chunk) => expect(chunk).toStrictEqual({}))
+			new PassThrough({ objectMode: true }).on('data', (chunk) => expect(chunk).toEqual({
+				"type": "output",
+				"data": {},
+			}))
 		)
 	})
 
@@ -207,7 +210,10 @@ describe('exec handlers', () => {
 		mockFS.restore()
 
 		const out = res.read(1)
-		expect(out).toStrictEqual({"specification": spec})
+		expect(out).toEqual({
+			"type": "output",
+			"data": {"specification": spec},
+		})
 	})
 
 	it('should execute custom handler', async () => {
