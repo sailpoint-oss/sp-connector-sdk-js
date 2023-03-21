@@ -28,17 +28,26 @@ export class ResponseStream<T> implements Response<T> {
 		this._writable.write(new RawResponse(chunk))
 	}
 
+	/**
+	 * Save state for stateful command
+	 * @param state the end state of running the stateful command
+	 */
 	saveState(state: any): void {
 		this._writable.write(new RawResponse(state, ResponseType.State))
 	}
 }
 
+/**
+ * Enum representing different types of responses
+ */
 enum ResponseType {
 	Output = 'output',
 	State = 'state'
 }
 
-
+/**
+ * RawResponse is the response that sdk sends out as command output
+ */
 class RawResponse {
     type: ResponseType
 	data: string
