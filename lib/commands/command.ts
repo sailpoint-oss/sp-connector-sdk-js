@@ -52,7 +52,7 @@ export type SchemaAttribute = {
 export declare type AccountSchema = {
     displayAttribute: string,
     identityAttribute: string,
-    attributes: Attributes[]
+    attributes: SchemaAttribute[]
 }
 
 /*
