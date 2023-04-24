@@ -46,6 +46,15 @@ export type SchemaAttribute = {
 	entitlement?: boolean
 }
 
+/**
+ * AccountSchema defines the account schema input
+ */
+export declare type AccountSchema = {
+    displayAttribute: string,
+    identityAttribute: string,
+    attributes: Attributes[]
+}
+
 /*
  * SimpleKey for accounts or entitlements which only have a single identifier.
  */
