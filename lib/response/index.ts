@@ -8,6 +8,7 @@ import { Writable } from 'stream'
 export interface Response<T> {
 	send(output: T): void
 	saveState(state: any): void
+	keepAlive(): void
 }
 
 /**
