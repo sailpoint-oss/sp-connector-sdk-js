@@ -35,6 +35,10 @@ export class ResponseStream<T> implements Response<T> {
 	saveState(state: any): void {
 		this._writable.write(new RawResponse(state, ResponseType.State))
 	}
+
+	keepAlive(): void {
+		this._writable.write(new RawResponse({}, ResponseType.KeepAlive))
+	}
 }
 
 /**
@@ -42,7 +46,8 @@ export class ResponseStream<T> implements Response<T> {
  */
 enum ResponseType {
 	Output = 'output',
-	State = 'state'
+	State = 'state',
+	KeepAlive = 'keepAlive'
 }
 
 /**
