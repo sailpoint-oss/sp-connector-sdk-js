@@ -1,11 +1,13 @@
 /* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
 
-import { Attributes, ObjectInput, ObjectOutput } from './command'
+import { AccountSchema, Attributes, ObjectInput, ObjectOutput } from './command'
 
 /**
  * Input object of `std:account:read` command
  */
-export type StdAccountReadInput = ObjectInput
+export type StdAccountReadInput = ObjectInput & {
+	schema?: AccountSchema
+}
 
 /**
  * Output object of `std:account:read` command

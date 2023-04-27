@@ -1,11 +1,13 @@
 /* Copyright (c) 2022. SailPoint Technologies, Inc. All rights reserved. */
 
-import { Attributes, ObjectInput, ObjectOutput } from './command'
+import { AccountSchema, Attributes, ObjectInput, ObjectOutput } from './command'
 
 /**
  * Input object of `std:account:disable` command
  */
-export type StdAccountDisableInput = ObjectInput
+export type StdAccountDisableInput = ObjectInput & {
+	schema?: AccountSchema
+}
 
 /**
  * Output object of `std:account:disable` command
