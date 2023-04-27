@@ -135,16 +135,24 @@ export type CommandState = {
 }
 
 /**
+ * The common schema
+ */
+export type Schema = {
+	displayAttribute: string
+	identityAttribute: string
+	attributes: SchemaAttribute[]
+}
+
+/**
  * Account schema
  */
-export type AccountSchema = { groupAttribute: string } & EntitlementSchema
+export type AccountSchema = Schema & {
+	groupAttribute: string
+}
 
 /**
  * Entitlement schema
  */
-export type EntitlementSchema = {
+export type EntitlementSchema = Schema & {
 	type: string
-	displayAttribute: string
-	identityAttribute: string
-	attributes: SchemaAttribute[]
 }
