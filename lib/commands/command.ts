@@ -41,7 +41,7 @@ export type SchemaAttribute = {
 	name: string,
 	description: string,
 	type: string,
-	required: boolean,
+	required?: boolean,
 	multi?: boolean,
 	managed?: boolean,
 	entitlement?: boolean
