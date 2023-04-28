@@ -1,6 +1,6 @@
 /* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
 
-import { Attributes, ObjectInput, ObjectOutput } from './command'
+import { AccountSchema, Attributes, ObjectInput, ObjectOutput } from './command'
 
 export enum AttributeChangeOp {
 	Add = 'Add',
@@ -22,6 +22,7 @@ export type AttributeChange = {
  */
 export type StdAccountUpdateInput = ObjectInput & {
 	changes: AttributeChange[]
+	schema?: AccountSchema
 }
 
 /**

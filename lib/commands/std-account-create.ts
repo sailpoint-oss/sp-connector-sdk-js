@@ -1,6 +1,6 @@
 /* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
 
-import { Attributes, ObjectOutput } from './command'
+import { AccountSchema, Attributes, ObjectOutput } from './command'
 
 /**
  * Input object of `std:account:create` command
@@ -8,6 +8,7 @@ import { Attributes, ObjectOutput } from './command'
 export type StdAccountCreateInput = {
 	identity?: string
 	attributes: any
+	schema?: AccountSchema
 }
 
 /**

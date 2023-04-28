@@ -41,6 +41,7 @@ export type SchemaAttribute = {
 	name: string,
 	description: string,
 	type: string,
+	required?: boolean,
 	multi?: boolean,
 	managed?: boolean,
 	entitlement?: boolean
@@ -131,4 +132,27 @@ export type ObjectOutput = { identity: string, uuid?: string } | { key: Key }
  */
 export type CommandState = {
 	[key: string]: any
+}
+
+/**
+ * The common schema
+ */
+export type Schema = {
+	displayAttribute: string
+	identityAttribute: string
+	attributes: SchemaAttribute[]
+}
+
+/**
+ * Account schema
+ */
+export type AccountSchema = Schema & {
+	groupAttribute: string
+}
+
+/**
+ * Entitlement schema
+ */
+export type EntitlementSchema = Schema & {
+	type: string
 }

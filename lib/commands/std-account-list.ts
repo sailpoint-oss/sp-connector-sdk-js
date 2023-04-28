@@ -1,6 +1,6 @@
 /* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
 
-import { Attributes, CommandState, ObjectOutput } from './command'
+import { AccountSchema, Attributes, CommandState, ObjectOutput } from './command'
 
 /**
  * Input object of `std:account:list` command
@@ -8,6 +8,7 @@ import { Attributes, CommandState, ObjectOutput } from './command'
 export type StdAccountListInput = {
 	stateful?: boolean
 	state?: CommandState
+	schema?: AccountSchema
 }
 
 /**
