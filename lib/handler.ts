@@ -27,6 +27,8 @@ import {
 	StdAccountListInput
 } from './commands'
 import { Response } from './response'
+import { Tracer } from "@opentelemetry/api";
+
 
 /**
  * Connector context object
@@ -38,6 +40,7 @@ export interface Context {
 	invocationId?: string
 	requestId?: string
 	commandType?: string
+	tracer?: Tracer,
 	[prop: string]: any
 }
 
