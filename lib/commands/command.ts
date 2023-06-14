@@ -38,12 +38,13 @@ export type Attributes = {
  * SchemaAttribute defines an attribute for schema
  */
 export type SchemaAttribute = {
-	name: string,
-	description: string,
-	type: string,
-	required?: boolean,
-	multi?: boolean,
-	managed?: boolean,
+	name: string
+	description: string
+	type: string
+	required?: boolean
+	multi?: boolean
+	managed?: boolean
+	schemaObjectType?: string
 	entitlement?: boolean
 }
 
