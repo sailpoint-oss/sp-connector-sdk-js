@@ -190,6 +190,12 @@ export class Connector {
 	}
 }
 
+export class ConnectorHanlders {
+	async _exec(input: string): Promise<void> {
+		console.log('The input is: ' + input)
+	}
+}
+
 /**
  * Creates a connector instance with default options
  */
