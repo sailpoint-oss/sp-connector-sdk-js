@@ -183,11 +183,21 @@ export class Connector {
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
 		}
+
+		let rules = require("/connectorRules").connectorRules
+
 		await contextState.run(context, () => {
 			 return handler(context, input, new ResponseStream<any>(res))
 		});
 
 	}
+}
+
+/**
+ * Creates a connector instance with default options
+ */
+export const createConnector = (): Connector => {
+	return new Connector()
 }
 
 export class ConnectorHanlders {
@@ -196,9 +206,6 @@ export class ConnectorHanlders {
 	}
 }
 
-/**
- * Creates a connector instance with default options
- */
-export const createConnector = (): Connector => {
+export const createConnectorHandlers = (): Connector => {
 	return new Connector()
 }
