@@ -22,6 +22,8 @@ import { StandardCommand } from './commands'
 import { ResponseStream } from './response'
 import { Writable } from 'stream'
 import { contextState } from './async-context';
+import { ConnectorPrePostHandler, HandlerType } from './connector-handler'
+import { PrePostHandler } from './pre-post-handlers'
 
 const SDK_VERSION = 1
 
@@ -167,6 +169,10 @@ export class Connector {
 		return this
 	}
 
+	private handlerKey(cmdType: string, handlerType: HandlerType): string {
+		return `${cmdType}:${handlerType}`
+	}
+
 	/**
 	 * Execute the handler for given command type
 	 *
@@ -177,15 +183,45 @@ export class Connector {
 	 * @param input command input
 	 * @param res writable
 	 */
-	async _exec(type: string, context: Context, input: any, res: Writable): Promise<void> {
+	async _exec(type: string, context: Context, input: any, res: Writable, customizer?: ConnectorPrePostHandler): Promise<void> {
 		
 		const handler: CommandHandler | undefined = this._handlers.get(type)
 		if (!handler) {
-			throw new Error(`unsupported command: ${type}`)
+			throw new Error(`unsupported command: ${type}`) //TODO
 		}
+
 		await contextState.run(context, () => {
-			 return handler(context, input, new ResponseStream<any>(res))
-		});
+
+			if (!customizer) {
+				console.log('No customizer')
+				return handler(context, input, new ResponseStream<any>(res))
+			}
+
+			console.log('Contains customizer')
+			let preHandler: PrePostHandler | undefined = customizer.handlers.get(this.handlerKey(type, HandlerType.Pre))
+			if (preHandler) {
+				console.log('Running pre customizer')
+				input = preHandler(context, input)
+			} else {
+				console.log('No pre customizer')
+			}
+
+			let postHandler: PrePostHandler | undefined = customizer.handlers.get(this.handlerKey(type, HandlerType.Post))
+			if (!postHandler) {
+				console.log('No post customizer')
+				return handler(context, input, new ResponseStream<any>(res))
+			}
+
+			var resInterceptor = new Writable({
+                write: function(chunk, encoding, next) {
+					console.log('Running post customizer: ' + chunk)
+					res.write(postHandler!(context, chunk))
+                  next()
+                }
+              })
+
+			return handler(context, input, new ResponseStream<any>(resInterceptor))
+		})
 
 	}
 }

@@ -133,8 +133,17 @@ function runDev() {
 							console.error(err)
 						}
 					})
+
+					const connectorPrePostHandler = require(connectorPath).connectorPrePostHandler
+				
+					let result
+					if (typeof connectorPrePostHandler === 'function') {
+						result = await connectorPrePostHandler()
+					} else {
+						result = connectorPrePostHandler
+					}
 	
-					await connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type }, cmd.input, out)
+					await connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type }, cmd.input, out, result)
 					out.end()
 				})
 			} catch (e: any) {

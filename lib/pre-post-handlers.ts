@@ -43,9 +43,10 @@ export type StdChangePasswordPreHandler = (
 	context: Context,
 	input: StdChangePasswordInput
 ) => Promise<StdChangePasswordInput>
+
 export type StdChangePasswordPostHandler = (
 	context: Context,
-	output: StdChangePasswordOutput
-) => Promise<StdChangePasswordOutput>
+	output: StdChangePasswordInput | StdChangePasswordOutput
+) => Promise<StdChangePasswordInput | StdChangePasswordOutput>
 
 export type PrePostHandler = (context: Context, input: any) => Promise<any>
