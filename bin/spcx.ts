@@ -134,13 +134,13 @@ function runDev() {
 						}
 					})
 
-					const createConnectorCustomizer = require(connectorPath).createConnectorCustomizer
+					const connectorCustomizer = require(connectorPath).connectorCustomizer
 				
 					let result
-					if (typeof createConnectorCustomizer === 'function') {
-						result = await createConnectorCustomizer()
+					if (typeof connectorCustomizer === 'function') {
+						result = await connectorCustomizer()
 					} else {
-						result = createConnectorCustomizer
+						result = connectorCustomizer
 					}
 	
 					await connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type }, cmd.input, out, result)
