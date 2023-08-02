@@ -22,8 +22,8 @@ import { StandardCommand } from './commands'
 import { ResponseStream } from './response'
 import { Writable } from 'stream'
 import { contextState } from './async-context';
-import { ConnectorPrePostHandler, HandlerType } from './connector-handler'
-import { PrePostHandler } from './pre-post-handlers'
+import { ConnectorCustomizer, HandlerType } from './connector-customizer'
+import { BeforeAfterHandler } from './before-after-handlers'
 
 const SDK_VERSION = 1
 
@@ -183,14 +183,14 @@ export class Connector {
 	 * @param input command input
 	 * @param res writable
 	 */
-	async _exec(type: string, context: Context, input: any, res: Writable, customizer?: ConnectorPrePostHandler): Promise<void> {
+	async _exec(type: string, context: Context, input: any, res: Writable, customizer?: ConnectorCustomizer): Promise<void> {
 		
 		const handler: CommandHandler | undefined = this._handlers.get(type)
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`) //TODO
 		}
 
-		await contextState.run(context, () => {
+		await contextState.run(context, async () => {
 
 			if (!customizer) {
 				console.log('No customizer')
@@ -198,15 +198,15 @@ export class Connector {
 			}
 
 			console.log('Contains customizer')
-			let preHandler: PrePostHandler | undefined = customizer.handlers.get(this.handlerKey(type, HandlerType.Pre))
+			let preHandler: BeforeAfterHandler | undefined = customizer.handlers.get(this.handlerKey(type, HandlerType.Before))
 			if (preHandler) {
 				console.log('Running pre customizer')
-				input = preHandler(context, input)
+				input = await preHandler(context, input)
 			} else {
 				console.log('No pre customizer')
 			}
 
-			let postHandler: PrePostHandler | undefined = customizer.handlers.get(this.handlerKey(type, HandlerType.Post))
+			let postHandler: BeforeAfterHandler | undefined = customizer.handlers.get(this.handlerKey(type, HandlerType.After))
 			if (!postHandler) {
 				console.log('No post customizer')
 				return handler(context, input, new ResponseStream<any>(res))
@@ -215,7 +215,13 @@ export class Connector {
 			var resInterceptor = new Writable({
                 write: function(chunk, encoding, next) {
 					console.log('Running post customizer: ' + chunk)
-					res.write(postHandler!(context, chunk))
+					postHandler!(context, chunk).then(res => {
+						console.log('Post processed: ' + res)
+						res.write(res)
+					})
+
+					// console.log('Running post customizer: ' + chunk)
+					// res.write()
                   next()
                 }
               })

@@ -1,4 +1,4 @@
-/* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
+/* Copyright (c) 2023. SailPoint Technologies, Inc. All rights reserved. */
 
 import {
 	StdAccountCreateInput,
@@ -29,24 +29,24 @@ import {
 import { Context } from './handler'
 
 
-export type StdTestConnectionPreHandler = (
+export type StdTestConnectionBeforeHandler = (
 	context: Context,
 	input: undefined
 ) => Promise<void>
 
-export type StdTestConnectionPostHandler = (
+export type StdTestConnectionAfterHandler = (
 	context: Context,
 	output: StdTestConnectionOutput
 ) => Promise<StdTestConnectionOutput>
 
-export type StdChangePasswordPreHandler = (
+export type StdChangePasswordBeforeHandler = (
 	context: Context,
 	input: StdChangePasswordInput
 ) => Promise<StdChangePasswordInput>
 
-export type StdChangePasswordPostHandler = (
+export type StdChangePasswordAfterHandler = (
 	context: Context,
-	output: StdChangePasswordInput | StdChangePasswordOutput
-) => Promise<StdChangePasswordInput | StdChangePasswordOutput>
+	output: StdChangePasswordOutput
+) => Promise<StdChangePasswordOutput>
 
-export type PrePostHandler = (context: Context, input: any) => Promise<any>
+export type BeforeAfterHandler = (context: Context, input: any) => Promise<any>
