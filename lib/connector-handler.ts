@@ -97,7 +97,7 @@ export class ConnectorPrePostHandler {
 /**
  * Creates a connector instance with default options
  */
-export const createConnectorHandler = (): ConnectorPrePostHandler => {
+export const createConnectorPrePostHandler = (): ConnectorPrePostHandler => {
 	return new ConnectorPrePostHandler()
 }
 

@@ -121,7 +121,7 @@ function runDev() {
 						transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback) {
 							try {
 								this.push(JSON.stringify(chunk) + '\n')
-							} catch (e) {
+							} catch (e: any) {
 								callback(e)
 							}
 							callback()
@@ -137,8 +137,8 @@ function runDev() {
 					await connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type }, cmd.input, out)
 					out.end()
 				})
-			} catch (e) {
-				console.error(e?.message || e)
+			} catch (e: any) {
+				console.error(typeof e === "string" ? e : e?.message)
 				
 				let errorType = ConnectorErrorType.Generic
 				if (e instanceof ConnectorError) {
