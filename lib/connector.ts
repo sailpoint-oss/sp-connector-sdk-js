@@ -210,26 +210,37 @@ export class Connector {
 
 			let resInterceptor = new Transform({
                 writableObjectMode: true,
-                transform(rawResponse: RawResponse, encoding: BufferEncoding, callback: TransformCallback) {
+                async transform(rawResponse: RawResponse, encoding: BufferEncoding, callback: TransformCallback) {
 					if (rawResponse.type != ResponseType.Output) {
 						console.log('Skipping response for type: ' + rawResponse.type)
-						res.write(rawResponse)
-						callback()
 					} else {
 						console.log('Running post customizer: ' + JSON.stringify(rawResponse))
-						postHandler!(context, rawResponse.data).then(c => {
-							console.log('Post processed: ' + JSON.stringify(c))
-							rawResponse.data = c
-							res.write(rawResponse)
-							callback()
-						}).catch(error => callback(error))
+						rawResponse.data = await postHandler!(context, rawResponse.data)
+						console.log('Post processed: ' + JSON.stringify(rawResponse))
 					}
+
+					res.write(rawResponse)
+					callback()
+
+					// a = new Promise(resolve => {
+					// 	setTimeout(resolve, 3000)
+					// })
                 },
             })
+
+			return new Promise<void>( async resolve => {
+				resInterceptor.on('finish', function(){
+					console.log('+++++++++++++ This is actually finished')
+					resolve()
+				})
+
+				await handler(context, input, new ResponseStream<any>(resInterceptor))
+
+				resInterceptor.end()
+			})
 			
 
-			await handler(context, input, new ResponseStream<any>(resInterceptor))
-			resInterceptor.end()
+			
 		})
 
 	}
