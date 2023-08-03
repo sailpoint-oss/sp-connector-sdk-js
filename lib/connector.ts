@@ -212,9 +212,9 @@ export class Connector {
                 writableObjectMode: true,
                 transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback) {
                     console.log('Running post customizer: ' + chunk)
-					postHandler!(context, chunk).then(res => {
-						console.log('Post processed: ' + res)
-						res.write(res)
+					postHandler!(context, chunk).then(c => {
+						console.log('Post processed: ' + JSON.stringify(c))
+						res.write(c)
 						callback()
 					}).catch(error => callback(error))
                 },
