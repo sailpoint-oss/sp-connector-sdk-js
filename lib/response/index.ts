@@ -52,7 +52,7 @@ export class ResponseStream<T> implements Response<T> {
 /**
  * Enum representing different types of responses
  */
-enum ResponseType {
+export enum ResponseType {
 	Output = 'output',
 	State = 'state',
 	KeepAlive = 'keepAlive'
