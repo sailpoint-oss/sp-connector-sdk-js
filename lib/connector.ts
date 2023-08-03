@@ -169,10 +169,6 @@ export class Connector {
 		return this
 	}
 
-	private handlerKey(cmdType: string, handlerType: HandlerType): string {
-		return `${cmdType}:${handlerType}`
-	}
-
 	/**
 	 * Execute the handler for given command type
 	 *
@@ -198,7 +194,7 @@ export class Connector {
 			}
 
 			console.log('Contains customizer')
-			let preHandler: BeforeAfterHandler | undefined = customizer.handlers.get(this.handlerKey(type, HandlerType.Before))
+			let preHandler: BeforeAfterHandler | undefined = customizer.handlers.get(customizer.handlerKey(type, HandlerType.Before))
 			if (preHandler) {
 				console.log('Running pre customizer')
 				input = await preHandler(context, input)
@@ -206,7 +202,7 @@ export class Connector {
 				console.log('No pre customizer')
 			}
 
-			let postHandler: BeforeAfterHandler | undefined = customizer.handlers.get(this.handlerKey(type, HandlerType.After))
+			let postHandler: BeforeAfterHandler | undefined = customizer.handlers.get(customizer.handlerKey(type, HandlerType.After))
 			if (!postHandler) {
 				console.log('No post customizer')
 				return handler(context, input, new ResponseStream<any>(res))

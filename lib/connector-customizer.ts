@@ -58,7 +58,7 @@ export class ConnectorCustomizer {
 		return this
 	}
 
-	private handlerKey(cmdType: string, handlerType: HandlerType): string {
+	handlerKey(cmdType: string, handlerType: HandlerType): string {
 		return `${handlerType}:${cmdType}`
 	}
 
