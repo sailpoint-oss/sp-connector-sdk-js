@@ -226,8 +226,10 @@ export class Connector {
 					}
                 },
             })
+			
 
-			return handler(context, input, new ResponseStream<any>(resInterceptor))
+			await handler(context, input, new ResponseStream<any>(resInterceptor))
+			resInterceptor.end()
 		})
 
 	}

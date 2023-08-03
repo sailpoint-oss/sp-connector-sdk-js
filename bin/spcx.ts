@@ -95,18 +95,17 @@ function runDev() {
 	 * @param config Connector config
 	 */
 	const loadConnector = async (connectorPath: string) => {
-		const connector = require(connectorPath).connector
+		let c = require(connectorPath)
+		const connector = c.connector
+		const connectorCustomizer = c.connectorCustomizer
 		Object.keys(require.cache)
 			.filter((key: string) => !key.includes('node_modules'))
 			.forEach((key: string) => delete require.cache[key])
 	
-		let result
-		if (typeof connector === 'function') {
-			result = await connector()
-		} else {
-			result = connector
+		return {
+			connector: typeof connector === 'function' ? await connector() : connector,
+			connectorCustomizer: typeof connectorCustomizer === 'function' ? await connectorCustomizer() : connectorCustomizer
 		}
-		return result
 	}
 	
 	const app = express()
@@ -115,7 +114,7 @@ function runDev() {
 			try {
 				const cmd: Command = req.body as Command
 				await _withConfig(cmd.config, async () => {
-					const connector: Connector = await loadConnector(connectorPath)
+					const c = await loadConnector(connectorPath)
 					const out = new Transform({
 						writableObjectMode: true,
 						transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback) {
@@ -133,17 +132,9 @@ function runDev() {
 							console.error(err)
 						}
 					})
-
-					const connectorCustomizer = require(connectorPath).connectorCustomizer
-				
-					let result
-					if (typeof connectorCustomizer === 'function') {
-						result = await connectorCustomizer()
-					} else {
-						result = connectorCustomizer
-					}
 	
-					await connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type }, cmd.input, out, result)
+					await c.connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
+						cmd.input, out, c.connectorCustomizer)
 					out.end()
 				})
 			} catch (e: any) {
