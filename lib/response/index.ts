@@ -61,7 +61,7 @@ enum ResponseType {
 /**
  * RawResponse is the response that sdk sends out as command output
  */
-class RawResponse {
+export class RawResponse {
     type: ResponseType
 	data: string
 

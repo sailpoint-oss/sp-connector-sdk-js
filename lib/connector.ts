@@ -19,7 +19,7 @@ import {
 } from './handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import { StandardCommand } from './commands'
-import { ResponseStream } from './response'
+import { RawResponse, ResponseStream, ResponseType } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
 import { contextState } from './async-context';
 import { ConnectorCustomizer, HandlerType } from './connector-customizer'
@@ -210,8 +210,12 @@ export class Connector {
 
 			let resInterceptor = new Transform({
                 writableObjectMode: true,
-                transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback) {
-                    console.log('Running post customizer: ' + chunk)
+                transform(chunk: RawResponse, encoding: BufferEncoding, callback: TransformCallback) {
+					if (chunk.type != ResponseType.Output) {
+						console.log('Skipping response for type: ' + chunk.type)
+						return
+					}
+                    console.log('Running post customizer: ' + JSON.stringify(chunk))
 					postHandler!(context, chunk).then(c => {
 						console.log('Post processed: ' + JSON.stringify(c))
 						res.write(c)
