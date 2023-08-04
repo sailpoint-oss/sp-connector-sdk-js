@@ -221,18 +221,16 @@ export class Connector {
 
 					res.write(rawResponse)
 					callback()
-
-					// a = new Promise(resolve => {
-					// 	setTimeout(resolve, 3000)
-					// })
                 },
             })
-
-			return new Promise<void>( async resolve => {
+			return new Promise<void>(async (resolve, reject) => {
 				resInterceptor.on('finish', function(){
-					console.log('+++++++++++++ This is actually finished')
 					resolve()
 				})
+
+				resInterceptor.on('error', function (e) {
+                    reject(e)
+                })
 
 				await handler(context, input, new ResponseStream<any>(resInterceptor))
 

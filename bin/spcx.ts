@@ -112,6 +112,7 @@ function runDev() {
 		.use(express.json({ strict: true }))
 		.post('/*', async (req, res) => {
 			try {
+				res.type('application/x-ndjson')
 				const cmd: Command = req.body as Command
 				await _withConfig(cmd.config, async () => {
 					const c = await loadConnector(connectorPath)
@@ -127,7 +128,7 @@ function runDev() {
 						},
 					})
 	
-					pipeline(out, res.status(200).type('application/x-ndjson'), (err) => {
+					pipeline(out, res, (err) => {
 						if (err) {
 							console.error(err)
 						}
@@ -135,6 +136,7 @@ function runDev() {
 	
 					await c.connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
 						cmd.input, out, c.connectorCustomizer)
+					res.status(200)
 					out.end()
 				})
 			} catch (e: any) {
@@ -144,7 +146,7 @@ function runDev() {
 				if (e instanceof ConnectorError) {
 					errorType = e.type
 				}
-				res.status(500).send(`${errorType} error: \n + ${inspect(e)}`)
+				res.status(500).write(`${errorType} error: \n + ${inspect(e)}`)
 			} finally {
 				res.end()
 			}

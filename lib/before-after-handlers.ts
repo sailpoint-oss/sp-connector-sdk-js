@@ -1,4 +1,4 @@
-/* Copyright (c) 2023. SailPoint Technologies, Inc. All rights reserved. */
+/* Copyright (c) 202. SailPoint Technologies, Inc. All rights reserved. */
 
 import {
 	StdAccountCreateInput,
