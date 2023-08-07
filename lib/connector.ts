@@ -183,46 +183,36 @@ export class Connector {
 		
 		const handler: CommandHandler | undefined = this._handlers.get(type)
 		if (!handler) {
-			throw new Error(`unsupported command: ${type}`) //TODO
+			throw new Error(`unsupported command: ${type}`)
 		}
 
 		await contextState.run(context, async () => {
-
 			if (!customizer) {
-				console.log('No customizer')
 				return handler(context, input, new ResponseStream<any>(res))
 			}
 
-			console.log('Contains customizer')
 			let preHandler: BeforeAfterHandler | undefined = customizer.handlers.get(customizer.handlerKey(type, HandlerType.Before))
 			if (preHandler) {
-				console.log('Running pre customizer')
 				input = await preHandler(context, input)
-			} else {
-				console.log('No pre customizer')
 			}
 
 			let postHandler: BeforeAfterHandler | undefined = customizer.handlers.get(customizer.handlerKey(type, HandlerType.After))
 			if (!postHandler) {
-				console.log('No post customizer')
 				return handler(context, input, new ResponseStream<any>(res))
 			}
 
 			let resInterceptor = new Transform({
                 writableObjectMode: true,
                 async transform(rawResponse: RawResponse, encoding: BufferEncoding, callback: TransformCallback) {
-					if (rawResponse.type != ResponseType.Output) {
-						console.log('Skipping response for type: ' + rawResponse.type)
-					} else {
-						console.log('Running post customizer: ' + JSON.stringify(rawResponse))
+					if (rawResponse.type == ResponseType.Output) {
 						rawResponse.data = await postHandler!(context, rawResponse.data)
-						console.log('Post processed: ' + JSON.stringify(rawResponse))
 					}
 
 					res.write(rawResponse)
 					callback()
                 },
             })
+
 			return new Promise<void>(async (resolve, reject) => {
 				resInterceptor.on('finish', function(){
 					resolve()
@@ -233,12 +223,8 @@ export class Connector {
                 })
 
 				await handler(context, input, new ResponseStream<any>(resInterceptor))
-
 				resInterceptor.end()
 			})
-			
-
-			
 		})
 
 	}

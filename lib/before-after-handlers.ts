@@ -3,28 +3,25 @@
 import {
 	StdAccountCreateInput,
 	StdAccountCreateOutput,
-	StdAccountDeleteInput,
-	StdAccountDeleteOutput,
-	StdAccountDisableInput,
-	StdAccountDisableOutput,
-	StdAccountDiscoverSchemaOutput,
-	StdAccountEnableInput,
-	StdAccountEnableOutput,
-	StdAccountListOutput,
 	StdAccountReadInput,
 	StdAccountReadOutput,
-	StdAccountUnlockInput,
-	StdAccountUnlockOutput,
 	StdAccountUpdateInput,
 	StdAccountUpdateOutput,
-	StdEntitlementListInput,
-	StdEntitlementListOutput,
+	StdAccountDeleteInput,
+	StdAccountDeleteOutput,
+	StdAccountEnableInput,
+	StdAccountEnableOutput,
+	StdAccountDisableInput,
+	StdAccountDisableOutput,
+	StdAccountUnlockInput,
+	StdAccountUnlockOutput,
+	StdAccountListInput,
 	StdEntitlementReadInput,
 	StdEntitlementReadOutput,
+	StdEntitlementListInput,
 	StdTestConnectionOutput,
 	StdChangePasswordInput,
-	StdChangePasswordOutput,
-	StdAccountListInput
+	StdChangePasswordOutput
 } from './commands'
 import { Context } from './handler'
 
@@ -38,6 +35,96 @@ export type StdTestConnectionAfterHandler = (
 	context: Context,
 	output: StdTestConnectionOutput
 ) => Promise<StdTestConnectionOutput>
+
+export type StdAccountCreateBeforeHandler = (
+	context: Context,
+	input: StdAccountCreateInput
+) => Promise<StdAccountCreateInput>
+
+export type StdAccountCreateAfterHandler = (
+	context: Context,
+	output: StdAccountCreateOutput
+) => Promise<StdAccountCreateOutput>
+
+export type StdAccountReadBeforeHandler = (
+	context: Context,
+	input: StdAccountReadInput
+) => Promise<StdAccountReadInput>
+
+export type StdAccountReadAfterHandler = (
+	context: Context,
+	output: StdAccountReadOutput
+) => Promise<StdAccountReadOutput>
+
+export type StdAccountUpdateBeforeHandler = (
+	context: Context,
+	input: StdAccountUpdateInput
+) => Promise<StdAccountUpdateInput>
+
+export type StdAccountUpdateAfterHandler = (
+	context: Context,
+	output: StdAccountUpdateOutput
+) => Promise<StdAccountUpdateOutput>
+
+export type StdAccountDeleteBeforeHandler = (
+	context: Context,
+	input: StdAccountDeleteInput
+) => Promise<StdAccountDeleteInput>
+
+export type StdAccountDeleteAfterHandler = (
+	context: Context,
+	output: StdAccountDeleteOutput
+) => Promise<StdAccountDeleteOutput>
+
+export type StdAccountEnableBeforeHandler = (
+	context: Context,
+	input: StdAccountEnableInput
+) => Promise<StdAccountEnableInput>
+
+export type StdAccountEnableAfterHandler = (
+	context: Context,
+	output: StdAccountEnableOutput
+) => Promise<StdAccountEnableOutput>
+
+export type StdAccountDisableBeforeHandler = (
+	context: Context,
+	input: StdAccountDisableInput
+) => Promise<StdAccountDisableInput>
+
+export type StdAccountDisableAfterHandler = (
+	context: Context,
+	output: StdAccountDisableOutput
+) => Promise<StdAccountDisableOutput>
+
+export type StdAccountUnlockBeforeHandler = (
+	context: Context,
+	input: StdAccountUnlockInput
+) => Promise<StdAccountUnlockInput>
+
+export type StdAccountUnlockAfterHandler = (
+	context: Context,
+	output: StdAccountUnlockOutput
+) => Promise<StdAccountUnlockOutput>
+
+export type StdAccountListBeforeHandler = (
+	context: Context,
+	input: StdAccountListInput
+) => Promise<StdAccountListInput>
+
+export type StdEntitlementReadBeforeHandler = (
+	context: Context,
+	input: StdEntitlementReadInput
+) => Promise<StdEntitlementReadInput>
+
+export type StdEntitlementReadAfterHandler = (
+	context: Context,
+	output: StdEntitlementReadOutput
+) => Promise<StdEntitlementReadOutput>
+
+export type StdEntitlementListBeforeHandler = (
+	context: Context,
+	input: StdEntitlementListInput
+) => Promise<StdEntitlementListInput>
 
 export type StdChangePasswordBeforeHandler = (
 	context: Context,
