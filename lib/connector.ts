@@ -16,14 +16,14 @@ import {
 	StdEntitlementReadHandler,
 	StdTestConnectionHandler,
 	StdChangePasswordHandler,
-} from './handler'
+} from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import { StandardCommand } from './commands'
 import { RawResponse, ResponseStream, ResponseType } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
 import { contextState } from './async-context';
 import { ConnectorCustomizer, HandlerType } from './connector-customizer'
-import { BeforeAfterHandler } from './before-after-handlers'
+import { ConnectorCustomizerHandler } from './connector-customizer-handler'
 
 const SDK_VERSION = 1
 
@@ -191,12 +191,12 @@ export class Connector {
 				return handler(context, input, new ResponseStream<any>(res))
 			}
 
-			let preHandler: BeforeAfterHandler | undefined = customizer.handlers.get(customizer.handlerKey(type, HandlerType.Before))
+			let preHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(type, HandlerType.Before))
 			if (preHandler) {
 				input = await preHandler(context, input)
 			}
 
-			let postHandler: BeforeAfterHandler | undefined = customizer.handlers.get(customizer.handlerKey(type, HandlerType.After))
+			let postHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(type, HandlerType.After))
 			if (!postHandler) {
 				return handler(context, input, new ResponseStream<any>(res))
 			}

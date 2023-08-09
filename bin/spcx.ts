@@ -143,8 +143,9 @@ function runDev() {
 								cmd.input, out, c.connectorCustomizer)
 						} catch (e) {
 							reject(e)
+						} finally {
+							out.end()
 						}
-						out.end()
 					})
 
 					res.status(200)

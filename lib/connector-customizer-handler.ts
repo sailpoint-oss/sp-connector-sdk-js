@@ -1,4 +1,4 @@
-/* Copyright (c) 202. SailPoint Technologies, Inc. All rights reserved. */
+/* Copyright (c) 2023. SailPoint Technologies, Inc. All rights reserved. */
 
 import {
 	StdAccountCreateInput,
@@ -23,7 +23,7 @@ import {
 	StdChangePasswordInput,
 	StdChangePasswordOutput
 } from './commands'
-import { Context } from './handler'
+import { Context } from './connector-handler'
 
 
 export type StdTestConnectionBeforeHandler = (
@@ -136,4 +136,4 @@ export type StdChangePasswordAfterHandler = (
 	output: StdChangePasswordOutput
 ) => Promise<StdChangePasswordOutput>
 
-export type BeforeAfterHandler = (context: Context, input: any) => Promise<any>
+export type ConnectorCustomizerHandler = (context: Context, input: any) => Promise<any>

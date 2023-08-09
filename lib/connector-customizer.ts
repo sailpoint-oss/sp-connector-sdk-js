@@ -1,10 +1,10 @@
 /* Copyright (c) 2023. SailPoint Technologies, Inc. All rights reserved. */
 
-import { Context } from './handler'
+import { Context } from './connector-handler'
 import { StandardCommand } from './commands'
 import { contextState } from './async-context'
 import { 
-	BeforeAfterHandler,
+	ConnectorCustomizerHandler,
 	StdTestConnectionAfterHandler,
 	StdTestConnectionBeforeHandler,
 	StdAccountCreateAfterHandler,
@@ -27,19 +27,19 @@ import {
 	StdEntitlementListBeforeHandler,
 	StdChangePasswordAfterHandler,
 	StdChangePasswordBeforeHandler
-} from './before-after-handlers'
+} from './connector-customizer-handler'
 
 /**
  * Connector to build by attaching handlers for supported commands.
  */
 export class ConnectorCustomizer {
-	private readonly _handlers: Map<string, BeforeAfterHandler>
+	private readonly _handlers: Map<string, ConnectorCustomizerHandler>
 
 	constructor() {
-		this._handlers = new Map<string, BeforeAfterHandler>()
+		this._handlers = new Map<string, ConnectorCustomizerHandler>()
 	}
 
-	get handlers(): Map<string, BeforeAfterHandler> {
+	get handlers(): Map<string, ConnectorCustomizerHandler> {
 		return this._handlers
 	}
 
@@ -158,7 +158,7 @@ export class ConnectorCustomizer {
 	}
 
 	async _exec(cmdType: string, handlerType: HandlerType, context: Context, input: any): Promise<any> {
-		const handler: BeforeAfterHandler | undefined = this._handlers.get(this.handlerKey(cmdType, handlerType))
+		const handler: ConnectorCustomizerHandler | undefined = this._handlers.get(this.handlerKey(cmdType, handlerType))
 		if (!handler) {
 			return input
 		}
