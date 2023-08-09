@@ -133,11 +133,21 @@ function runDev() {
 							console.error(err)
 						}
 					})
-	
-					await c.connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
-						cmd.input, out, c.connectorCustomizer)
+
+					await new Promise<void>(async (resolve, reject) => {
+						out.on('finish', () => resolve())
+						out.on('error', (e) => reject(e))
+
+						try {
+							await c.connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
+								cmd.input, out, c.connectorCustomizer)
+						} catch (e) {
+							reject(e)
+						}
+						out.end()
+					})
+
 					res.status(200)
-					out.end()
 				})
 			} catch (e: any) {
 				console.error(typeof e === "string" ? e : e?.message)
