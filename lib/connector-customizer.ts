@@ -160,7 +160,7 @@ export class ConnectorCustomizer {
 	async _exec(cmdType: string, handlerType: HandlerType, context: Context, input: any): Promise<any> {
 		const handler: ConnectorCustomizerHandler | undefined = this._handlers.get(this.handlerKey(cmdType, handlerType))
 		if (!handler) {
-			return input
+			throw new Error(`No ${handlerType} handler found for command: ${cmdType}`)
 		}
 
 		return await contextState.run(context, () => handler(context, input))

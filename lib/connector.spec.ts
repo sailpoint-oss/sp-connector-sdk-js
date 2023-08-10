@@ -8,6 +8,7 @@ import { ResponseStream } from './response'
 import { major } from 'semver'
 
 import packageJson from '../package.json'
+import { createConnectorCustomizer } from './connector-customizer'
 
 const mockFS = require('mock-fs');
 
@@ -226,6 +227,62 @@ describe('exec handlers', () => {
 		})
 
 		await connector._exec(customCommandType, MOCK_CONTEXT, undefined, new PassThrough({ objectMode: true }))
+	})
+
+	it('should customizer handler customize input and output', async () => {
+		const connector = createConnector()
+		.stdAccountCreate(async (context, input, res) => {
+			expect(input).toEqual({
+				attributes: {
+					firstname: 'jane',
+					lastname: 'doe'
+				}
+			})
+			res.send({
+				identity: 'jane.doe',
+				attributes: input.attributes
+			})
+		})
+
+		const customizer = createConnectorCustomizer()
+			.beforeStdAccountCreate(async (context, input) => {
+				expect(input).toEqual({
+					attributes: {
+						firstname: 'john',
+						lastname: 'doe'
+					}
+				})
+				input.attributes.firstname = 'jane'
+				return input
+			})
+			.afterStdAccountCreate(async (context, output) => {
+				expect(output).toEqual({
+					identity: 'jane.doe',
+					attributes: {
+						firstname: 'jane',
+						lastname: 'doe'
+					}
+				})
+				output.attributes.location = 'austin'
+				return output
+			})
+
+		await connector._exec(StandardCommand.StdAccountCreate, MOCK_CONTEXT, {
+			attributes: {
+				firstname: 'john',
+				lastname: 'doe'
+			}
+		}, new PassThrough({ objectMode: true }).on('data', (chunk) => expect(chunk).toEqual({
+			"type": "output",
+			"data": {
+				identity: 'jane.doe',
+				attributes: {
+					firstname: 'jane',
+					lastname: 'doe',
+					location: 'austin'
+				}
+			},
+		})), customizer)
 	})
 })
 

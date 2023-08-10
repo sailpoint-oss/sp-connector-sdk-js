@@ -202,16 +202,16 @@ export class Connector {
 			}
 
 			let resInterceptor = new Transform({
-                writableObjectMode: true,
-                async transform(rawResponse: RawResponse, encoding: BufferEncoding, callback: TransformCallback) {
+				writableObjectMode: true,
+				async transform(rawResponse: RawResponse, encoding: BufferEncoding, callback: TransformCallback) {
 					if (rawResponse.type == ResponseType.Output) {
 						rawResponse.data = await postHandler!(context, rawResponse.data)
 					}
 
 					res.write(rawResponse)
 					callback()
-                },
-            })
+				},
+			})
 
 			return new Promise<void>(async (resolve, reject) => {
 				resInterceptor.on('finish', function(){
@@ -219,8 +219,8 @@ export class Connector {
 				})
 
 				resInterceptor.on('error', function (e) {
-                    reject(e)
-                })
+					reject(e)
+				})
 
 				await handler(context, input, new ResponseStream<any>(resInterceptor))
 				resInterceptor.end()
