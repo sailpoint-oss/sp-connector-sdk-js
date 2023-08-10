@@ -15,7 +15,6 @@ import fs from 'fs'
 interface Command {
 	version?: number
 	type: string
-	withCustomizer?: string
 	input: any
 	config: { [configKey: string]: any }
 }
@@ -150,13 +149,8 @@ function runDev() {
 									cmd.input, out, c.connectorCustomizer)
 							}
 
-							
-							if (!(<any>Object).values(CustomizerType).includes(cmd.withCustomizer)) {
-								return reject(new Error('"customizerType" needs to be either "before" or "after"'))
-							}
-
 							// Run customizer only
-							let output = await c.connectorCustomizer._exec(cmd.type, cmd.withCustomizer, { version: cmd.version, commandType: cmd.type },
+							let output = await c.connectorCustomizer._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
 								cmd.input, out)
 							out.write(output)
 						} catch (e) {
