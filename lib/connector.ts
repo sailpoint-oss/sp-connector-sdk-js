@@ -187,20 +187,26 @@ export class Connector {
 		}
 
 		await contextState.run(context, async () => {
+			// If customizer does not exist, we just run the command handler itself.
 			if (!customizer) {
 				return handler(context, input, new ResponseStream<any>(res))
 			}
 
-			let preHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(type, HandlerType.Before))
-			if (preHandler) {
-				input = await preHandler(context, input)
+			// If before handler exists, run the before handler and updates the command input
+			let beforeHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(HandlerType.Before, type))
+			if (beforeHandler) {
+				input = await beforeHandler(context, input)
 			}
 
-			let postHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(type, HandlerType.After))
+			// If after handler does not exist, run the command handler with updated input
+			let postHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(HandlerType.After, type))
 			if (!postHandler) {
 				return handler(context, input, new ResponseStream<any>(res))
 			}
 
+			// If after handler exists, run the after handler with an interceptor. Because we pass in writable to the command handlder,
+			// we need an interceptor to capture the result from the command handler, run that though the after handler and then write
+			// the final result to the original writable stream
 			let resInterceptor = new Transform({
 				writableObjectMode: true,
 				async transform(rawResponse: RawResponse, encoding: BufferEncoding, callback: TransformCallback) {
@@ -213,6 +219,9 @@ export class Connector {
 				},
 			})
 
+			// We need to wait on the interceptor to be done writting and flushing before we resolve the promise. If we don't wait,
+			// the interceptor could be ended but is still flushing while this _exec method is resolved. That would cause the writable
+			// stream that get passed into this _exec method to end as well, and then receive another write call, causing that stream to fail.
 			return new Promise<void>(async (resolve, reject) => {
 				resInterceptor.on('finish', function(){
 					resolve()

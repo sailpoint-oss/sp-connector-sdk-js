@@ -150,15 +150,15 @@ function runDev() {
 									cmd.input, out, c.connectorCustomizer)
 							}
 
-							// Run customizer only
+							
 							if (!(<any>Object).values(HandlerType).includes(cmd.customizerType)) {
 								return reject(new Error('"customizerType" needs to be either "before" or "after"'))
 							}
 
+							// Run customizer only
 							let output = await c.connectorCustomizer._exec(cmd.type, cmd.customizerType, { version: cmd.version, commandType: cmd.type },
 								cmd.input, out)
 							out.write(output)
-
 						} catch (e) {
 							reject(e)
 						} finally {
