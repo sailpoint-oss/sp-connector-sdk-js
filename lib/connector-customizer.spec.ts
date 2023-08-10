@@ -53,30 +53,32 @@ describe('exec handlers', () => {
 				return output
 			})
 
-		let customizedInput = await customizer._exec(StandardCommand.StdAccountCreate, CustomizerType.Before, MOCK_CONTEXT, {
-			attributes: {
-				firstname: 'john',
-				lastname: 'doe'
-			}
-		})
+		let customizedInput = await customizer._exec(customizer.handlerKey(CustomizerType.Before, StandardCommand.StdAccountCreate),
+			MOCK_CONTEXT, {
+				attributes: {
+					firstname: 'john',
+					lastname: 'doe'
+				}
+			})
 		expect(customizedInput.attributes.firstname).toBe('jane')
 
-		let customizedOutput = await customizer._exec(StandardCommand.StdAccountCreate, CustomizerType.After, MOCK_CONTEXT, {
-			attributes: {
-				firstname: 'john',
-				lastname: 'doe'
-			}
-		})
+		let customizedOutput = await customizer._exec(customizer.handlerKey(CustomizerType.After, StandardCommand.StdAccountCreate),
+			MOCK_CONTEXT, {
+				attributes: {
+					firstname: 'john',
+					lastname: 'doe'
+				}
+			})
 		expect(customizedOutput.attributes.location).toBe('austin')
 	})
 
 	it('should customizer throw error if handler is not defined', async () => {
 		const customizer = createConnectorCustomizer()
 		try {
-			await customizer._exec(StandardCommand.StdAccountCreate, CustomizerType.Before, MOCK_CONTEXT, {})
+			await customizer._exec(customizer.handlerKey(CustomizerType.Before, StandardCommand.StdAccountCreate), MOCK_CONTEXT, {})
 			fail()
 		} catch (e) {
-			expect(e).toStrictEqual(new Error(`No ${CustomizerType.Before} handler found for command: ${StandardCommand.StdAccountCreate}`))
+			expect(e).toStrictEqual(new Error(`No handler found for type: before:std:account:create`))
 		}
 	})
 })

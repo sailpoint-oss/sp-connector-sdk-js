@@ -255,17 +255,17 @@ export class ConnectorCustomizer {
 	}
 
 	/**
-	 * Execute the handler for given handler and command type
+	 * Execute the handler for given type.
+	 * Type is a comibination of command type and customizer type, for example, before:std:account:read
 	 *
-	 * @param cmdType command type
-	 * @param customizerType handler type
+	 * @param type handler type
 	 * @param context connector context
 	 * @param input input to the handler function
 	 */
-	async _exec(cmdType: string, customizerType: CustomizerType, context: Context, input: any): Promise<any> {
-		const handler: ConnectorCustomizerHandler | undefined = this._handlers.get(this.handlerKey(customizerType, cmdType))
+	async _exec(type: string, context: Context, input: any): Promise<any> {
+		const handler: ConnectorCustomizerHandler | undefined = this._handlers.get(type)
 		if (!handler) {
-			throw new Error(`No ${customizerType} handler found for command: ${cmdType}`)
+			throw new Error(`No handler found for type: ${type}`)
 		}
 
 		return await contextState.run(context, () => handler(context, input))
