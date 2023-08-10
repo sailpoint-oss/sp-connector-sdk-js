@@ -1,7 +1,7 @@
 /* Copyright (c) 2023. SailPoint Technologies, Inc. All rights reserved. */
 
 import { StandardCommand } from './commands'
-import { HandlerType, createConnectorCustomizer } from './connector-customizer'
+import { CustomizerType, createConnectorCustomizer } from './connector-customizer'
 
 const mockFS = require('mock-fs')
 
@@ -53,7 +53,7 @@ describe('exec handlers', () => {
 				return output
 			})
 
-		let customizedInput = await customizer._exec(StandardCommand.StdAccountCreate, HandlerType.Before, MOCK_CONTEXT, {
+		let customizedInput = await customizer._exec(StandardCommand.StdAccountCreate, CustomizerType.Before, MOCK_CONTEXT, {
 			attributes: {
 				firstname: 'john',
 				lastname: 'doe'
@@ -61,7 +61,7 @@ describe('exec handlers', () => {
 		})
 		expect(customizedInput.attributes.firstname).toBe('jane')
 
-		let customizedOutput = await customizer._exec(StandardCommand.StdAccountCreate, HandlerType.After, MOCK_CONTEXT, {
+		let customizedOutput = await customizer._exec(StandardCommand.StdAccountCreate, CustomizerType.After, MOCK_CONTEXT, {
 			attributes: {
 				firstname: 'john',
 				lastname: 'doe'
@@ -73,10 +73,10 @@ describe('exec handlers', () => {
 	it('should customizer throw error if handler is not defined', async () => {
 		const customizer = createConnectorCustomizer()
 		try {
-			await customizer._exec(StandardCommand.StdAccountCreate, HandlerType.Before, MOCK_CONTEXT, {})
+			await customizer._exec(StandardCommand.StdAccountCreate, CustomizerType.Before, MOCK_CONTEXT, {})
 			fail()
 		} catch (e) {
-			expect(e).toStrictEqual(new Error(`No ${HandlerType.Before} handler found for command: ${StandardCommand.StdAccountCreate}`))
+			expect(e).toStrictEqual(new Error(`No ${CustomizerType.Before} handler found for command: ${StandardCommand.StdAccountCreate}`))
 		}
 	})
 })

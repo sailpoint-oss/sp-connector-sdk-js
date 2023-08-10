@@ -22,7 +22,7 @@ import { StandardCommand } from './commands'
 import { RawResponse, ResponseStream, ResponseType } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
 import { contextState } from './async-context';
-import { ConnectorCustomizer, HandlerType } from './connector-customizer'
+import { ConnectorCustomizer, CustomizerType as CustomizerType } from './connector-customizer'
 import { ConnectorCustomizerHandler } from './connector-customizer-handler'
 
 const SDK_VERSION = 1
@@ -193,13 +193,13 @@ export class Connector {
 			}
 
 			// If before handler exists, run the before handler and updates the command input
-			let beforeHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(HandlerType.Before, type))
+			let beforeHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(CustomizerType.Before, type))
 			if (beforeHandler) {
 				input = await beforeHandler(context, input)
 			}
 
 			// If after handler does not exist, run the command handler with updated input
-			let postHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(HandlerType.After, type))
+			let postHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(CustomizerType.After, type))
 			if (!postHandler) {
 				return handler(context, input, new ResponseStream<any>(res))
 			}

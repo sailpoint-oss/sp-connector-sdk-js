@@ -4,7 +4,7 @@ import { pipeline, Transform, TransformCallback } from 'stream'
 import path from 'path'
 import { inspect } from 'util'
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
-import { Connector, ConnectorError, ConnectorErrorType, HandlerType, _withConfig } from '../lib'
+import { Connector, ConnectorError, ConnectorErrorType, CustomizerType, _withConfig } from '../lib'
 import archiver from 'archiver'
 import fs from 'fs'
 
@@ -15,7 +15,7 @@ import fs from 'fs'
 interface Command {
 	version?: number
 	type: string
-	customizerType?: string
+	withCustomizer?: string
 	input: any
 	config: { [configKey: string]: any }
 }
@@ -151,12 +151,12 @@ function runDev() {
 							}
 
 							
-							if (!(<any>Object).values(HandlerType).includes(cmd.customizerType)) {
+							if (!(<any>Object).values(CustomizerType).includes(cmd.withCustomizer)) {
 								return reject(new Error('"customizerType" needs to be either "before" or "after"'))
 							}
 
 							// Run customizer only
-							let output = await c.connectorCustomizer._exec(cmd.type, cmd.customizerType, { version: cmd.version, commandType: cmd.type },
+							let output = await c.connectorCustomizer._exec(cmd.type, cmd.withCustomizer, { version: cmd.version, commandType: cmd.type },
 								cmd.input, out)
 							out.write(output)
 						} catch (e) {
