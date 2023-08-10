@@ -199,8 +199,8 @@ export class Connector {
 			}
 
 			// If after handler does not exist, run the command handler with updated input
-			let postHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(CustomizerType.After, type))
-			if (!postHandler) {
+			let afterHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(CustomizerType.After, type))
+			if (!afterHandler) {
 				return handler(context, input, new ResponseStream<any>(res))
 			}
 
@@ -211,7 +211,7 @@ export class Connector {
 				writableObjectMode: true,
 				async transform(rawResponse: RawResponse, encoding: BufferEncoding, callback: TransformCallback) {
 					if (rawResponse.type == ResponseType.Output) {
-						rawResponse.data = await postHandler!(context, rawResponse.data)
+						rawResponse.data = await afterHandler!(context, rawResponse.data)
 					}
 
 					res.write(rawResponse)
