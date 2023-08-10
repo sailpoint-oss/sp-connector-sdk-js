@@ -15,6 +15,7 @@ import fs from 'fs'
 interface Command {
 	version?: number
 	type: string
+	customizerType?: string
 	input: any
 	config: { [configKey: string]: any }
 }
@@ -139,8 +140,20 @@ function runDev() {
 						out.on('error', (e) => reject(e))
 
 						try {
-							await c.connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
-								cmd.input, out, c.connectorCustomizer)
+							if (c.connector == null && c.connectorCustomizer == null) {
+								return reject(new Error('Connector not found. Did you export it?'))
+							}
+
+							// Running connector is exists. This will also run customizer if customizer exists.
+							if (c.connector != null) {
+								return await c.connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
+									cmd.input, out, c.connectorCustomizer)
+							}
+
+							// Run customizer only
+							await c.connectorCustomizer._exec(cmd.type, cmd.customizerType, { version: cmd.version, commandType: cmd.type },
+								cmd.input, out)
+
 						} catch (e) {
 							reject(e)
 						} finally {
