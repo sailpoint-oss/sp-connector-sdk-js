@@ -1,7 +1,7 @@
 import { StdSpecReadInput } from './commands'
 import { StdSpecReadOutput } from './commands/std-spec-read'
 import { Response } from './response'
-import { Context } from './handler'
+import { Context } from './connector-handler'
 
 import { promisify } from 'util'
 import { readFile } from 'fs'

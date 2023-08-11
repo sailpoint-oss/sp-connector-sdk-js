@@ -52,7 +52,7 @@ export class ResponseStream<T> implements Response<T> {
 /**
  * Enum representing different types of responses
  */
-enum ResponseType {
+export enum ResponseType {
 	Output = 'output',
 	State = 'state',
 	KeepAlive = 'keepAlive'
@@ -61,7 +61,7 @@ enum ResponseType {
 /**
  * RawResponse is the response that sdk sends out as command output
  */
-class RawResponse {
+export class RawResponse {
     type: ResponseType
 	data: string
 

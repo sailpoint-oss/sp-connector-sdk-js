@@ -4,7 +4,7 @@ import { pipeline, Transform, TransformCallback } from 'stream'
 import path from 'path'
 import { inspect } from 'util'
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
-import { Connector, ConnectorError, ConnectorErrorType, _withConfig } from '../lib'
+import { Connector, ConnectorError, ConnectorErrorType, CustomizerType, _withConfig } from '../lib'
 import archiver from 'archiver'
 import fs from 'fs'
 
@@ -95,56 +95,81 @@ function runDev() {
 	 * @param config Connector config
 	 */
 	const loadConnector = async (connectorPath: string) => {
-		const connector = require(connectorPath).connector
+		let c = require(connectorPath)
+		const connector = c.connector
+		const connectorCustomizer = c.connectorCustomizer
 		Object.keys(require.cache)
 			.filter((key: string) => !key.includes('node_modules'))
 			.forEach((key: string) => delete require.cache[key])
 	
-		let result
-		if (typeof connector === 'function') {
-			result = await connector()
-		} else {
-			result = connector
+		return {
+			connector: typeof connector === 'function' ? await connector() : connector,
+			connectorCustomizer: typeof connectorCustomizer === 'function' ? await connectorCustomizer() : connectorCustomizer
 		}
-		return result
 	}
 	
 	const app = express()
 		.use(express.json({ strict: true }))
 		.post('/*', async (req, res) => {
 			try {
+				res.type('application/x-ndjson')
 				const cmd: Command = req.body as Command
 				await _withConfig(cmd.config, async () => {
-					const connector: Connector = await loadConnector(connectorPath)
+					const c = await loadConnector(connectorPath)
 					const out = new Transform({
 						writableObjectMode: true,
 						transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback) {
 							try {
 								this.push(JSON.stringify(chunk) + '\n')
-							} catch (e) {
+							} catch (e: any) {
 								callback(e)
 							}
 							callback()
 						},
 					})
 	
-					pipeline(out, res.status(200).type('application/x-ndjson'), (err) => {
+					pipeline(out, res, (err) => {
 						if (err) {
 							console.error(err)
 						}
 					})
-	
-					await connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type }, cmd.input, out)
-					out.end()
+
+					await new Promise<void>(async (resolve, reject) => {
+						out.on('finish', () => resolve())
+						out.on('error', (e) => reject(e))
+
+						try {
+							if (c.connector == null && c.connectorCustomizer == null) {
+								return reject(new Error('Connector not found. Did you export it?'))
+							}
+
+							// Running connector is exists. This will also run customizer if customizer exists.
+							if (c.connector != null) {
+								return await c.connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
+									cmd.input, out, c.connectorCustomizer)
+							}
+
+							// Run customizer only
+							let output = await c.connectorCustomizer._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
+								cmd.input, out)
+							out.write(output)
+						} catch (e) {
+							reject(e)
+						} finally {
+							out.end()
+						}
+					})
+
+					res.status(200)
 				})
-			} catch (e) {
-				console.error(e?.message || e)
+			} catch (e: any) {
+				console.error(typeof e === "string" ? e : e?.message)
 				
 				let errorType = ConnectorErrorType.Generic
 				if (e instanceof ConnectorError) {
 					errorType = e.type
 				}
-				res.status(500).send(`${errorType} error: \n + ${inspect(e)}`)
+				res.status(500).write(`${errorType} error: \n + ${inspect(e)}`)
 			} finally {
 				res.end()
 			}
