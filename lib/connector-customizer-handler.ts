@@ -21,9 +21,12 @@ import {
 	StdEntitlementListInput,
 	StdTestConnectionOutput,
 	StdChangePasswordInput,
-	StdChangePasswordOutput
+	StdChangePasswordOutput,
+	StdSourceDataDiscoverInput,
+	StdSourceDataListInput,
 } from './commands'
 import { Context } from './connector-handler'
+import {Response} from "./response";
 
 
 export type StdTestConnectionBeforeHandler = (
@@ -135,5 +138,15 @@ export type StdChangePasswordAfterHandler = (
 	context: Context,
 	output: StdChangePasswordOutput
 ) => Promise<StdChangePasswordOutput>
+
+export type StdSourceDataDiscoverBeforeHandler = (
+	context: Context,
+	input: StdSourceDataDiscoverInput
+) => Promise<StdSourceDataDiscoverInput>
+
+export type StdSourceDataListBeforeHandler = (
+	context: Context,
+	input: StdSourceDataListInput
+) => Promise<StdSourceDataDiscoverInput>
 
 export type ConnectorCustomizerHandler = (context: Context, input: any) => Promise<any>

@@ -36,8 +36,10 @@ describe('class properties and methods', () => {
 			.beforeStdEntitlementList(async (context, input) => {return input})
 			.beforeStdChangePassword(async (context, input) => {return input})
 			.afterStdChangePassword(async (context, output) => {return output})
+			.beforeStdSourceDataDiscover(async (context, input) => {return input})
+			.beforeStdSourceDataList(async (context, input) => {return input})
 
-		expect(customizer.handlers.size).toBe(22)
+		expect(customizer.handlers.size).toBe(24)
 	})
 })
 

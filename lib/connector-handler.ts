@@ -24,7 +24,11 @@ import {
 	StdTestConnectionOutput,
 	StdChangePasswordInput,
 	StdChangePasswordOutput,
-	StdAccountListInput
+	StdAccountListInput,
+	StdSourceDataDiscoverInput,
+	StdSourceDataDiscoverOutput,
+	StdSourceDataListInput,
+	StdSourceDataListOutput
 } from './commands'
 import { Response } from './response'
 
@@ -105,5 +109,15 @@ export type StdChangePasswordHandler = (
 	context: Context,
 	input: StdChangePasswordInput,
 	res: Response<StdChangePasswordOutput>
+) => Promise<void>
+export type StdSourceDataDiscoverHandler = (
+	context: Context,
+	input: StdSourceDataDiscoverInput,
+	res: Response<StdSourceDataDiscoverOutput>
+) => Promise<void>
+export type StdSourceDataListHandler = (
+	context: Context,
+	input: StdSourceDataListInput,
+	res: Response<StdSourceDataListOutput>
 ) => Promise<void>
 export type CommandHandler = (context: Context, input: any, res: Response<any>) => Promise<void>
