@@ -16,12 +16,14 @@ type QueryInput = {
 	limit?: number
 }
 
-
 /**
  * Output object of `std:source-data:list` command
  */
-export type StdSourceDataListOutput = ObjectOutput & [{
-	key: string
-	label: string
-	subLabel?: string
-}]
+export type StdSourceDataListOutput = ObjectOutput &
+	[
+		{
+			key: string
+			label: string
+			subLabel?: string
+		}
+	]

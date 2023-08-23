@@ -14,7 +14,6 @@ type QueryInput = {
 	limit?: number
 }
 
-
 /**
  * Output object of `std:source-data:discover` command
  */
