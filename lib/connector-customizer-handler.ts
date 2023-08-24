@@ -23,9 +23,9 @@ import {
 	StdChangePasswordInput,
 	StdChangePasswordOutput,
 	StdSourceDataDiscoverInput,
-	StdSourceDataListInput,
+	StdSourceDataReadInput,
 	StdSourceDataDiscoverOutput,
-	StdSourceDataListOutput,
+	StdSourceDataReadOutput,
 } from './commands'
 import { Context } from './connector-handler'
 
@@ -150,14 +150,14 @@ export type StdSourceDataDiscoverAfterHandler = (
 	output: StdSourceDataDiscoverOutput
 ) => Promise<StdSourceDataDiscoverOutput>
 
-export type StdSourceDataListBeforeHandler = (
+export type StdSourceDataReadBeforeHandler = (
 	context: Context,
-	input: StdSourceDataListInput
-) => Promise<StdSourceDataDiscoverInput>
+	input: StdSourceDataReadInput
+) => Promise<StdSourceDataReadInput>
 
-export type StdSourceDataListAfterHandler = (
+export type StdSourceDataReadAfterHandler = (
 	context: Context,
-	output: StdSourceDataListOutput
-) => Promise<StdSourceDataListOutput>
+	output: StdSourceDataReadOutput
+) => Promise<StdSourceDataReadOutput>
 
 export type ConnectorCustomizerHandler = (context: Context, input: any) => Promise<any>

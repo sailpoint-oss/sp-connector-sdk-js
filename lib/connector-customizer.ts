@@ -29,8 +29,8 @@ import {
 	StdChangePasswordBeforeHandler,
 	StdSourceDataDiscoverBeforeHandler,
 	StdSourceDataDiscoverAfterHandler,
-	StdSourceDataListBeforeHandler,
-	StdSourceDataListAfterHandler,
+	StdSourceDataReadBeforeHandler,
+	StdSourceDataReadAfterHandler,
 } from './connector-customizer-handler'
 
 /**
@@ -267,20 +267,20 @@ export class ConnectorCustomizer {
 	}
 
 	/**
-	 * Add a before handler for 'std:source-data:list' command
+	 * Add a before handler for 'std:source-data:read' command
 	 * @param handler handler
 	 */
-	beforeStdSourceDataList(handler: StdSourceDataListBeforeHandler): this {
-		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdSourceDataList), handler)
+	beforeStdSourceDataList(handler: StdSourceDataReadBeforeHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdSourceDataRead), handler)
 		return this
 	}
 
 	/**
-	 * Add a before handler for 'std:source-data:list' command
+	 * Add a before handler for 'std:source-data:read' command
 	 * @param handler handler
 	 */
-	afterStdSourceDataList(handler: StdSourceDataListAfterHandler): this {
-		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdSourceDataList), handler)
+	afterStdSourceDataList(handler: StdSourceDataReadAfterHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdSourceDataRead), handler)
 		return this
 	}
 

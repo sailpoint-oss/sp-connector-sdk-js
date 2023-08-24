@@ -19,7 +19,7 @@ export enum StandardCommand {
 	StdTestConnection = 'std:test-connection',
 	StdChangePassword = 'std:change-password',
 	StdSourceDataDiscover = 'std:source-data:discover',
-	StdSourceDataList = 'std:source-data:list',
+	StdSourceDataRead = 'std:source-data:read',
 }
 
 /**

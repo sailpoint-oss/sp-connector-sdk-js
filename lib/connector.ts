@@ -17,7 +17,7 @@ import {
 	StdTestConnectionHandler,
 	StdChangePasswordHandler,
 	StdSourceDataDiscoverHandler,
-	StdSourceDataListHandler,
+	StdSourceDataReadHandler,
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import { StandardCommand } from './commands'
@@ -169,11 +169,11 @@ export class Connector {
 	}
 
 	/**
-	 * Add a handler for 'std:source-data:list' command
+	 * Add a handler for 'std:source-data:read' command
 	 * @param handler handler
 	 */
-	stdSourceDataList(handler: StdSourceDataListHandler): this {
-		return this.command(StandardCommand.StdSourceDataList, handler)
+	stdSourceDataList(handler: StdSourceDataReadHandler): this {
+		return this.command(StandardCommand.StdSourceDataRead, handler)
 	}
 
 

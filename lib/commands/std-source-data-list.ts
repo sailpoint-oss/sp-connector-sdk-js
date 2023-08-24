@@ -3,9 +3,9 @@
 import { ObjectOutput } from './command'
 
 /**
- * Input object of `std:source-data:list` command
+ * Input object of `std:source-data:read` command
  */
-export type StdSourceDataListInput = {
+export type StdSourceDataReadInput = {
 	sourceDataKey: string
 	queryInput?: QueryInput
 }
@@ -17,9 +17,9 @@ type QueryInput = {
 }
 
 /**
- * Output object of `std:source-data:list` command
+ * Output object of `std:source-data:read` command
  */
-export type StdSourceDataListOutput = ObjectOutput &
+export type StdSourceDataReadOutput = ObjectOutput &
 	[
 		{
 			key: string

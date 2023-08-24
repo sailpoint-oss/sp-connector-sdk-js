@@ -27,8 +27,8 @@ import {
 	StdAccountListInput,
 	StdSourceDataDiscoverInput,
 	StdSourceDataDiscoverOutput,
-	StdSourceDataListInput,
-	StdSourceDataListOutput,
+	StdSourceDataReadInput,
+	StdSourceDataReadOutput,
 } from './commands'
 import { Response } from './response'
 
@@ -115,9 +115,9 @@ export type StdSourceDataDiscoverHandler = (
 	input: StdSourceDataDiscoverInput,
 	res: Response<StdSourceDataDiscoverOutput>
 ) => Promise<void>
-export type StdSourceDataListHandler = (
+export type StdSourceDataReadHandler = (
 	context: Context,
-	input: StdSourceDataListInput,
-	res: Response<StdSourceDataListOutput>
+	input: StdSourceDataReadInput,
+	res: Response<StdSourceDataReadOutput>
 ) => Promise<void>
 export type CommandHandler = (context: Context, input: any, res: Response<any>) => Promise<void>
