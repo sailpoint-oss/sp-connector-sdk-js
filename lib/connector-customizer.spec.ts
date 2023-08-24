@@ -37,9 +37,9 @@ describe('class properties and methods', () => {
 			.beforeStdChangePassword(async (context, input) => {return input})
 			.afterStdChangePassword(async (context, output) => {return output})
 			.beforeStdSourceDataDiscover(async (context, input) => {return input})
-			.beforeStdSourceDataList(async (context, input) => {return input})
+			.beforeStdSourceDataRead(async (context, input) => {return input})
 			.afterStdSourceDataDiscover(async (context, output) => {return output})
-			.afterStdSourceDataList(async (context, output) => {return output})
+			.afterStdSourceDataRead(async (context, output) => {return output})
 
 		expect(customizer.handlers.size).toBe(26)
 	})

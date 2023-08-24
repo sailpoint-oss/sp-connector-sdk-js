@@ -172,7 +172,7 @@ export class Connector {
 	 * Add a handler for 'std:source-data:read' command
 	 * @param handler handler
 	 */
-	stdSourceDataList(handler: StdSourceDataReadHandler): this {
+	stdSourceDataRead(handler: StdSourceDataReadHandler): this {
 		return this.command(StandardCommand.StdSourceDataRead, handler)
 	}
 

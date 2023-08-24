@@ -270,7 +270,7 @@ export class ConnectorCustomizer {
 	 * Add a before handler for 'std:source-data:read' command
 	 * @param handler handler
 	 */
-	beforeStdSourceDataList(handler: StdSourceDataReadBeforeHandler): this {
+	beforeStdSourceDataRead(handler: StdSourceDataReadBeforeHandler): this {
 		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdSourceDataRead), handler)
 		return this
 	}
@@ -279,7 +279,7 @@ export class ConnectorCustomizer {
 	 * Add a before handler for 'std:source-data:read' command
 	 * @param handler handler
 	 */
-	afterStdSourceDataList(handler: StdSourceDataReadAfterHandler): this {
+	afterStdSourceDataRead(handler: StdSourceDataReadAfterHandler): this {
 		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdSourceDataRead), handler)
 		return this
 	}
