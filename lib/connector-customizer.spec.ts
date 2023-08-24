@@ -38,8 +38,10 @@ describe('class properties and methods', () => {
 			.afterStdChangePassword(async (context, output) => {return output})
 			.beforeStdSourceDataDiscover(async (context, input) => {return input})
 			.beforeStdSourceDataList(async (context, input) => {return input})
+			.afterStdSourceDataDiscover(async (context, output) => {return output})
+			.afterStdSourceDataList(async (context, output) => {return output})
 
-		expect(customizer.handlers.size).toBe(24)
+		expect(customizer.handlers.size).toBe(26)
 	})
 })
 
@@ -60,7 +62,7 @@ describe('exec handlers', () => {
 				attributes: {
 					firstname: 'john',
 					lastname: 'doe'
-				}
+			}
 			})
 		expect(customizedInput.attributes.firstname).toBe('jane')
 
@@ -69,7 +71,7 @@ describe('exec handlers', () => {
 				attributes: {
 					firstname: 'john',
 					lastname: 'doe'
-				}
+			}
 			})
 		expect(customizedOutput.attributes.location).toBe('austin')
 	})

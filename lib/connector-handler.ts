@@ -28,7 +28,7 @@ import {
 	StdSourceDataDiscoverInput,
 	StdSourceDataDiscoverOutput,
 	StdSourceDataListInput,
-	StdSourceDataListOutput
+	StdSourceDataListOutput,
 } from './commands'
 import { Response } from './response'
 
