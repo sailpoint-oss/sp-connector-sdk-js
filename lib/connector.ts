@@ -34,9 +34,13 @@ export class Connector {
 	public static readonly SDK_VERSION = SDK_VERSION
 	private readonly _sdkVersion = Connector.SDK_VERSION
 	private readonly _handlers: Map<string, CommandHandler>
+  private _resources: any
+  private _resumable_ops: any
+  private readonly _resumable: Map<string, boolean>
 
 	constructor() {
 		this._handlers = new Map<string, CommandHandler>()
+		this._resumable = new Map<string, boolean>()
 		this.command(StandardCommand.StdSpecRead, StdSpecReadDefaultHandler)
 	}
 
@@ -100,6 +104,10 @@ export class Connector {
 	 */
 	stdAccountList(handler: StdAccountListHandler): this {
 		return this.command(StandardCommand.StdAccountList, handler)
+	}
+
+	stdAccountListResumable(handler: StdAccountListHandler): this {
+		return this.resumableCommand(StandardCommand.StdAccountList, handler)
 	}
 
 	/**
@@ -170,6 +178,27 @@ export class Connector {
 	}
 
 	/**
+	 * Add a handler for a command of specified type
+	 * @param type command type
+	 * @param handler handler
+	 */
+	resumableCommand(type: string, handler: CommandHandler): this {
+		this._handlers.set(type, handler)
+    this._resumable.set(type, true)
+		return this
+	}
+
+	registerResources(resources: any): this {
+    this._resources = resources
+    return this
+	}
+
+	registerResumable(resumable: any): this {
+    this._resumable_ops = resumable
+    return this
+	}
+
+	/**
 	 * Execute the handler for given command type
 	 *
 	 * Note: This function MUST NOT be called by the connector directly
@@ -186,10 +215,20 @@ export class Connector {
 			throw new Error(`unsupported command: ${type}`)
 		}
 
+    // TODO sloppy
+    const contextNew = {
+      ...context,
+      resources: this._resources
+    }
+
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
 			if (!customizer) {
-				return handler(context, input, new ResponseStream<any>(res))
+        //if this._resumable.get(type) {
+        //  return handler(context, input, new ResponseStream<any>(res))
+        //} else {
+          return handler(contextNew, input, new ResponseStream<any>(res))
+        //}
 			}
 
 			// If before handler exists, run the before handler and updates the command input
