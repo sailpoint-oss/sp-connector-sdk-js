@@ -3,7 +3,7 @@
 import { Context } from './connector-handler'
 import { StandardCommand } from './commands'
 import { contextState } from './async-context'
-import { 
+import {
 	ConnectorCustomizerHandler,
 	StdTestConnectionAfterHandler,
 	StdTestConnectionBeforeHandler,
@@ -26,7 +26,11 @@ import {
 	StdEntitlementReadBeforeHandler,
 	StdEntitlementListBeforeHandler,
 	StdChangePasswordAfterHandler,
-	StdChangePasswordBeforeHandler
+	StdChangePasswordBeforeHandler,
+	StdSourceDataDiscoverBeforeHandler,
+	StdSourceDataDiscoverAfterHandler,
+	StdSourceDataReadBeforeHandler,
+	StdSourceDataReadAfterHandler,
 } from './connector-customizer-handler'
 
 /**
@@ -245,8 +249,44 @@ export class ConnectorCustomizer {
 	}
 
 	/**
+	 * Add a before handler for 'std:source-data:discover' command
+	 * @param handler handler
+	 */
+	beforeStdSourceDataDiscover(handler: StdSourceDataDiscoverBeforeHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdSourceDataDiscover), handler)
+		return this
+	}
+
+	/**
+	 * Add a before handler for 'std:source-data:discover' command
+	 * @param handler handler
+	 */
+	afterStdSourceDataDiscover(handler: StdSourceDataDiscoverAfterHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdSourceDataDiscover), handler)
+		return this
+	}
+
+	/**
+	 * Add a before handler for 'std:source-data:read' command
+	 * @param handler handler
+	 */
+	beforeStdSourceDataRead(handler: StdSourceDataReadBeforeHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdSourceDataRead), handler)
+		return this
+	}
+
+	/**
+	 * Add a before handler for 'std:source-data:read' command
+	 * @param handler handler
+	 */
+	afterStdSourceDataRead(handler: StdSourceDataReadAfterHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdSourceDataRead), handler)
+		return this
+	}
+
+	/**
 	 * Generate handler key base on customizer type and command type
-	 * 
+	 *
 	 * @param customizerType customizer type
 	 * @param cmdType command type
 	 */
@@ -283,7 +323,6 @@ export const createConnectorCustomizer = (): ConnectorCustomizer => {
  * Type of handlers for the connector customizer
  */
 export enum CustomizerType {
-	Before = "before",
-	After = "after"
+	Before = 'before',
+	After = 'after',
 }
-

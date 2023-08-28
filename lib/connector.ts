@@ -16,6 +16,8 @@ import {
 	StdEntitlementReadHandler,
 	StdTestConnectionHandler,
 	StdChangePasswordHandler,
+	StdSourceDataDiscoverHandler,
+	StdSourceDataReadHandler,
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import { StandardCommand } from './commands'
@@ -157,7 +159,23 @@ export class Connector {
 	stdChangePassword(handler: StdChangePasswordHandler): this {
 		return this.command(StandardCommand.StdChangePassword, handler)
 	}
-	
+
+	/**
+	 * Add a handler for 'std:source-data:discover' command
+	 * @param handler handler
+	 */
+	stdSourceDataDiscover(handler: StdSourceDataDiscoverHandler): this {
+		return this.command(StandardCommand.StdSourceDataDiscover, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:source-data:read' command
+	 * @param handler handler
+	 */
+	stdSourceDataRead(handler: StdSourceDataReadHandler): this {
+		return this.command(StandardCommand.StdSourceDataRead, handler)
+	}
+
 
 	/**
 	 * Add a handler for a command of specified type
@@ -180,7 +198,7 @@ export class Connector {
 	 * @param res writable
 	 */
 	async _exec(type: string, context: Context, input: any, res: Writable, customizer?: ConnectorCustomizer): Promise<void> {
-		
+
 		const handler: CommandHandler | undefined = this._handlers.get(type)
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
