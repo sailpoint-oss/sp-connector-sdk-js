@@ -14,11 +14,13 @@ type QueryInput = {
 	limit?: number
 }
 
-/**
- * Output object of `std:source-data:discover` command
- */
-export type StdSourceDataDiscoverOutput = ObjectOutput & {
+type SourceDataDiscover = {
 	key: string
 	label: string
 	subLabel?: string
 }
+
+/**
+ * Output object of `std:source-data:discover` command
+ */
+export type StdSourceDataDiscoverOutput = SourceDataDiscover[]
