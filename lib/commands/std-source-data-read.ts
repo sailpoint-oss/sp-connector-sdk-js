@@ -19,7 +19,7 @@ type QueryInput = {
 /**
  * Output object of `std:source-data:read` command
  */
-export type StdSourceDataReadOutput = ObjectOutput & {
+export type StdSourceDataReadOutput = {
 	key: string
 	label: string
 	subLabel?: string

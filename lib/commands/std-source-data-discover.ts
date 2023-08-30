@@ -17,7 +17,7 @@ type QueryInput = {
 /**
  * Output object of `std:source-data:discover` command
  */
-export type StdSourceDataDiscoverOutput = ObjectOutput & {
+export type StdSourceDataDiscoverOutput = {
 		key: string
 		label: string
 		subLabel?: string
