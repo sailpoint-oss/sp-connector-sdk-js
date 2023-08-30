@@ -16,12 +16,14 @@ type QueryInput = {
 	limit?: number
 }
 
-/**
- * Output object of `std:source-data:read` command
- */
-export type StdSourceDataReadOutput = {
+type SourceDataRead = {
 	key: string
 	label: string
 	subLabel?: string
-}[]
+}
+
+/**
+ * Output object of `std:source-data:read` command
+ */
+export type StdSourceDataReadOutput = SourceDataRead[]
 	
