@@ -139,11 +139,11 @@ export type ObjectOutputKey = {
 
 export type ObjectOutput = ObjectOutputIdentity | ObjectOutputKey
   
-export function hasIdentity(oo: ObjectOutput): oo is ObjectOutputIdentity {
+export function HasIdentity(oo: ObjectOutput): oo is ObjectOutputIdentity {
 	return (oo as ObjectOutputIdentity).identity !== undefined
 }
 
-export function hasKey(oo: ObjectOutput): oo is ObjectOutputKey {
+export function HasKey(oo: ObjectOutput): oo is ObjectOutputKey {
     return (oo as ObjectOutputKey).key !== undefined
 }
 
