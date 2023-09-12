@@ -128,7 +128,24 @@ export type ObjectInput = {
 	key: Key
 }
 
-export type ObjectOutput = { identity: string, uuid?: string } | { key: Key }
+export type ObjectOutputIdentity = {
+	identity: string
+	uuid?: string
+}
+
+export type ObjectOutputKey = {
+	key: Key
+}
+
+export type ObjectOutput = ObjectOutputIdentity | ObjectOutputKey
+  
+export function hasIdentity(oo: ObjectOutput): oo is ObjectOutputIdentity {
+	return (oo as ObjectOutputIdentity).identity !== undefined
+}
+
+export function hasKey(oo: ObjectOutput): oo is ObjectOutputKey {
+    return (oo as ObjectOutputKey).key !== undefined
+}
 
 /**
  * State input for stateful command
