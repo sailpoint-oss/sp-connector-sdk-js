@@ -237,10 +237,7 @@ export class Connector {
 				},
 			})
 
-			// We need to wait on the interceptor to be done writting and flushing before we resolve the promise. If we don't wait,
-			// the interceptor could be ended but is still flushing while this _exec method is resolved. That would cause the writable
-			// stream that get passed into this _exec method to end as well, and then receive another write call, causing that stream to fail.
-			return new Promise<void>(async (resolve, reject) => {
+      const complete = new Promise<void>((resolve, reject) => {
 				resInterceptor.on('finish', function(){
 					resolve()
 				})
@@ -248,10 +245,11 @@ export class Connector {
 				resInterceptor.on('error', function (e) {
 					reject(e)
 				})
+      })
 
-				await handler(context, input, new ResponseStream<any>(resInterceptor))
-				resInterceptor.end()
-			})
+      await handler(context, input, new ResponseStream<any>(resInterceptor))
+      resInterceptor.end()
+      await complete
 		})
 
 	}
