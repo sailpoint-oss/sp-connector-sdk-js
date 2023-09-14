@@ -249,8 +249,12 @@ export class Connector {
 					reject(e)
 				})
 
-				await handler(context, input, new ResponseStream<any>(resInterceptor))
-				resInterceptor.end()
+				try {
+					await handler(context, input, new ResponseStream<any>(resInterceptor))
+					resInterceptor.end()
+				} catch (e: any) {
+					reject(e)
+				}
 			})
 		})
 
