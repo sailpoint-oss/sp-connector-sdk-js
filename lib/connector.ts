@@ -229,7 +229,11 @@ export class Connector {
 				writableObjectMode: true,
 				async transform(rawResponse: RawResponse, encoding: BufferEncoding, callback: TransformCallback) {
 					if (rawResponse.type == ResponseType.Output) {
-						rawResponse.data = await afterHandler!(context, rawResponse.data)
+						try {
+							rawResponse.data = await afterHandler!(context, rawResponse.data)
+						} catch (e: any) {
+							callback(e)
+						}
 					}
 
 					res.write(rawResponse)
@@ -240,7 +244,7 @@ export class Connector {
 			// We need to wait on the interceptor to be done writting and flushing before we resolve the promise. If we don't wait,
 			// the interceptor could be ended but is still flushing while this _exec method is resolved. That would cause the writable
 			// stream that get passed into this _exec method to end as well, and then receive another write call, causing that stream to fail.
-			return new Promise<void>(async (resolve, reject) => {
+			let interceptorComplete = new Promise<void>((resolve, reject) => {
 				resInterceptor.on('finish', function(){
 					resolve()
 				})
@@ -248,14 +252,11 @@ export class Connector {
 				resInterceptor.on('error', function (e) {
 					reject(e)
 				})
-
-				try {
-					await handler(context, input, new ResponseStream<any>(resInterceptor))
-					resInterceptor.end()
-				} catch (e: any) {
-					reject(e)
-				}
 			})
+
+			await handler(context, input, new ResponseStream<any>(resInterceptor))
+			resInterceptor.end()
+			await interceptorComplete
 		})
 
 	}
