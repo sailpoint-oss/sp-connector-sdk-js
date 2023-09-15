@@ -301,6 +301,27 @@ describe('connector errors', () => {
 			expect(e).toStrictEqual(new Error(`unsupported command: ${StandardCommand.StdTestConnection}`))
 		}
 	})
+
+	it('should customizer after handler error be handled gracefully', async () => {
+		const connector = createConnector()
+		.stdTestConnection(async (context, input, res) => {
+			res.send({})
+		})
+
+		const customizer = createConnectorCustomizer()
+			.afterStdTestConnection(async (context, output) => {
+				throw new Error('Error from customizer')
+			})
+
+		try {
+			await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, {},
+				new PassThrough({ objectMode: true }).on('data', (chunk) => fail('no data should be received here')), customizer)
+
+			fail('connector execution should not success');
+		} catch (e) {
+			expect(e).toStrictEqual(new Error('Error from customizer'))
+		}
+	})
 })
 
 describe('read config', () => {
