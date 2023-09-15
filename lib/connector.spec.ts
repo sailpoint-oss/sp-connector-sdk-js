@@ -302,6 +302,42 @@ describe('connector errors', () => {
 		}
 	})
 
+	it('should connector error be handled gracefully', async () => {
+		const connector = createConnector()
+		.stdTestConnection(async (context, input, res) => {
+			throw new Error('Error from connector')
+		})
+
+		try {
+			await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, undefined,
+				new PassThrough({ objectMode: true }).on('data', (chunk) => fail('no data should be received here')))
+			fail('connector execution should not work')
+		} catch (e) {
+			expect(e).toStrictEqual(new Error('Error from connector'))
+		}
+	})
+
+	it('should customizer before handler error be handled gracefully', async () => {
+		const connector = createConnector()
+		.stdTestConnection(async (context, input, res) => {
+			res.send({})
+		})
+
+		const customizer = createConnectorCustomizer()
+			.beforeStdTestConnection(async (context, input) => {
+				throw new Error('Error from customizer after handler')
+			})
+
+		try {
+			await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, undefined,
+				new PassThrough({ objectMode: true }).on('data', (chunk) => fail('no data should be received here')), customizer)
+
+			fail('connector execution should not work')
+		} catch (e) {
+			expect(e).toStrictEqual(new Error('Error from customizer after handler'))
+		}
+	})
+
 	it('should customizer after handler error be handled gracefully', async () => {
 		const connector = createConnector()
 		.stdTestConnection(async (context, input, res) => {
@@ -310,16 +346,16 @@ describe('connector errors', () => {
 
 		const customizer = createConnectorCustomizer()
 			.afterStdTestConnection(async (context, output) => {
-				throw new Error('Error from customizer')
+				throw new Error('Error from customizer before handler')
 			})
 
 		try {
-			await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, {},
+			await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, undefined,
 				new PassThrough({ objectMode: true }).on('data', (chunk) => fail('no data should be received here')), customizer)
 
-			fail('connector execution should not success');
+			fail('connector execution should not work')
 		} catch (e) {
-			expect(e).toStrictEqual(new Error('Error from customizer'))
+			expect(e).toStrictEqual(new Error('Error from customizer before handler'))
 		}
 	})
 })
