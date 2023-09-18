@@ -128,7 +128,7 @@ export type ObjectInput = {
 	key: Key
 }
 
-export type ObjectOutput = { identity: string, uuid?: string } | { key: Key }
+export type ObjectOutput = { identity?: string, uuid?: string } & { key?: Key }
 
 /**
  * State input for stateful command
