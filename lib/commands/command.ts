@@ -157,5 +157,6 @@ export type AccountSchema = Schema & {
  * Entitlement schema
  */
 export type EntitlementSchema = Schema & {
-	type: string
+	type: string,
+	hierarchyAttribute?: string
 }
