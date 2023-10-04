@@ -231,13 +231,13 @@ export class Connector {
 					if (rawResponse.type == ResponseType.Output) {
 						try {
 							rawResponse.data = await afterHandler!(context, rawResponse.data)
+							res.write(rawResponse)
+							callback()
 						} catch (e: any) {
 							callback(e)
 						}
 					}
 
-					res.write(rawResponse)
-					callback()
 				},
 			})
 
