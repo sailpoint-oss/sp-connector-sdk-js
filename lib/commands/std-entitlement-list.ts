@@ -19,4 +19,5 @@ export type StdEntitlementListOutput = ObjectOutput & {
 	type: string
 	deleted?: boolean
 	attributes: Attributes
+	permissions?: Permissions
 }

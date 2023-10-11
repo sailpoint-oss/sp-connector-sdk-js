@@ -310,8 +310,8 @@ describe('connector errors', () => {
 
 		try {
 			await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, undefined,
-				new PassThrough({ objectMode: true }).on('data', (chunk) => fail('no data should be received here')))
-			fail('connector execution should not work')
+				new PassThrough({ objectMode: true }).on('data', (chunk) => {throw new Error('no data should be received here')}))
+			throw new Error('connector execution should not work')
 		} catch (e) {
 			expect(e).toStrictEqual(new Error('Error from connector'))
 		}
@@ -330,9 +330,9 @@ describe('connector errors', () => {
 
 		try {
 			await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, undefined,
-				new PassThrough({ objectMode: true }).on('data', (chunk) => fail('no data should be received here')), customizer)
+				new PassThrough({ objectMode: true }).on('data', (chunk) => {throw new Error('no data should be received here')}), customizer)
 
-			fail('connector execution should not work')
+			throw new Error('connector execution should not work')
 		} catch (e) {
 			expect(e).toStrictEqual(new Error('Error from customizer after handler'))
 		}
@@ -351,9 +351,11 @@ describe('connector errors', () => {
 
 		try {
 			await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, undefined,
-				new PassThrough({ objectMode: true }).on('data', (chunk) => fail('no data should be received here')), customizer)
+				new PassThrough({ objectMode: true }).on('data', (chunk) => {
+          throw new Error('no data should be received here')
+        }), customizer)
 
-			fail('connector execution should not work')
+			throw new Error('connector execution should not work')
 		} catch (e) {
 			expect(e).toStrictEqual(new Error('Error from customizer before handler'))
 		}
