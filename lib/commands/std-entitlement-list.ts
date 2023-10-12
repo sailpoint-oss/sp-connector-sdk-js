@@ -1,6 +1,6 @@
 /* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
 
-import { Attributes, CommandState, EntitlementSchema, ObjectOutput } from './command'
+import { Attributes, CommandState, EntitlementSchema, ObjectOutput, EntPermission } from './command'
 
 /**
  * Input object of `std:entitlement:list` command
@@ -19,5 +19,5 @@ export type StdEntitlementListOutput = ObjectOutput & {
 	type: string
 	deleted?: boolean
 	attributes: Attributes
-	permissions?: Permissions
+	permissions?: EntPermission[]
 }
