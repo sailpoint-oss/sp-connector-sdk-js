@@ -1,6 +1,6 @@
 /* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
 
-import { Attributes, CommandState, EntitlementSchema, ObjectOutput, EntPermission } from './command'
+import { Attributes, CommandState, EntitlementSchema, ObjectOutput } from './command'
 
 /**
  * Input object of `std:entitlement:list` command
