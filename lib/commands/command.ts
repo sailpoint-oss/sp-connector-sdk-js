@@ -33,10 +33,10 @@ export enum StandardCommand {
  * - string[] or integer[] for multi-valued attributes
  */
 export type Attributes = {
-	[attribute: string]: boolean | string | string[] | number | number[] | null | EntPermission[]
+	[attribute: string]: boolean | string | string[] | number | number[] | null 
 }
 
-export type EntPermission = {
+export type Permission = {
 	target: string
 	rights: string
 	annotation?: string
@@ -163,5 +163,5 @@ export type AccountSchema = Schema & {
  * Entitlement schema
  */
 export type EntitlementSchema = Schema & {
-	type: string
+	type: string, 
 }
