@@ -33,7 +33,7 @@ export enum StandardCommand {
  * - string[] or integer[] for multi-valued attributes
  */
 export type Attributes = {
-	[attribute: string]: boolean | string | string[] | number | number[] | null 
+	[attribute: string]: boolean | string | string[] | number | number[] | null
 }
 
 export type Permission = {
@@ -163,5 +163,6 @@ export type AccountSchema = Schema & {
  * Entitlement schema
  */
 export type EntitlementSchema = Schema & {
-	type: string, 
+	type: string,
+	includePermissions?: boolean
 }
