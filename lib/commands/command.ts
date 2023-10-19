@@ -36,6 +36,12 @@ export type Attributes = {
 	[attribute: string]: boolean | string | string[] | number | number[] | null
 }
 
+export type Permission = {
+	target: string
+	rights: string
+	annotation?: string
+}
+
 /**
  * SchemaAttribute defines an attribute for schema
  */
@@ -157,5 +163,6 @@ export type AccountSchema = Schema & {
  * Entitlement schema
  */
 export type EntitlementSchema = Schema & {
-	type: string
+	type: string,
+	includePermissions?: boolean
 }
