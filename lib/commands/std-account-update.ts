@@ -1,6 +1,6 @@
 /* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
 
-import { AccountSchema, Attributes, ObjectInput, ObjectOutput } from './command'
+import { AccountSchema, Attributes, ObjectInput, ObjectOutput, Result } from './command'
 
 export enum AttributeChangeOp {
 	Add = 'Add',
@@ -30,4 +30,9 @@ export type StdAccountUpdateInput = ObjectInput & {
  *
  * All properties are optional for this output
  */
-export type StdAccountUpdateOutput = ObjectOutput & { disabled?: boolean, locked?: boolean, attributes?: Attributes }
+export type StdAccountUpdateOutput = ObjectOutput & {
+	disabled?: boolean,
+	locked?: boolean,
+	attributes?: Attributes,
+	results?: Result
+}

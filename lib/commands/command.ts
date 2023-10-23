@@ -166,3 +166,14 @@ export type EntitlementSchema = Schema & {
 	type: string,
 	includePermissions?: boolean
 }
+
+export type Result = {
+	attribute: string,
+	status?: string,
+	messages?: ResultMessage[]
+}
+
+export type ResultMessage = {
+	level: string,
+	message: string
+}
