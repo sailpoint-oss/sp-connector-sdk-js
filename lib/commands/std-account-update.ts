@@ -34,5 +34,5 @@ export type StdAccountUpdateOutput = ObjectOutput & {
 	disabled?: boolean,
 	locked?: boolean,
 	attributes?: Attributes,
-	results?: Result
+	results?: Result[]
 }
