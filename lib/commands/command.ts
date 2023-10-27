@@ -166,3 +166,35 @@ export type EntitlementSchema = Schema & {
 	type: string,
 	includePermissions?: boolean
 }
+
+/**
+ * Granular result for an attribute to indicate partial attribule level success & warning & failure 
+ */
+export type Result = {
+	attribute: string,
+	status?: ResultStatus,
+	messages?: ResultMessage[]
+}
+
+/**
+ * Status for result
+ */
+export enum ResultStatus {
+	Error = 'error',
+}
+
+/**
+ * Warning or error message for a result
+ */
+export type ResultMessage = {
+	level: ResultMessageLevel,
+	message: string
+}
+
+/**
+ * Level for result message
+ */
+export enum ResultMessageLevel {
+	WARN = 'WARN',
+	ERROR = 'ERROR',
+}
