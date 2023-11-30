@@ -18,6 +18,8 @@ export type StdAccountListOutput = ObjectOutput & {
 	disabled?: boolean
 	locked?: boolean
 	deleted?: boolean
+	incomplete?: boolean
+	finalUpdate?: boolean
 	attributes: Attributes
 	permissions?: Permission[]
 }
