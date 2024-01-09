@@ -78,15 +78,4 @@ export class RawResponse {
 }
 
 
-export type Patch = { op: string, path: string, value: any }
-
-// export class Patch {
-// 	op: string
-// 	path: string
-// 	value: any
-
-//     constructor(data: any, type = ResponseType.Config) {
-//        this.data = data
-// 		this.type = type
-// 	}
-// }
+export type Patch = { op: string, path: string, value?: any }
