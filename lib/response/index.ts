@@ -77,5 +77,16 @@ export class RawResponse {
 	}
 }
 
+/**
+ * Enum PatchOp is the config patch operations
+ */
+export enum PatchOp {
+	Add = 'add',
+	Replace = 'replace',
+	Remove = 'remove'
+}
 
-export type Patch = { op: string, path: string, value?: any }
+/**
+ * Patch is a JSON patch for source config
+ */
+export type Patch = { op: PatchOp, path: string, value?: any }
