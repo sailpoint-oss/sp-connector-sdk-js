@@ -9,6 +9,7 @@ export interface Response<T> {
 	send(output: T): void
 	saveState(state: any): void
 	keepAlive(): void
+	patchConfig(patches: Patch[]): void
 }
 
 /**
@@ -47,6 +48,10 @@ export class ResponseStream<T> implements Response<T> {
 	keepAlive(): void {
 		this._writable.write(new RawResponse({}, ResponseType.KeepAlive))
 	}
+
+	patchConfig(patches: Patch[]): void {
+		this._writable.write(new RawResponse(patches, ResponseType.Config))
+	}
 }
 
 /**
@@ -55,7 +60,8 @@ export class ResponseStream<T> implements Response<T> {
 export enum ResponseType {
 	Output = 'output',
 	State = 'state',
-	KeepAlive = 'keepAlive'
+	KeepAlive = 'keepAlive',
+	Config = 'config'
 }
 
 /**
@@ -70,3 +76,17 @@ export class RawResponse {
 		this.type = type
 	}
 }
+
+/**
+ * Enum PatchOp is the config patch operations
+ */
+export enum PatchOp {
+	Add = 'add',
+	Replace = 'replace',
+	Remove = 'remove'
+}
+
+/**
+ * Patch is a JSON patch for source config
+ */
+export type Patch = { op: PatchOp, path: string, value?: any }
