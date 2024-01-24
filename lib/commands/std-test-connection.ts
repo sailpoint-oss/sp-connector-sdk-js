@@ -6,7 +6,7 @@ import { AccountSchema } from './command'
  * Input object of `std:test-connection` command
  */
 export type StdTestConnectionInput = {
-	account_schema?: AccountSchema
+	accountSchema?: AccountSchema
 }
 
 /**

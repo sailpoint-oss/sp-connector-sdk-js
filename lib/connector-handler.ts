@@ -29,6 +29,7 @@ import {
 	StdSourceDataDiscoverOutput,
 	StdSourceDataReadInput,
 	StdSourceDataReadOutput,
+	StdTestConnectionInput,
 } from './commands'
 import { Response } from './response'
 
@@ -102,7 +103,7 @@ export type StdEntitlementReadHandler = (
 ) => Promise<void>
 export type StdTestConnectionHandler = (
 	context: Context,
-	input: undefined,
+	input: StdTestConnectionInput,
 	res: Response<StdTestConnectionOutput>
 ) => Promise<void>
 export type StdChangePasswordHandler = (
