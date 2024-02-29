@@ -72,7 +72,7 @@ export const connector: Connector = createConnector()
 
 Use SDK provided logger to ensure log statements will include command execution context fields.
 ```typescript
-import {logger} from '@sailpoint/connector-sdk'
+import { logger } from '@sailpoint/connector-sdk'
 ```
 
 ### Examples
