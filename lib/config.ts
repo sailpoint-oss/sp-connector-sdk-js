@@ -42,8 +42,11 @@ export const _withConfig = async (cfg: any, callback: () => unknown): Promise<vo
 
 export const reloadConfig = async (res: Response<any>): Promise<any> => {
 
-	let dir = `/tmp/${uuidv4()}`
-	let request = {}
+	let requestId = uuidv4()
+	let dir = `/tmp/${requestId}`
+	let request = {
+		requestId: requestId
+	}
 	fs.mkdirSync(dir)
 	fs.writeFileSync(`${dir}/request.json`, JSON.stringify(request), {flag: 'w'})
 
