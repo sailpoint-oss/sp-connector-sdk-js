@@ -44,6 +44,19 @@ export interface Context {
 	requestId?: string
 	commandType?: string
 	[prop: string]: any
+
+	reloadConfig(): Promise<any>
+	assumAwsRole(arm: string): Promise<CredentialResponse>
+}
+
+export class CredentialResponse {
+	type: string
+	data: number
+
+	constructor(type: string, data: number) {
+		this.type = type
+		this.data = data
+	}
 }
 
 export type StdAccountCreateHandler = (
