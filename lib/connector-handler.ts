@@ -41,6 +41,7 @@ export interface Context {
 	name?: string
 	version?: number
 	invocationId?: string
+	spanId? :string
 	requestId?: string
 	commandType?: string
 	[prop: string]: any

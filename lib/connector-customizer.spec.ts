@@ -2,14 +2,23 @@
 
 import { StandardCommand } from './commands'
 import { CustomizerType, createConnectorCustomizer } from './connector-customizer'
+import { Context, CredentialResponse } from './connector-handler'
 
-const mockFS = require('mock-fs')
+class MockContext implements Context {
+	config = {}
+	id = 'mockId'
+	mockKey = 'mockValue'
 
-const MOCK_CONTEXT = {
-	config: {},
-	id: 'mockId',
-	mockKey: 'mockValue',
+	reloadConfig(): Promise<any> {
+		return Promise.resolve({})
+	}
+
+	assumAwsRole(arm: string): Promise<CredentialResponse> {
+		return Promise.resolve(new CredentialResponse("", 0))
+	}
 }
+
+const MOCK_CONTEXT = new MockContext()
 
 describe('class properties and methods', () => {
 	it('should add handlers to connector customizer', async () => {

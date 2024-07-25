@@ -9,14 +9,26 @@ import { major } from 'semver'
 
 import packageJson from '../package.json'
 import { createConnectorCustomizer } from './connector-customizer'
+import { Context, CredentialResponse } from './connector-handler'
+import path from 'path'
 
 const mockFS = require('mock-fs');
 
-const MOCK_CONTEXT = {
-	config: {},
-	id: 'mockId',
-	mockKey: 'mockValue',
+class MockContext implements Context {
+	config = {}
+	id = 'mockId'
+	mockKey = 'mockValue'
+
+	reloadConfig(): Promise<any> {
+		return Promise.resolve({})
+	}
+
+	assumAwsRole(arm: string): Promise<CredentialResponse> {
+		return Promise.resolve(new CredentialResponse("", 0))
+	}
 }
+
+const MOCK_CONTEXT = new MockContext()
 
 describe('class properties and methods', () => {
 	it('sdkVersion in Connector class should match major version in package.json', () => {
@@ -205,7 +217,8 @@ describe('exec handlers', () => {
 		const connector = createConnector()
 
 		mockFS({
-			'connector-spec.json': JSON.stringify(spec)
+			'connector-spec.json': JSON.stringify(spec),
+			[path.join(__dirname, 'connector-spec.json')]: JSON.stringify(spec),
 		})
 		await connector._exec('std:spec:read', MOCK_CONTEXT, undefined, res)
 		mockFS.restore()
@@ -283,6 +296,39 @@ describe('exec handlers', () => {
 				}
 			},
 		})), customizer)
+	})
+
+	it('should execute custom handler with save state', async () => {
+		const customCommandType = 'mock:custom:command'
+
+		const connector = createConnector().command(customCommandType, async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input).toBeUndefined()
+			expect(res).toBeInstanceOf(ResponseStream)
+
+			res.saveState({newState: 'value'})
+		})
+
+		await connector._exec(customCommandType, MOCK_CONTEXT, undefined, new PassThrough({ objectMode: true }).on('data', (chunk) => {
+			expect(chunk).toEqual({
+				type: 'state',
+				data: {
+					newState: 'value'
+				}
+			})
+		}))
+		
+	})
+
+	it('should execute custom handler with connector request', async () => {
+		createConnector().command('mock:custom:command', async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input).toBeUndefined()
+			expect(res).toBeInstanceOf(ResponseStream)
+
+			let config = await context.reloadConfig()
+			expect(config).toEqual({})
+		})
 	})
 })
 
@@ -390,3 +436,22 @@ describe('read config', () => {
 		}
 	})
 })
+
+export const REQ_ID_OFFSET = 0
+export const MSG_TYPE_OFFSET = 4
+export const PAYLOAD_LEN_OFFSET = 5
+export const PAYLOAD_OFFSET = 9
+export const STREAM_MAX_MESSAGE_LENGTH = 4 * 1024 * 1024
+
+export enum StreamMessageType {
+	Request = 0,
+	Response = 1,
+	Data = 2,
+}
+
+// const MOCK_CONTEXT = {
+// 	config: {},
+// 	id: 'mockId',
+// 	mockKey: 'mockValue',
+// }
+
