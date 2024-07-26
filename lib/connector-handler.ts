@@ -51,12 +51,14 @@ export interface Context {
 }
 
 export class CredentialResponse {
-	type: string
-	data: number
+	accessKeyId: string
+	secretAccessKey: string
+	sessionToken: string
 
-	constructor(type: string, data: number) {
-		this.type = type
-		this.data = data
+	constructor(accessKeyId: string, secretAccessKey: string, sessionToken: string) {
+		this.accessKeyId = accessKeyId
+		this.secretAccessKey = secretAccessKey
+		this.sessionToken = sessionToken
 	}
 }
 

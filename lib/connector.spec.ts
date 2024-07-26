@@ -24,7 +24,7 @@ class MockContext implements Context {
 	}
 
 	assumAwsRole(arm: string): Promise<CredentialResponse> {
-		return Promise.resolve(new CredentialResponse("", 0))
+		return Promise.resolve(new CredentialResponse('ccessKeyId', 'secretAccessKey', 'sessionToken'))
 	}
 }
 
