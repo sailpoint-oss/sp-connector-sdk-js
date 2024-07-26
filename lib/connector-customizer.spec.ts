@@ -2,14 +2,19 @@
 
 import { StandardCommand } from './commands'
 import { CustomizerType, createConnectorCustomizer } from './connector-customizer'
+import { Context } from './connector-handler'
 
-const mockFS = require('mock-fs')
+class MockContext implements Context {
+	config = {}
+	id = 'mockId'
+	mockKey = 'mockValue'
 
-const MOCK_CONTEXT = {
-	config: {},
-	id: 'mockId',
-	mockKey: 'mockValue',
+	reloadConfig(): Promise<any> {
+		return Promise.resolve({})
+	}
 }
+
+const MOCK_CONTEXT = new MockContext()
 
 describe('class properties and methods', () => {
 	it('should add handlers to connector customizer', async () => {
