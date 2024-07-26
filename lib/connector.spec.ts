@@ -9,7 +9,7 @@ import { major } from 'semver'
 
 import packageJson from '../package.json'
 import { createConnectorCustomizer } from './connector-customizer'
-import { Context, CredentialResponse } from './connector-handler'
+import { Context } from './connector-handler'
 import path from 'path'
 
 const mockFS = require('mock-fs');
@@ -21,10 +21,6 @@ class MockContext implements Context {
 
 	reloadConfig(): Promise<any> {
 		return Promise.resolve({})
-	}
-
-	assumAwsRole(arm: string): Promise<CredentialResponse> {
-		return Promise.resolve(new CredentialResponse("", 0))
 	}
 }
 
@@ -436,22 +432,3 @@ describe('read config', () => {
 		}
 	})
 })
-
-export const REQ_ID_OFFSET = 0
-export const MSG_TYPE_OFFSET = 4
-export const PAYLOAD_LEN_OFFSET = 5
-export const PAYLOAD_OFFSET = 9
-export const STREAM_MAX_MESSAGE_LENGTH = 4 * 1024 * 1024
-
-export enum StreamMessageType {
-	Request = 0,
-	Response = 1,
-	Data = 2,
-}
-
-// const MOCK_CONTEXT = {
-// 	config: {},
-// 	id: 'mockId',
-// 	mockKey: 'mockValue',
-// }
-

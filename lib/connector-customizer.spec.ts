@@ -2,7 +2,7 @@
 
 import { StandardCommand } from './commands'
 import { CustomizerType, createConnectorCustomizer } from './connector-customizer'
-import { Context, CredentialResponse } from './connector-handler'
+import { Context } from './connector-handler'
 
 class MockContext implements Context {
 	config = {}
@@ -11,10 +11,6 @@ class MockContext implements Context {
 
 	reloadConfig(): Promise<any> {
 		return Promise.resolve({})
-	}
-
-	assumAwsRole(arm: string): Promise<CredentialResponse> {
-		return Promise.resolve(new CredentialResponse("", 0))
 	}
 }
 
