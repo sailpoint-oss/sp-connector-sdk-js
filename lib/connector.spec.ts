@@ -44,12 +44,13 @@ describe('class properties and methods', () => {
 			.stdAccountRead(async (context, input, res) => {})
 			.stdAccountUnlock(async (context, input, res) => {})
 			.stdAccountUpdate(async (context, input, res) => {})
+			.stdAuthenticate(async (context, input, res) => {})
 			.stdEntitlementList(async (context, input, res) => {})
 			.stdEntitlementRead(async (context, input, res) => {})
 			.stdTestConnection(async (context, input, res) => {})
 			.command('mock:custom:command', async (context, input, res) => {})
 
-		expect(connector.handlers.size).toBe(14)
+		expect(connector.handlers.size).toBe(15)
 	})
 })
 
@@ -147,6 +148,24 @@ describe('exec handlers', () => {
 			StandardCommand.StdAccountUpdate,
 			MOCK_CONTEXT,
 			{ identity: 'mockIdentity', changes: [] },
+			new PassThrough({ objectMode: true })
+		)
+	})
+
+	it('should execute stdAuthenticateHandler', async () => {
+		const connector = createConnector().stdAuthenticate(async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input.identity).toStrictEqual('mockIdentity')
+			expect(input.username).toStrictEqual('mockUsername')
+			expect(input.password).toStrictEqual('mockPassword')
+			expect(input.options).toStrictEqual({})
+			expect(res).toBeInstanceOf(ResponseStream)
+		})
+
+		await connector._exec(
+			StandardCommand.StdAuthenticate,
+			MOCK_CONTEXT,
+			{ identity: 'mockIdentity', username: 'mockUsername', password: 'mockPassword', options :{}},
 			new PassThrough({ objectMode: true })
 		)
 	})

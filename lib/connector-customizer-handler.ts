@@ -16,6 +16,8 @@ import {
 	StdAccountUnlockInput,
 	StdAccountUnlockOutput,
 	StdAccountListInput,
+	StdAuthenticateInput,
+	StdAuthenticateOutput,
 	StdEntitlementReadInput,
 	StdEntitlementReadOutput,
 	StdEntitlementListInput,
@@ -114,6 +116,16 @@ export type StdAccountListBeforeHandler = (
 	context: Context,
 	input: StdAccountListInput
 ) => Promise<StdAccountListInput>
+
+export type StdAuthenticateBeforeHandler = (
+	context: Context,
+	input: StdAuthenticateInput
+) => Promise<StdAuthenticateInput>
+
+export type StdAuthenticateAfterHandler = (
+	context: Context,
+	output: StdAuthenticateOutput
+) => Promise<StdAuthenticateOutput>
 
 export type StdEntitlementReadBeforeHandler = (
 	context: Context,

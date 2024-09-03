@@ -22,6 +22,8 @@ import {
 	StdAccountUnlockAfterHandler,
 	StdAccountUnlockBeforeHandler,
 	StdAccountListBeforeHandler,
+	StdAuthenticateAfterHandler,
+	StdAuthenticateBeforeHandler,
 	StdEntitlementReadAfterHandler,
 	StdEntitlementReadBeforeHandler,
 	StdEntitlementListBeforeHandler,
@@ -200,6 +202,24 @@ export class ConnectorCustomizer {
 	 */
 	beforeStdAccountList(handler: StdAccountListBeforeHandler): this {
 		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdAccountList), handler)
+		return this
+	}
+
+	/**
+	 * Add a before handler for 'std:authenticate' command
+	 * @param handler handler
+	 */
+	beforeStdAuthenticate(handler: StdAuthenticateBeforeHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdAuthenticate), handler)
+		return this
+	}
+
+	/**
+	 * Add an after handler for 'std:authenticate' command
+	 * @param handler handler
+	 */
+	afterStdAuthenticate(handler: StdAuthenticateAfterHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdAuthenticate), handler)
 		return this
 	}
 
