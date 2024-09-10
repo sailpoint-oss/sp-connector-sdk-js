@@ -13,6 +13,7 @@ export enum StandardCommand {
 	StdAccountRead = 'std:account:read',
 	StdAccountUnlock = 'std:account:unlock',
 	StdAccountUpdate = 'std:account:update',
+	StdAuthenticate = 'std:authenticate',
 	StdEntitlementList = 'std:entitlement:list',
 	StdEntitlementRead = 'std:entitlement:read',
 	StdSpecRead = 'std:spec:read',
