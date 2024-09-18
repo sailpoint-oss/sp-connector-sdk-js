@@ -19,6 +19,8 @@ import {
 	StdAccountUpdateOutput,
 	StdAuthenticateInput,
 	StdAuthenticateOutput,
+	StdConfigOptionsInput,
+	StdConfigOptionsOutput,
 	StdEntitlementListInput,
 	StdEntitlementListOutput,
 	StdEntitlementReadInput,
@@ -132,3 +134,8 @@ export type StdSourceDataReadHandler = (
 	res: Response<StdSourceDataReadOutput>
 ) => Promise<void>
 export type CommandHandler = (context: Context, input: any, res: Response<any>) => Promise<void>
+export type StdConfigOptionsHandler = (
+	context: Context,
+	input: StdConfigOptionsInput,
+	res: Response<StdConfigOptionsOutput>
+) => Promise<void>

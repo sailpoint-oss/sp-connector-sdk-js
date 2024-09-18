@@ -33,6 +33,8 @@ import {
 	StdSourceDataDiscoverAfterHandler,
 	StdSourceDataReadBeforeHandler,
 	StdSourceDataReadAfterHandler,
+	StdConfigOptionsAfterHandler,
+	StdConfigOptionsBeforeHandler
 } from './connector-customizer-handler'
 
 /**
@@ -223,6 +225,24 @@ export class ConnectorCustomizer {
 		return this
 	}
 
+
+	/**
+	 * Add a before handler for 'std:config-options:read' command
+	 * @param handler handler
+	 */
+	beforeStdConfigOptions(handler: StdConfigOptionsBeforeHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdConfigOptions), handler)
+		return this
+	}
+
+	/**
+	 * Add an after handler for 'std:config-options:read' command
+	 * @param handler handler
+	 */
+	afterStdConfigOptions(handler: StdConfigOptionsAfterHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdConfigOptions), handler)
+		return this
+	}
 	/**
 	 * Add a before handler for 'std:entitlement:read' command
 	 * @param handler handler

@@ -21,6 +21,7 @@ export enum StandardCommand {
 	StdChangePassword = 'std:change-password',
 	StdSourceDataDiscover = 'std:source-data:discover',
 	StdSourceDataRead = 'std:source-data:read',
+	StdConfigOptions = 'std:config-options:read',
 }
 
 /**
@@ -169,7 +170,7 @@ export type EntitlementSchema = Schema & {
 }
 
 /**
- * Granular result for an attribute to indicate partial attribule level success & warning & failure 
+ * Granular result for an attribute to indicate partial attribule level success & warning & failure
  */
 export type Result = {
 	attribute: string,
@@ -198,4 +199,11 @@ export type ResultMessage = {
 export enum ResultMessageLevel {
 	WARN = 'WARN',
 	ERROR = 'ERROR',
+}
+
+/**
+ * Data type for config options
+ */
+export type ConfigOptions = {
+	[configOptions: string]: string | string[] | Record<string, string>[]
 }
