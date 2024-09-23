@@ -33,6 +33,8 @@ import {
 	StdSourceDataDiscoverAfterHandler,
 	StdSourceDataReadBeforeHandler,
 	StdSourceDataReadAfterHandler,
+	StdPartitionListBeforeHandler,
+	StdPartitionListAfterHandler
 } from './connector-customizer-handler'
 
 /**
@@ -301,6 +303,24 @@ export class ConnectorCustomizer {
 	 */
 	afterStdSourceDataRead(handler: StdSourceDataReadAfterHandler): this {
 		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdSourceDataRead), handler)
+		return this
+	}
+
+	/**
+	 * Add a before handler for 'std:partitions:list' command
+	 * @param handler handler
+	 */
+	beforeStdPartitionList(handler: StdPartitionListBeforeHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdPartitionsList), handler)
+		return this
+	}
+
+	/**
+	 * Add an after handler for 'std:partitions:list' command
+	 * @param handler handler
+	 */
+	afterStdPartitionList(handler: StdPartitionListAfterHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdPartitionsList), handler)
 		return this
 	}
 
