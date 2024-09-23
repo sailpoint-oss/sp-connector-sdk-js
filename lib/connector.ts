@@ -19,14 +19,17 @@ import {
 	StdChangePasswordHandler,
 	StdSourceDataDiscoverHandler,
 	StdSourceDataReadHandler,
+	StdPartitionListHandler
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
-import { StandardCommand } from './commands'
+import { StandardCommand, StdPartitionListOutput } from './commands'
 import { RawResponse, ResponseStream, ResponseType } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
 import { contextState } from './async-context';
 import { ConnectorCustomizer, CustomizerType as CustomizerType } from './connector-customizer'
 import { ConnectorCustomizerHandler } from './connector-customizer-handler'
+import { Partition } from './partition'
+import { readConfig } from './config'
 
 const SDK_VERSION = 1
 
@@ -185,6 +188,14 @@ export class Connector {
 		return this.command(StandardCommand.StdSourceDataRead, handler)
 	}
 
+	/**
+	 * Add a handler for 'std:partitions:list' command
+	 * @param handler handler
+	 */
+	stdPartitionList(handler: StdPartitionListHandler): this {
+		return this.command(StandardCommand.StdPartitionsList, handler)
+	}
+
 
 	/**
 	 * Add a handler for a command of specified type
@@ -213,7 +224,34 @@ export class Connector {
 			throw new Error(`unsupported command: ${type}`)
 		}
 
-		await contextState.run(context, async () => {
+		const config = await readConfig();
+        
+		const isPatitionEnabled = config.partitionAggregationEnabled;
+		var partitionList: Array<Partition> | undefined;
+
+		if (type === StandardCommand.StdAccountList && isPatitionEnabled) {
+			const getIteratePartitionhandler: CommandHandler | undefined = this._handlers.get("std:partitions:list")
+			if (getIteratePartitionhandler) {
+				partitionList = await getIteratePartitionhandler(context, input, new ResponseStream<any>(res))
+			}
+		}
+
+		if (!partitionList) {
+			const partitionTasks: Promise<any>[] = []
+			for (const partition of partitionList!) {
+				input.partition = partition
+				partitionTasks.push(
+						this.runContextState(type, context, input, res, handler, customizer)
+				)
+			}
+			await Promise.all(partitionTasks)
+		} else {
+			await this.runContextState(type, context, input, res, handler, customizer)
+		}
+	}
+
+	runContextState(type: string, context: Context, input: any, res: Writable, handler: CommandHandler, customizer?: ConnectorCustomizer): Promise<any> {
+		return contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
 			if (!customizer) {
 				return handler(context, input, new ResponseStream<any>(res))
@@ -254,7 +292,7 @@ export class Connector {
 			// the interceptor could be ended but is still flushing while this _exec method is resolved. That would cause the writable
 			// stream that get passed into this _exec method to end as well, and then receive another write call, causing that stream to fail.
 			let interceptorComplete = new Promise<void>((resolve, reject) => {
-				resInterceptor.on('finish', function(){
+				resInterceptor.on('finish', function () {
 					resolve()
 				})
 
@@ -267,7 +305,6 @@ export class Connector {
 			resInterceptor.end()
 			await interceptorComplete
 		})
-
 	}
 }
 

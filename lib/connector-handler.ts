@@ -32,6 +32,8 @@ import {
 	StdSourceDataReadInput,
 	StdSourceDataReadOutput,
 	StdTestConnectionInput,
+	StdPartitionListInput,
+	StdPartitionListOutput
 } from './commands'
 import { Response } from './response'
 
@@ -131,4 +133,9 @@ export type StdSourceDataReadHandler = (
 	input: StdSourceDataReadInput,
 	res: Response<StdSourceDataReadOutput>
 ) => Promise<void>
-export type CommandHandler = (context: Context, input: any, res: Response<any>) => Promise<void>
+export type StdPartitionListHandler = (
+	context: Context,
+	input: StdPartitionListInput,
+	res: Response<StdPartitionListOutput>
+) => Promise<any>
+export type CommandHandler = (context: Context, input: any, res: Response<any>) => Promise<any>

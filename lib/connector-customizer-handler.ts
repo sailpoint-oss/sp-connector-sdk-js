@@ -28,6 +28,8 @@ import {
 	StdSourceDataReadInput,
 	StdSourceDataDiscoverOutput,
 	StdSourceDataReadOutput,
+	StdPartitionListInput,
+	StdPartitionListOutput
 } from './commands'
 import { Context } from './connector-handler'
 
@@ -171,5 +173,15 @@ export type StdSourceDataReadAfterHandler = (
 	context: Context,
 	output: StdSourceDataReadOutput
 ) => Promise<StdSourceDataReadOutput>
+
+export type StdPartitionListBeforeHandler = (
+	context: Context,
+	input: StdPartitionListInput
+) => Promise<StdPartitionListInput>
+
+export type StdPartitionListAfterHandler = (
+	context: Context,
+	output: StdPartitionListOutput
+) => Promise<StdPartitionListOutput>
 
 export type ConnectorCustomizerHandler = (context: Context, input: any) => Promise<any>

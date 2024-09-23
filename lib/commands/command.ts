@@ -21,6 +21,7 @@ export enum StandardCommand {
 	StdChangePassword = 'std:change-password',
 	StdSourceDataDiscover = 'std:source-data:discover',
 	StdSourceDataRead = 'std:source-data:read',
+	StdPartitionsList = 'std:partitions:list'
 }
 
 /**
