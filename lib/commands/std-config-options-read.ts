@@ -13,5 +13,5 @@ export type StdConfigOptionsInput = ObjectInput & {
  * Output object of `std:config-options:read` command
  */
 export type StdConfigOptionsOutput = ObjectOutput & {
-	output: ConfigOptions
+	options: ConfigOptions
 }
