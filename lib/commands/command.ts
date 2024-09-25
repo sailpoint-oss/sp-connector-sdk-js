@@ -205,5 +205,5 @@ export enum ResultMessageLevel {
  * Data type for config options
  */
 export type ConfigOptions = {
-	[output: string]: string | string[] | Record<string, string>[]
+	[options: string]: string | string[] | Record<string, string>[]
 }
