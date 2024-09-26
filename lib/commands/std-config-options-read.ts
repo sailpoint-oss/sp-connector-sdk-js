@@ -5,13 +5,13 @@ import {ConfigOptions, ObjectInput, ObjectOutput} from './command'
 /**
  * Input object of `std:config-options:read` command
  */
-export type StdConfigOptionsInput = ObjectInput & {
+export type StdConfigOptionsInput = {
     key: string
 }
 
 /**
  * Output object of `std:config-options:read` command
  */
-export type StdConfigOptionsOutput = ObjectOutput & {
+export type StdConfigOptionsOutput = {
 	options: ConfigOptions
 }
