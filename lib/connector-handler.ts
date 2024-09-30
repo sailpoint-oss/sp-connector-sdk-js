@@ -47,7 +47,7 @@ export interface Context {
 	[prop: string]: any
 
 	reloadConfig(): Promise<any>
-	assumAwsRole(arm: string): Promise<CredentialResponse>
+	assumAwsRole(arn: string): Promise<CredentialResponse>
 }
 
 export class CredentialResponse {
