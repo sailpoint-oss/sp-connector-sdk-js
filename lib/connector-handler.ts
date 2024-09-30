@@ -17,6 +17,8 @@ import {
 	StdAccountUnlockOutput,
 	StdAccountUpdateInput,
 	StdAccountUpdateOutput,
+	StdAuthenticateInput,
+	StdAuthenticateOutput,
 	StdEntitlementListInput,
 	StdEntitlementListOutput,
 	StdEntitlementReadInput,
@@ -47,6 +49,7 @@ export interface Context {
 	[prop: string]: any
 
 	reloadConfig(): Promise<any>
+
 	assumAwsRole(arn: string): Promise<CredentialResponse>
 }
 
@@ -60,6 +63,7 @@ export class CredentialResponse {
 		this.secretAccessKey = secretAccessKey
 		this.sessionToken = sessionToken
 	}
+
 }
 
 export type StdAccountCreateHandler = (
@@ -106,6 +110,11 @@ export type StdAccountUpdateHandler = (
 	context: Context,
 	input: StdAccountUpdateInput,
 	res: Response<StdAccountUpdateOutput>
+) => Promise<void>
+export type StdAuthenticateHandler = (
+	context: Context,
+	input: StdAuthenticateInput,
+	res: Response<StdAuthenticateOutput>
 ) => Promise<void>
 export type StdEntitlementListHandler = (
 	context: Context,

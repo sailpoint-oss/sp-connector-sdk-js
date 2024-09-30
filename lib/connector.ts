@@ -12,6 +12,7 @@ import {
 	StdAccountReadHandler,
 	StdAccountUnlockHandler,
 	StdAccountUpdateHandler,
+	StdAuthenticateHandler,
 	StdEntitlementListHandler,
 	StdEntitlementReadHandler,
 	StdTestConnectionHandler,
@@ -126,6 +127,14 @@ export class Connector {
 	 */
 	stdAccountUpdate(handler: StdAccountUpdateHandler): this {
 		return this.command(StandardCommand.StdAccountUpdate, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:authenticate' command
+	 * @param handler handler
+	 */
+	stdAuthenticate(handler: StdAuthenticateHandler): this {
+		return this.command(StandardCommand.StdAuthenticate, handler)
 	}
 
 	/**
