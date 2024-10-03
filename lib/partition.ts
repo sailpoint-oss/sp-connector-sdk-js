@@ -1,3 +1,5 @@
+/* Copyright (c) 2024. SailPoint Technologies, Inc. All rights reserved. */
+
 export class Partition {
     public name: string
 	public size: number
