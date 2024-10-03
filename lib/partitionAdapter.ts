@@ -7,30 +7,30 @@ export interface PartitionedAdapter {
 }
 
 export class Partitioned {
-	public h;
+	public partitionAdapter;
 
-	constructor(h: PartitionedAdapter) {
-		this.h = h;
+	constructor(partitionAdapter: PartitionedAdapter) {
+		this.partitionAdapter = partitionAdapter;
 	}
 
 	async handler(context: Context, input: StdAccountListInput, res: Response<StdAccountListOutput>): Promise<void> {
-
 		const config = await readConfig();
 		const isPatitionEnabled = config.partitionAggregationEnabled;
 		var partitionList: Array<Partition> | undefined;
 
+		// Get the partitions from the connector
 		if (isPatitionEnabled) {
-			partitionList = await this.h.getPartitions(context, input);
+			partitionList = await this.partitionAdapter.getPartitions(context, input);
 		}
 
 		if (!partitionList) {
 			let promises = [];
 			for (const partition of partitionList!) {
-				promises.push(this.h.list(context, input, res, partition));
+				promises.push(this.partitionAdapter.list(context, input, res, partition));
 			}
 			await Promise.all(promises);
 		} else {
-			return await this.h.list(context, input, res, undefined);
+			return await this.partitionAdapter.list(context, input, res, undefined);
 		}
 	}
 }
