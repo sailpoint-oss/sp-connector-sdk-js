@@ -49,8 +49,30 @@ export interface Context {
 	[prop: string]: any
 
 	reloadConfig(): Promise<any>
+	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse>;
 }
-
+export class AssumeAwsRoleRequest {
+	arnRole: string;
+	externalId     : string;
+	roleSessionName :string;
+	constructor(externalArnRole: string, externalId: string, roleSessionName: string) {
+		this.arnRole = externalArnRole;
+		this.externalId = externalId;
+		this.roleSessionName = roleSessionName;
+	}
+}
+export class AssumeAwsRoleResponse {
+    accessKeyId: string;
+    secretAccessKey: string;
+    sessionToken: string;
+	expiration : number;
+    constructor(accessKeyId: string, secretAccessKey: string, sessionToken: string, expiration: number) {
+		this.accessKeyId = accessKeyId;
+		this.secretAccessKey = secretAccessKey;
+		this.sessionToken = sessionToken;
+		this.expiration = expiration;
+	}
+}
 export type StdAccountCreateHandler = (
 	context: Context,
 	input: StdAccountCreateInput,

@@ -9,7 +9,7 @@ import { major } from 'semver'
 
 import packageJson from '../package.json'
 import { createConnectorCustomizer } from './connector-customizer'
-import { Context } from './connector-handler'
+import { Context, AssumeAwsRoleRequest, AssumeAwsRoleResponse } from './connector-handler'
 import path from 'path'
 
 const mockFS = require('mock-fs');
@@ -21,6 +21,10 @@ class MockContext implements Context {
 
 	reloadConfig(): Promise<any> {
 		return Promise.resolve({})
+	}
+
+	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse> {
+		return Promise.resolve(new AssumeAwsRoleResponse('ccessKeyId', 'secretAccessKey', 'sessionToken', 123))
 	}
 }
 
@@ -332,7 +336,7 @@ describe('exec handlers', () => {
 				}
 			})
 		}))
-		
+
 	})
 
 	it('should execute custom handler with connector request', async () => {
