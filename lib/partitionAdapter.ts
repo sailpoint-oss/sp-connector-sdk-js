@@ -41,12 +41,20 @@ export class PartitionHandler {
 		}
 
 		if (partitionList != undefined && partitionList.length > 0) {
-			this.childLogger.info(`Number of partitons returned - ${partitionList.length}`)
+			let partitionCount = partitionList.length;
+			this.childLogger.info(`Number of partitons returned - ${partitionCount}`)
 			let promises = [];
+			let partitionsDone = 0
 			for (const partition of partitionList!) {
-				promises.push(this.partitionAdapter.list(context, input, res, partition));
+				promises.push((async() => {
+					let startTime = new Date().getTime();
+    				await this.partitionAdapter.list(context, input, res, partition);
+					let endTime = new Date().getTime();
+    				partitionsDone += 1
+    				this.childLogger.info(`Partition ${partitionsDone} of ${partitionCount} done after ${endTime - startTime} milliseconds`)
+				})());
 			}
-			await Promise.all(promises);
+			await Promise.all(promises)
 		} else {
 			return await this.partitionAdapter.list(context, input, res, undefined);
 		}
