@@ -45,12 +45,13 @@ describe('class properties and methods', () => {
 			.stdAccountUnlock(async (context, input, res) => {})
 			.stdAccountUpdate(async (context, input, res) => {})
 			.stdAuthenticate(async (context, input, res) => {})
+			.stdConfigOptions(async (context, input, res) => {})
 			.stdEntitlementList(async (context, input, res) => {})
 			.stdEntitlementRead(async (context, input, res) => {})
 			.stdTestConnection(async (context, input, res) => {})
 			.command('mock:custom:command', async (context, input, res) => {})
 
-		expect(connector.handlers.size).toBe(15)
+		expect(connector.handlers.size).toBe(16)
 	})
 })
 
@@ -170,6 +171,21 @@ describe('exec handlers', () => {
 		)
 	})
 
+
+	it('should execute stdConfigOptionsHandler', async () => {
+		const connector = createConnector().stdConfigOptions(async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input.key).toStrictEqual('mockKey')
+			expect(res).toBeInstanceOf(ResponseStream)
+		})
+
+		await connector._exec(
+			StandardCommand.StdConfigOptions,
+			MOCK_CONTEXT,
+			{ key: 'mockKey'},
+			new PassThrough({ objectMode: true })
+		)
+	})
 	it('should execute stdEntitlementListHandler', async () => {
 		const connector = createConnector().stdEntitlementList(async (context, input, res) => {
 			expect(context).toBeDefined()
@@ -332,7 +348,7 @@ describe('exec handlers', () => {
 				}
 			})
 		}))
-		
+
 	})
 
 	it('should execute custom handler with connector request', async () => {

@@ -18,6 +18,8 @@ import {
 	StdAccountListInput,
 	StdAuthenticateInput,
 	StdAuthenticateOutput,
+	StdConfigOptionsInput,
+	StdConfigOptionsOutput,
 	StdEntitlementReadInput,
 	StdEntitlementReadOutput,
 	StdEntitlementListInput,
@@ -173,3 +175,13 @@ export type StdSourceDataReadAfterHandler = (
 ) => Promise<StdSourceDataReadOutput>
 
 export type ConnectorCustomizerHandler = (context: Context, input: any) => Promise<any>
+
+export type StdConfigOptionsBeforeHandler = (
+	context: Context,
+	input: StdConfigOptionsInput
+) => Promise<StdConfigOptionsInput>
+
+export type StdConfigOptionsAfterHandler = (
+	context: Context,
+	output: StdConfigOptionsOutput
+) => Promise<StdConfigOptionsOutput>

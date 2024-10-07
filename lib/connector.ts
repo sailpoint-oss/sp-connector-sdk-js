@@ -19,6 +19,7 @@ import {
 	StdChangePasswordHandler,
 	StdSourceDataDiscoverHandler,
 	StdSourceDataReadHandler,
+	StdConfigOptionsHandler
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import { StandardCommand } from './commands'
@@ -135,6 +136,14 @@ export class Connector {
 	 */
 	stdAuthenticate(handler: StdAuthenticateHandler): this {
 		return this.command(StandardCommand.StdAuthenticate, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:config-options:read' command
+	 * @param handler handler
+	 */
+	stdConfigOptions(handler: StdConfigOptionsHandler): this {
+		return this.command(StandardCommand.StdConfigOptions, handler)
 	}
 
 	/**
