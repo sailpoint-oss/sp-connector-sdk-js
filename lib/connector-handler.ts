@@ -52,11 +52,11 @@ export interface Context {
 	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse>;
 }
 export class AssumeAwsRoleRequest {
-	arnRole: string;
+	roleArn: string;
 	externalId     : string;
 	roleSessionName :string;
-	constructor(externalArnRole: string, externalId: string, roleSessionName: string) {
-		this.arnRole = externalArnRole;
+	constructor(roleArn: string, externalId: string, roleSessionName: string) {
+		this.roleArn = roleArn;
 		this.externalId = externalId;
 		this.roleSessionName = roleSessionName;
 	}
