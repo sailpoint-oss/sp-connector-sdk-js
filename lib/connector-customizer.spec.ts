@@ -2,7 +2,7 @@
 
 import { StandardCommand } from './commands'
 import { CustomizerType, createConnectorCustomizer } from './connector-customizer'
-import { Context } from './connector-handler'
+import { Context, AssumeAwsRoleRequest, AssumeAwsRoleResponse } from './connector-handler'
 
 class MockContext implements Context {
 	config = {}
@@ -12,6 +12,11 @@ class MockContext implements Context {
 	reloadConfig(): Promise<any> {
 		return Promise.resolve({})
 	}
+
+	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse> {
+		return Promise.resolve(new AssumeAwsRoleResponse('ccessKeyId', 'secretAccessKey', 'sessionToken', 123))
+	}
+
 }
 
 const MOCK_CONTEXT = new MockContext()
