@@ -67,8 +67,8 @@ export class AssumeAwsRoleResponse {
     accessKeyId: string;
     secretAccessKey: string;
     sessionToken: string;
-	expiration : number;
-    constructor(accessKeyId: string, secretAccessKey: string, sessionToken: string, expiration: number) {
+	expiration : string;
+    constructor(accessKeyId: string, secretAccessKey: string, sessionToken: string, expiration: string) {
 		this.accessKeyId = accessKeyId;
 		this.secretAccessKey = secretAccessKey;
 		this.sessionToken = sessionToken;
