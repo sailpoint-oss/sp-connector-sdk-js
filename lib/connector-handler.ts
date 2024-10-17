@@ -21,6 +21,8 @@ import {
 	StdAuthenticateOutput,
 	StdConfigOptionsInput,
 	StdConfigOptionsOutput,
+	StdApplicationDiscoveryInput,
+	StdApplicationDiscoveryOutput,
 	StdEntitlementListInput,
 	StdEntitlementListOutput,
 	StdEntitlementReadInput,
@@ -160,4 +162,9 @@ export type StdConfigOptionsHandler = (
 	context: Context,
 	input: StdConfigOptionsInput,
 	res: Response<StdConfigOptionsOutput>
+) => Promise<void>
+export type StdApplicationDiscoveryHandler = (
+	context: Context,
+	input: StdApplicationDiscoveryInput,
+	res: Response<StdApplicationDiscoveryOutput>
 ) => Promise<void>

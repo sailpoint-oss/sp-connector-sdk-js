@@ -20,6 +20,8 @@ import {
 	StdAuthenticateOutput,
 	StdConfigOptionsInput,
 	StdConfigOptionsOutput,
+	StdApplicationDiscoveryInput,
+	StdApplicationDiscoveryOutput,
 	StdEntitlementReadInput,
 	StdEntitlementReadOutput,
 	StdEntitlementListInput,
@@ -185,3 +187,13 @@ export type StdConfigOptionsAfterHandler = (
 	context: Context,
 	output: StdConfigOptionsOutput
 ) => Promise<StdConfigOptionsOutput>
+
+export type StdApplicationDiscoveryBeforeHandler = (
+	context: Context,
+	input: StdApplicationDiscoveryInput
+) => Promise<StdApplicationDiscoveryInput>
+
+export type StdApplicationDiscoveryAfterHandler = (
+	context: Context,
+	output: StdApplicationDiscoveryOutput
+) => Promise<StdApplicationDiscoveryOutput>

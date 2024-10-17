@@ -34,7 +34,9 @@ import {
 	StdSourceDataReadBeforeHandler,
 	StdSourceDataReadAfterHandler,
 	StdConfigOptionsAfterHandler,
-	StdConfigOptionsBeforeHandler
+	StdConfigOptionsBeforeHandler,
+	StdApplicationDiscoveryBeforeHandler,
+	StdApplicationDiscoveryAfterHandler
 } from './connector-customizer-handler'
 
 /**
@@ -243,6 +245,25 @@ export class ConnectorCustomizer {
 		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdConfigOptions), handler)
 		return this
 	}
+
+	/**
+	 * Add a before handler for 'std:application-discovery:list' command
+	 * @param handler handler
+	 */
+	beforeStdApplicationDiscovery(handler: StdApplicationDiscoveryBeforeHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdApplicationDiscovery), handler)
+		return this
+	}
+
+	/**
+	 * Add an after handler for 'std:application-discovery:list' command
+	 * @param handler handler
+	 */
+	afterStdApplicationDiscovery(handler: StdApplicationDiscoveryAfterHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdApplicationDiscovery), handler)
+		return this
+	}
+
 	/**
 	 * Add a before handler for 'std:entitlement:read' command
 	 * @param handler handler

@@ -45,6 +45,8 @@ describe('class properties and methods', () => {
 			.afterStdAuthenticate(async (context, output) => {return output})
 			.beforeStdConfigOptions(async (context, input) => {return input})
 			.afterStdConfigOptions(async (context, output) => {return output})
+			.beforeStdApplicationDiscovery(async (context, input) => {return input})
+			.afterStdApplicationDiscovery(async (context, output) => {return output})
 			.beforeStdEntitlementRead(async (context, input) => {return input})
 			.afterStdEntitlementRead(async (context, output) => {return output})
 			.beforeStdEntitlementList(async (context, input) => {return input})
@@ -55,7 +57,7 @@ describe('class properties and methods', () => {
 			.afterStdSourceDataDiscover(async (context, output) => {return output})
 			.afterStdSourceDataRead(async (context, output) => {return output})
 
-		expect(customizer.handlers.size).toBe(30)
+		expect(customizer.handlers.size).toBe(32)
 	})
 })
 
