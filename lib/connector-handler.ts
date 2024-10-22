@@ -163,7 +163,7 @@ export type StdConfigOptionsHandler = (
 	input: StdConfigOptionsInput,
 	res: Response<StdConfigOptionsOutput>
 ) => Promise<void>
-export type StdApplicationDiscoveryHandler = (
+export type StdApplicationDiscoveryListHandler = (
 	context: Context,
 	input: StdApplicationDiscoveryInput,
 	res: Response<StdApplicationDiscoveryOutput>

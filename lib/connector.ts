@@ -20,7 +20,7 @@ import {
 	StdSourceDataDiscoverHandler,
 	StdSourceDataReadHandler,
 	StdConfigOptionsHandler,
-	StdApplicationDiscoveryHandler
+	StdApplicationDiscoveryListHandler
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import { StandardCommand } from './commands'
@@ -151,7 +151,7 @@ export class Connector {
 	 * Add a handler for 'std:application-discovery:list' command
 	 * @param handler handler
 	 */
-	stdApplicationDiscovery(handler: StdApplicationDiscoveryHandler): this {
+	stdApplicationDiscovery(handler: StdApplicationDiscoveryListHandler): this {
 		return this.command(StandardCommand.StdApplicationDiscovery, handler)
 	}
 
