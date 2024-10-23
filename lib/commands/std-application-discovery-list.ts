@@ -3,12 +3,12 @@
 /**
  * Input object of `std:application-discovery:list` command
  */
-export type StdApplicationDiscoveryInput = {}
+export type StdApplicationDiscoveryInputList = {}
 
 /**
  * Output object of `std:application-discovery:list` command
  */
-export type StdApplicationDiscoveryOutput = {
+export type StdApplicationDiscoveryOutputList = {
 	discoveredApplication: DiscoveredApplication
 }
 

@@ -151,8 +151,8 @@ export class Connector {
 	 * Add a handler for 'std:application-discovery:list' command
 	 * @param handler handler
 	 */
-	stdApplicationDiscovery(handler: StdApplicationDiscoveryListHandler): this {
-		return this.command(StandardCommand.StdApplicationDiscovery, handler)
+	stdApplicationDiscoveryList(handler: StdApplicationDiscoveryListHandler): this {
+		return this.command(StandardCommand.StdApplicationDiscoveryList, handler)
 	}
 
 	/**

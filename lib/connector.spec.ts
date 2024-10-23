@@ -50,7 +50,7 @@ describe('class properties and methods', () => {
 			.stdAccountUpdate(async (context, input, res) => {})
 			.stdAuthenticate(async (context, input, res) => {})
 			.stdConfigOptions(async (context, input, res) => {})
-			.stdApplicationDiscovery(async (context, input, res) => {})
+			.stdApplicationDiscoveryList(async (context, input, res) => {})
 			.stdEntitlementList(async (context, input, res) => {})
 			.stdEntitlementRead(async (context, input, res) => {})
 			.stdTestConnection(async (context, input, res) => {})
@@ -192,15 +192,15 @@ describe('exec handlers', () => {
 		)
 	})
 
-	it('should execute stdApplicationDiscoveryHandler', async () => {
-		const connector = createConnector().stdApplicationDiscovery(async (context, input, res) => {
+	it('should execute stdApplicationDiscoveryListHandler', async () => {
+		const connector = createConnector().stdApplicationDiscoveryList(async (context, input, res) => {
 			expect(context).toBeDefined()
 			expect(input).toBeUndefined()
 			expect(res).toBeInstanceOf(ResponseStream)
 		})
 
 		await connector._exec(
-			StandardCommand.StdApplicationDiscovery,
+			StandardCommand.StdApplicationDiscoveryList,
 			MOCK_CONTEXT,
 			undefined,
 			new PassThrough({ objectMode: true })
