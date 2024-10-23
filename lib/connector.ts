@@ -19,7 +19,8 @@ import {
 	StdChangePasswordHandler,
 	StdSourceDataDiscoverHandler,
 	StdSourceDataReadHandler,
-	StdConfigOptionsHandler
+	StdConfigOptionsHandler,
+	StdApplicationDiscoveryListHandler
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import { StandardCommand } from './commands'
@@ -144,6 +145,14 @@ export class Connector {
 	 */
 	stdConfigOptions(handler: StdConfigOptionsHandler): this {
 		return this.command(StandardCommand.StdConfigOptions, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:application-discovery:list' command
+	 * @param handler handler
+	 */
+	stdApplicationDiscoveryList(handler: StdApplicationDiscoveryListHandler): this {
+		return this.command(StandardCommand.StdApplicationDiscoveryList, handler)
 	}
 
 	/**
