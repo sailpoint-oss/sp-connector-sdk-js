@@ -20,18 +20,27 @@ export const logLevel = (): string => {
 
 export const logger = pino({
     timestamp:false,
-	messageKey: 'message',
+		messageKey: 'message',
     level: logLevel(),
     base:undefined,
-	formatters: {
-		level: (label: string) => {
-			return { level: label.toUpperCase() }
+		formatters: {
+			level: (label: string) => {
+				return { level: label.toUpperCase() }
+			},
 		},
-	},
-    mixin(){
-        return { 
-            ...contextState.getStore()
-        };
+    mixin() {
+			const ctx = contextState.getStore();
+			if (ctx === undefined) {
+				return {}
+			}
+
+			return {
+					id: ctx.id,
+					version: ctx.version,
+					invocationId: ctx.invocationId,
+					requestId: ctx.requestId,
+					commandType: ctx.commandType,
+			}
     },
     mixinMergeStrategy(mergeObject:any, mixinObject:any) {
         return {...mergeObject, ...mixinObject}
