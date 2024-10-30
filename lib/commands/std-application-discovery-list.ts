@@ -17,7 +17,9 @@ export type StdApplicationDiscoveryOutputList = {
  */
 export type DiscoveredApplication = {
 	id: string,
-	name: string,
+	primaryAppName: string,
+	secondaryAppName: string
 	description: string,
-	status: string
+	status: string,
+	extraProperties: Map<string, object>
 }
