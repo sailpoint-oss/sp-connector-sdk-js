@@ -50,12 +50,13 @@ describe('class properties and methods', () => {
 			.stdAccountUpdate(async (context, input, res) => {})
 			.stdAuthenticate(async (context, input, res) => {})
 			.stdConfigOptions(async (context, input, res) => {})
+			.stdApplicationDiscoveryList(async (context, input, res) => {})
 			.stdEntitlementList(async (context, input, res) => {})
 			.stdEntitlementRead(async (context, input, res) => {})
 			.stdTestConnection(async (context, input, res) => {})
 			.command('mock:custom:command', async (context, input, res) => {})
 
-		expect(connector.handlers.size).toBe(16)
+		expect(connector.handlers.size).toBe(17)
 	})
 })
 
@@ -190,6 +191,22 @@ describe('exec handlers', () => {
 			new PassThrough({ objectMode: true })
 		)
 	})
+
+	it('should execute stdApplicationDiscoveryListHandler', async () => {
+		const connector = createConnector().stdApplicationDiscoveryList(async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input).toBeUndefined()
+			expect(res).toBeInstanceOf(ResponseStream)
+		})
+
+		await connector._exec(
+			StandardCommand.StdApplicationDiscoveryList,
+			MOCK_CONTEXT,
+			undefined,
+			new PassThrough({ objectMode: true })
+		)
+	})
+
 	it('should execute stdEntitlementListHandler', async () => {
 		const connector = createConnector().stdEntitlementList(async (context, input, res) => {
 			expect(context).toBeDefined()

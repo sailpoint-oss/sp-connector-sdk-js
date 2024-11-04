@@ -22,6 +22,7 @@ export enum StandardCommand {
 	StdSourceDataDiscover = 'std:source-data:discover',
 	StdSourceDataRead = 'std:source-data:read',
 	StdConfigOptions = 'std:config-options:read',
+	StdApplicationDiscoveryList = 'std:application-discovery:list',
 }
 
 /**
