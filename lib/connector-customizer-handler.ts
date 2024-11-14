@@ -25,6 +25,7 @@ import {
 	StdEntitlementReadInput,
 	StdEntitlementReadOutput,
 	StdEntitlementListInput,
+	StdTestConnectionInput,
 	StdTestConnectionOutput,
 	StdChangePasswordInput,
 	StdChangePasswordOutput,
@@ -38,8 +39,8 @@ import { Context } from './connector-handler'
 
 export type StdTestConnectionBeforeHandler = (
 	context: Context,
-	input: undefined
-) => Promise<void>
+	input: StdTestConnectionInput
+) => Promise<StdTestConnectionInput>
 
 export type StdTestConnectionAfterHandler = (
 	context: Context,
