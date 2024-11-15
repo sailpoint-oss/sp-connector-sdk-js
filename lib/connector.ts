@@ -263,6 +263,9 @@ export class Connector {
 						} catch (e: any) {
 							callback(e)
 						}
+					} else {
+						res.write(rawResponse)
+						callback()
 					}
 
 				},

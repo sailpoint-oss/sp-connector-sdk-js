@@ -294,6 +294,36 @@ describe('exec handlers', () => {
 		await connector._exec(customCommandType, MOCK_CONTEXT, undefined, new PassThrough({ objectMode: true }))
 	})
 
+	it('should customizer handler handle output with mixed response types', async () => {
+		const connector = createConnector()
+		.stdTestConnection(async (context, input, res) => {
+			expect(input).toEqual({})
+
+			res.keepAlive()
+			res.send({})
+		})
+
+		const customizer = createConnectorCustomizer()
+		.beforeStdTestConnection(async (context, input) => {
+			expect(input).toEqual({})
+			return input
+		})
+		.afterStdTestConnection(async (context, output) => {
+			expect(output).toEqual({})
+			return output
+		})
+
+		await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, {},
+			new PassThrough({ objectMode: true }).on('data', (chunk) => {
+				if (chunk.type == 'keepAlive') {
+					expect(chunk.data).toEqual({})
+				}
+				if (chunk.type == 'data') {
+					expect(chunk.data).toEqual({})
+				}
+		}), customizer)
+	})
+
 	it('should customizer handler customize input and output', async () => {
 		const connector = createConnector()
 		.stdAccountCreate(async (context, input, res) => {
