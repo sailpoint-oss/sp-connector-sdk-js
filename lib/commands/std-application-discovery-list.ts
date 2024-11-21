@@ -13,6 +13,6 @@ export type StdApplicationDiscoveryOutputList = {
 	primaryAppName: string,
 	secondaryAppName: string
 	description: string,
-	status: string
+	status: string,
 	extraProperties: Map<string, object>
 }
