@@ -11,8 +11,8 @@ export type StdApplicationDiscoveryInputList = {}
 export type StdApplicationDiscoveryOutputList = {
 	id: string,
 	primaryAppName: string,
-	secondaryAppName: string
+	secondaryAppName?: string
 	description: string,
-	status: string,
-	extraProperties: Map<string, object>
+	status?: string,
+	[properties: string]: string | string[] | undefined |  Record<string, string>[]
 }
