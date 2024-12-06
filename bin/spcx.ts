@@ -32,7 +32,7 @@ if (!argv[0]) {
 	runDev()
 }
 
-// packageConnector packages connector files into a zip file 
+// packageConnector packages connector files into a zip file
 function packageConnector() {
 	const zipName = process.env.npm_package_name + '-' + process.env.npm_package_version + '.zip'
 	const archive = archiver('zip', { zlib: { level: 9 }})
@@ -64,7 +64,7 @@ function runDev() {
 	if (path.extname(connectorPath) !== '.js') {
 		throw new Error(`invalid file path: ${connectorPath}`)
 	}
-	
+
 	/**
 	 * Spawns a child process that runs TypeScript compiler (tsc) with watch option and inlineSourcemap for debugging.
 	 * spawn will fail in pure JS projects as typescript devDependency is expected to be missing
@@ -76,12 +76,12 @@ function runDev() {
 				tsc.stderr.on('data', (data) => console.error(`tsc: ${data}`))
 			})
 			.once('error', (ignored) => {})
-	
+
 		return tsc
 	}
-	
+
 	spawnTsc()
-	
+
 	/**
 	 * Loads the connector module from specified connectorPath.
 	 * Connector config is set as env var to be read via `readConfig()`.
@@ -101,16 +101,16 @@ function runDev() {
 		Object.keys(require.cache)
 			.filter((key: string) => !key.includes('node_modules'))
 			.forEach((key: string) => delete require.cache[key])
-	
+
 		return {
 			connector: typeof connector === 'function' ? await connector() : connector,
 			connectorCustomizer: typeof connectorCustomizer === 'function' ? await connectorCustomizer() : connectorCustomizer
 		}
 	}
-	
+
 	const app = express()
 		.use(express.json({ strict: true }))
-		.post('/*', async (req, res) => {
+		.post('/*path', async (req, res) => {
 			try {
 				res.type('application/x-ndjson')
 				const cmd: Command = req.body as Command
@@ -127,7 +127,7 @@ function runDev() {
 							callback()
 						},
 					})
-	
+
 					pipeline(out, res, (err) => {
 						if (err) {
 							console.error(err)
@@ -164,7 +164,7 @@ function runDev() {
 				})
 			} catch (e: any) {
 				console.error(typeof e === "string" ? e : e?.message)
-				
+
 				let errorType = ConnectorErrorType.Generic
 				if (e instanceof ConnectorError) {
 					errorType = e.type
@@ -174,7 +174,7 @@ function runDev() {
 				res.end()
 			}
 		})
-	
+
 	app.listen(port, () => {
 		console.log(`SailPoint connector local development server listening at http://localhost:${port}`)
 	})
