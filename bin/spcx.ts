@@ -112,9 +112,11 @@ function runDev() {
 		.use(express.json({ strict: true }))
 		.post('/*path', async (req, res) => {
 			try {
+				console.log("Start to create the command")
 				res.type('application/x-ndjson')
 				const cmd: Command = req.body as Command
 				await _withConfig(cmd.config, async () => {
+					console.log("Into create the command")
 					const c = await loadConnector(connectorPath)
 					const out = new Transform({
 						writableObjectMode: true,
