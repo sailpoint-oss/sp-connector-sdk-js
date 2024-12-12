@@ -175,10 +175,10 @@ function runDev() {
 			} finally {
 				res.end()
 			}
-		})
+		});
 
 	app.listen(port, () => {
 		console.log(`SailPoint connector local development server listening at http://localhost:${port}`)
-	})
+	});
 }
 
