@@ -107,75 +107,76 @@ function runDev() {
 			connectorCustomizer: typeof connectorCustomizer === 'function' ? await connectorCustomizer() : connectorCustomizer
 		}
 	}
-
 	const app = express()
 		.use(express.json({ strict: true }))
-		.post('/*path', async (req, res) => {
-			try {
-				console.log("Start to create the command")
-				res.type('application/x-ndjson')
-				const cmd: Command = req.body as Command
-				await _withConfig(cmd.config, async () => {
-					console.log("Into create the command")
-					const c = await loadConnector(connectorPath)
-					const out = new Transform({
-						writableObjectMode: true,
-						transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback) {
-							try {
-								this.push(JSON.stringify(chunk) + '\n')
-							} catch (e: any) {
-								callback(e)
-							}
-							callback()
-						},
-					})
 
-					pipeline(out, res, (err) => {
-						if (err) {
-							console.error(err)
-						}
-					})
-
-					await new Promise<void>(async (resolve, reject) => {
-						out.on('finish', () => resolve())
-						out.on('error', (e) => reject(e))
-
+	const router = express.Router()
+	router.post('/*path', async (req, res) => {
+		try {
+			console.log("Start to create the command")
+			res.type('application/x-ndjson')
+			const cmd: Command = req.body as Command
+			await _withConfig(cmd.config, async () => {
+				console.log("Into create the command")
+				const c = await loadConnector(connectorPath)
+				const out = new Transform({
+					writableObjectMode: true,
+					transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback) {
 						try {
-							if (c.connector == null && c.connectorCustomizer == null) {
-								return reject(new Error('Connector not found. Did you export it?'))
-							}
-
-							// Running connector is exists. This will also run customizer if customizer exists.
-							if (c.connector != null) {
-								return await c.connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
-									cmd.input, out, c.connectorCustomizer)
-							}
-
-							// Run customizer only
-							let output = await c.connectorCustomizer._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
-								cmd.input, out)
-							out.write(output)
-						} catch (e) {
-							reject(e)
-						} finally {
-							out.end()
+							this.push(JSON.stringify(chunk) + '\n')
+						} catch (e: any) {
+							callback(e)
 						}
-					})
-
-					res.status(200)
+						callback()
+					},
 				})
-			} catch (e: any) {
-				console.error(typeof e === "string" ? e : e?.message)
 
-				let errorType = ConnectorErrorType.Generic
-				if (e instanceof ConnectorError) {
-					errorType = e.type
-				}
-				res.status(500).write(`${errorType} error: \n + ${inspect(e)}`)
-			} finally {
-				res.end()
+				pipeline(out, res, (err) => {
+					if (err) {
+						console.error(err)
+					}
+				})
+
+				await new Promise<void>(async (resolve, reject) => {
+					out.on('finish', () => resolve())
+					out.on('error', (e) => reject(e))
+
+					try {
+						if (c.connector == null && c.connectorCustomizer == null) {
+							return reject(new Error('Connector not found. Did you export it?'))
+						}
+
+						// Running connector is exists. This will also run customizer if customizer exists.
+						if (c.connector != null) {
+							return await c.connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
+								cmd.input, out, c.connectorCustomizer)
+						}
+
+						// Run customizer only
+						let output = await c.connectorCustomizer._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
+							cmd.input, out)
+						out.write(output)
+					} catch (e) {
+						reject(e)
+					} finally {
+						out.end()
+					}
+				})
+
+				res.status(200)
+			})
+		} catch (e: any) {
+			console.error(typeof e === "string" ? e : e?.message)
+
+			let errorType = ConnectorErrorType.Generic
+			if (e instanceof ConnectorError) {
+				errorType = e.type
 			}
-		});
+			res.status(500).write(`${errorType} error: \n + ${inspect(e)}`)
+		} finally {
+			res.end()
+		}
+	});
 
 	app.listen(port, () => {
 		console.log(`SailPoint connector local development server listening at http://localhost:${port}`)
