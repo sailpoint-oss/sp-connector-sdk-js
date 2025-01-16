@@ -128,7 +128,6 @@ export type StdAccountListAfterHandler = (
 	input: StdAccountListOutput
 ) => Promise<StdAccountListOutput>
 
-
 export type StdAuthenticateBeforeHandler = (
 	context: Context,
 	input: StdAuthenticateInput

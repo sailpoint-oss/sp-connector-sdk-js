@@ -29,7 +29,6 @@ import { Transform, TransformCallback, Writable } from 'stream'
 import { contextState } from './async-context';
 import { ConnectorCustomizer, CustomizerType as CustomizerType } from './connector-customizer'
 import { ConnectorCustomizerHandler } from './connector-customizer-handler'
-import { logger } from './logger'
 
 const SDK_VERSION = 1
 
@@ -280,12 +279,12 @@ export class Connector {
 			// stream that get passed into this _exec method to end as well, and then receive another write call, causing that stream to fail.
 			let interceptorComplete = new Promise<void>((resolve, reject) => {
 				resInterceptor.on('finish', function(){
-					logger.info(`After customizer time total execution time: ${totalTime} ms`);
+					console.log(`After customizer time total execution time: ${totalTime} ms`);
 					resolve()
 				})
 
 				resInterceptor.on('error', function (e) {
-					logger.info(`After customizer time total execution time: ${totalTime} ms`);
+					console.log(`After customizer time total execution time: ${totalTime} ms`);
 					reject(e)
 				})
 			})
