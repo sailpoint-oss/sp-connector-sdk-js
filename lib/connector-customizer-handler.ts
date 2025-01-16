@@ -33,6 +33,7 @@ import {
 	StdSourceDataReadInput,
 	StdSourceDataDiscoverOutput,
 	StdSourceDataReadOutput,
+	StdAccountListOutput,
 } from './commands'
 import { Context } from './connector-handler'
 
@@ -121,6 +122,12 @@ export type StdAccountListBeforeHandler = (
 	context: Context,
 	input: StdAccountListInput
 ) => Promise<StdAccountListInput>
+
+export type StdAccountListAfterHandler = (
+	context: Context,
+	input: StdAccountListOutput
+) => Promise<StdAccountListOutput>
+
 
 export type StdAuthenticateBeforeHandler = (
 	context: Context,

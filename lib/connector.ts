@@ -29,6 +29,7 @@ import { Transform, TransformCallback, Writable } from 'stream'
 import { contextState } from './async-context';
 import { ConnectorCustomizer, CustomizerType as CustomizerType } from './connector-customizer'
 import { ConnectorCustomizerHandler } from './connector-customizer-handler'
+import { logger } from './logger'
 
 const SDK_VERSION = 1
 
@@ -225,7 +226,7 @@ export class Connector {
 	 * @param res writable
 	 */
 	async _exec(type: string, context: Context, input: any, res: Writable, customizer?: ConnectorCustomizer): Promise<void> {
-
+		let totalTime: number = 0;
 		const handler: CommandHandler | undefined = this._handlers.get(type)
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
@@ -257,8 +258,12 @@ export class Connector {
 				async transform(rawResponse: RawResponse, encoding: BufferEncoding, callback: TransformCallback) {
 					if (rawResponse.type == ResponseType.Output) {
 						try {
+							const start = performance.now();
 							rawResponse.data = await afterHandler!(context, rawResponse.data)
 							res.write(rawResponse)
+							const end = performance.now();
+							// Accumulate the total time
+							totalTime += end - start;
 							callback()
 						} catch (e: any) {
 							callback(e)
@@ -267,7 +272,6 @@ export class Connector {
 						res.write(rawResponse)
 						callback()
 					}
-
 				},
 			})
 
@@ -276,10 +280,12 @@ export class Connector {
 			// stream that get passed into this _exec method to end as well, and then receive another write call, causing that stream to fail.
 			let interceptorComplete = new Promise<void>((resolve, reject) => {
 				resInterceptor.on('finish', function(){
+					logger.info(`After customizer time total execution time: ${totalTime} ms`);
 					resolve()
 				})
 
 				resInterceptor.on('error', function (e) {
+					logger.info(`After customizer time total execution time: ${totalTime} ms`);
 					reject(e)
 				})
 			})
