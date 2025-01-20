@@ -282,8 +282,8 @@ export class Connector {
 			// stream that get passed into this _exec method to end as well, and then receive another write call, causing that stream to fail.
 			let interceptorComplete = new Promise<void>((resolve, reject) => {
 				resInterceptor.on('finish', function(){
-					// Calculate the average time once all chunks are processed
-    				const averageTime = roCount > 0 ? totalTime / roCount : 0;
+					// Calculate the average time once all chunks are processed. Here roCount should never be 0 
+    				const averageTime = totalTime / roCount;
 					console.log(`After customizer time total execution time: ${totalTime} ms`);
 					console.log(`Average time per output: ${averageTime.toFixed(2)} ms`);
 					resolve()
@@ -302,7 +302,6 @@ export class Connector {
 			resInterceptor.end()
 			await interceptorComplete
 		})
-
 	}
 }
 
