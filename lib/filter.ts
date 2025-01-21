@@ -232,7 +232,3 @@ export class Filter {
     return rightValue.some(Boolean) || leftValue.some(Boolean);
   }
 }
-
-
-//const filterEvaluator = new Filter(data);
-//const result = filterEvaluator.matcher(filterString);
