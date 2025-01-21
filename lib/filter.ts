@@ -8,7 +8,7 @@ export class Filter {
   }
 
   // matcher decides which operation to be performed based on resource object based on the provided filter object
-  public matcher(filterString: string): boolean {
+  public matcher(filterString: string) {
     let filter = jsep(filterString);
     switch (true) {
       case (filter.type === 'BinaryExpression' && filter.operator !== '&&' && filter.operator !== '||'):
@@ -21,8 +21,6 @@ export class Filter {
         return this.applyAndBinaryExpressionFilter(filter);
       case (filter.operator === '||'):
         return this.applyOrBinaryExpressionFilter(filter);
-      default:
-        throw new Error(`Unknown operator: ${filter.operator}`);
     }
   }
 
@@ -35,7 +33,7 @@ export class Filter {
   //  right: { type: 'Literal', value: 20 }
   //};
   // applyBinaryExpressionFilter applies binarry filters on an objects
-  private applyBinaryExpressionFilter(filter: any): boolean {
+  private applyBinaryExpressionFilter(filter: any) {
     // check the type of the filter, which should be BinaryExpression for comparison
     if (filter.type === 'BinaryExpression') {
       const left = filter.left; // left part (field to compare)
@@ -59,15 +57,12 @@ export class Filter {
           return leftValue <= right.value;
         case '!=':  // inequality check
           return leftValue != right.value;
-        default:
-          throw new Error(`Unknown operator: ${operator}`);
       }
     }
-    throw new Error('Unsupported filter type');
   }
 
   // a mock of the isNull method that could be attached to an object like 'email' 'name' etc..
-  private isNullorEmpty(value: any): boolean {
+  private isNullorEmpty(value: any) {
     return value === null || value === undefined || value === '';
   }
 
@@ -84,7 +79,7 @@ export class Filter {
   //   }
   // };
   // applyCallExpressionFilte applies filter based on CallExpression
-  private applyCallExpressionFilter(filter: any): boolean {
+  private applyCallExpressionFilter(filter: any) {
     // check if the filter is a CallExpression
     if (filter.type === 'CallExpression') {
       const callee = filter.callee;  // the MemberExpression for the method call
@@ -122,14 +117,9 @@ export class Filter {
           case 'containsAllIgnoreCase':// Check if the method is `containsAllIgnoreCase` and apply it to the value
             // ensure all values are present in the property
             return args.every((arg: { value: string }) => !value.includes(arg.value));// apply the containsAllIgnoreCase method
-          default:
-            throw new Error(`Unsupported method: ${methodName}`);
         }
-      } else {
-        throw new Error(`Object ${objectName} not found in the data`);
       }
     }
-    throw new Error('Unsupported filter type');
   }
 
   // filterString Example: ( type == "Employee" && location == "Austin" )
@@ -161,7 +151,7 @@ export class Filter {
   //     }
   //   }
   // applyAndBinaryExpressionFilter applies AND BinaryExpression and CallExpression filters
-  private applyAndBinaryExpressionFilter(filter: any): boolean {
+  private applyAndBinaryExpressionFilter(filter: any){
     let currentFilter = filter;
     let rightValue = [];
     let leftValue = [];
@@ -216,7 +206,7 @@ export class Filter {
   //     }
   //   }
   //  applyOrBinaryExpressionFilter applies OR BinaryExpression and CallExpression filters
-  private applyOrBinaryExpressionFilter(filter: any): boolean {
+  private applyOrBinaryExpressionFilter(filter: any){
     let currentFilter = filter;
     let rightValue = [];
     let leftValue = [];
@@ -244,20 +234,5 @@ export class Filter {
 }
 
 
-
-
-// Example Usage
-const data = {
-  firstName: null,
-  type: null,
-  email: null,
-  company: "SailPoint",
-  age: 21,
-  address: [],
-};
-
-const filterString = '( company == "SailPoint" )';
-const filterEvaluator = new Filter(data);
-const result = filterEvaluator.matcher(filterString);
-
-console.log(result); // Output should be true if company equals "SailPoint"
+//const filterEvaluator = new Filter(data);
+//const result = filterEvaluator.matcher(filterString);
