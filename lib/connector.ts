@@ -225,7 +225,8 @@ export class Connector {
 	 * @param res writable
 	 */
 	async _exec(type: string, context: Context, input: any, res: Writable, customizer?: ConnectorCustomizer): Promise<void> {
-
+		let totalTime: number = 0;
+		let roCount: number = 0;
 		const handler: CommandHandler | undefined = this._handlers.get(type)
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
@@ -257,8 +258,14 @@ export class Connector {
 				async transform(rawResponse: RawResponse, encoding: BufferEncoding, callback: TransformCallback) {
 					if (rawResponse.type == ResponseType.Output) {
 						try {
+							const start = performance.now();
 							rawResponse.data = await afterHandler!(context, rawResponse.data)
+							const end = performance.now();
 							res.write(rawResponse)
+							
+							// Accumulate the total time
+							totalTime += end - start;
+							roCount++;
 							callback()
 						} catch (e: any) {
 							callback(e)
@@ -267,7 +274,6 @@ export class Connector {
 						res.write(rawResponse)
 						callback()
 					}
-
 				},
 			})
 
@@ -276,10 +282,18 @@ export class Connector {
 			// stream that get passed into this _exec method to end as well, and then receive another write call, causing that stream to fail.
 			let interceptorComplete = new Promise<void>((resolve, reject) => {
 				resInterceptor.on('finish', function(){
+					// Calculate the average time once all chunks are processed. Here roCount should never be 0 
+    				const averageTime = totalTime / roCount;
+					console.log(`After customizer time total execution time: ${totalTime} ms`);
+					console.log(`Average time per output: ${averageTime.toFixed(2)} ms`);
 					resolve()
 				})
 
 				resInterceptor.on('error', function (e) {
+					// Calculate the average time once all chunks are processed
+    				const averageTime = roCount > 0 ? totalTime / roCount : 0;
+					console.log(`After customizer time total execution time: ${totalTime} ms`);
+					console.log(`Average time per output: ${averageTime.toFixed(2)} ms`);
 					reject(e)
 				})
 			})
@@ -288,7 +302,6 @@ export class Connector {
 			resInterceptor.end()
 			await interceptorComplete
 		})
-
 	}
 }
 

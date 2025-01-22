@@ -36,7 +36,8 @@ import {
 	StdConfigOptionsAfterHandler,
 	StdConfigOptionsBeforeHandler,
 	StdApplicationDiscoveryListBeforeHandler,
-	StdApplicationDiscoveryListAfterHandler
+	StdApplicationDiscoveryListAfterHandler,
+	StdAccountListAfterHandler
 } from './connector-customizer-handler'
 
 /**
@@ -206,6 +207,15 @@ export class ConnectorCustomizer {
 	 */
 	beforeStdAccountList(handler: StdAccountListBeforeHandler): this {
 		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdAccountList), handler)
+		return this
+	}
+
+	/**
+	 * Add a after handler for 'std:account:list' command
+	 * @param handler handler
+	 */
+	afterStdAccountList(handler: StdAccountListAfterHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdAccountList), handler)
 		return this
 	}
 
