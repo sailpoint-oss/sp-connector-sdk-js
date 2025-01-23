@@ -31,6 +31,7 @@
 		"archiver": "^7.0.1",
 		"debug": "^4.3.7",
 		"express": "^5.0.1",
+		"jsep": "^1.4.0",
 		"pino": "^8.5.0"
 	},
 	"devDependencies": {

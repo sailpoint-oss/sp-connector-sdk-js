@@ -10,3 +10,4 @@ export * from './connector-customizer-handler'
 export * from './response'
 export * from './logger'
 export * from './partitionAdapter'
+export * from './filter';
