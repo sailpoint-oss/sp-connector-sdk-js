@@ -31,7 +31,7 @@ export class Filter {
   //  right: { type: 'Literal', value: 20 }
   //};
   // applyBinaryExpressionFilter applies binarry filters on an objects
-  private applyBinaryExpressionFilter(filter: any) {
+  private applyBinaryExpressionFilter(filter: any): any {
     // check the type of the filter, which should be BinaryExpression for comparison
     if (filter.type === 'BinaryExpression') {
       const left = filter.left; // left part (field to compare)
@@ -150,7 +150,7 @@ export class Filter {
   //   }
   // }
   // applyAndOrComplexFilter applies filter based on BinaryExpression and CallExpression on complex as well as simple filters
-  private applyAndOrComplexFilter(filter: any): any {
+  private applyAndOrComplexFilter(filter: any): boolean {
     // if the current expression is a comparison
     if (filter.type === 'BinaryExpression' && ['==', '===', '!=', '!==', '<', '>', '<=', '>='].includes(filter.operator)) {
       return this.applyBinaryExpressionFilter(filter);
@@ -171,6 +171,6 @@ export class Filter {
         return leftResult && rightResult; // logical AND
       }
     }
-    return null
+    return true
   }
 }
