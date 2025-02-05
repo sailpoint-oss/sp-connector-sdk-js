@@ -8,7 +8,7 @@ export class Filter {
   }
 
   // matcher decides which operation to be performed based on resource object based on the provided filter object
-  public matcher(filterString: string) {
+  public matcher(filterString: string): boolean {
     let filter = jsep(filterString);
     switch (true) {
       case (filter.type === 'BinaryExpression' && filter.operator !== '&&' && filter.operator !== '||'):
@@ -17,11 +17,10 @@ export class Filter {
         return this.applyCallExpressionFilter(filter);
       case (filter.operator === '!'):
         return !this.applyBinaryExpressionFilter(filter.argument);
-      case (filter.operator === '&&'):
-        return this.applyAndBinaryExpressionFilter(filter);
-      case (filter.operator === '||'):
-        return this.applyOrBinaryExpressionFilter(filter);
+      case (filter.operator === '&&')|| (filter.operator === '||'):
+        return this.applyAndOrComplexFilter(filter);
     }
+    return true
   }
 
   // filterString Example: (age > 20)
@@ -33,7 +32,7 @@ export class Filter {
   //  right: { type: 'Literal', value: 20 }
   //};
   // applyBinaryExpressionFilter applies binarry filters on an objects
-  private applyBinaryExpressionFilter(filter: any) {
+  private applyBinaryExpressionFilter(filter: any): boolean {
     // check the type of the filter, which should be BinaryExpression for comparison
     if (filter.type === 'BinaryExpression') {
       const left = filter.left; // left part (field to compare)
@@ -59,6 +58,7 @@ export class Filter {
           return leftValue != right.value;
       }
     }
+    return true
   }
 
   // a mock of the isNull method that could be attached to an object like 'email' 'name' etc..
@@ -79,7 +79,7 @@ export class Filter {
   //   }
   // };
   // applyCallExpressionFilte applies filter based on CallExpression
-  private applyCallExpressionFilter(filter: any) {
+  private applyCallExpressionFilter(filter: any): boolean {
     // check if the filter is a CallExpression
     if (filter.type === 'CallExpression') {
       const callee = filter.callee;  // the MemberExpression for the method call
@@ -117,118 +117,65 @@ export class Filter {
           case 'containsAllIgnoreCase':// Check if the method is `containsAllIgnoreCase` and apply it to the value
             // ensure all values are present in the property
             return args.every((arg: { value: string }) => !value.includes(arg.value));// apply the containsAllIgnoreCase method
+          default:
+            return true
         }
       }
     }
+    return true
   }
 
-  // filterString Example: ( type == "Employee" && location == "Austin" )
-  // Filter Evaluator Example for AND operation with multiple expressions:
+  // // filterString Example 1: ( type == "Employee" && location == "Austin" )
+  // filterString Example 2: (((login == \"integrations-shtarko\" && name.isNull()) && company == \"sailpoint\") || city == \"pune\")
+  // Filter evaluter output Example :
   // {
+  //   type: 'BinaryExpression',
+  //   operator: '||',
+  //   left: {
   //     type: 'BinaryExpression',
   //     operator: '&&',
   //     left: {
   //       type: 'BinaryExpression',
   //       operator: '&&',
-  //       left: {
-  //         type: 'BinaryExpression',
-  //         operator: '==',
-  //         left: [Object],
-  //         right: [Object]
-  //       },
-  //       right: {
-  //         type: 'BinaryExpression',
-  //         operator: '==',
-  //         left: [Object],
-  //         right: [Object]
-  //       }
+  //       left: [Object],
+  //       right: [Object]
   //     },
   //     right: {
   //       type: 'BinaryExpression',
   //       operator: '==',
-  //       left: { type: 'Identifier', name: 'age' },
-  //       right: { type: 'Literal', value: null, raw: 'null' }
+  //       left: [Object],
+  //       right: [Object]
   //     }
-  //   }
-  // applyAndBinaryExpressionFilter applies AND BinaryExpression and CallExpression filters
-  private applyAndBinaryExpressionFilter(filter: any){
-    let currentFilter = filter;
-    let rightValue = [];
-    let leftValue = [];
-
-    // keep processing the filter as long as we have '&&' operators
-    while (currentFilter.operator === '&&') {
-      if (currentFilter.right.type === 'BinaryExpression') {
-        // evaluate the right part of the current '&&' expression
-        rightValue.push(this.applyBinaryExpressionFilter(currentFilter.right));
-        currentFilter = currentFilter.left;
-        if (currentFilter.operator !== '&&' && currentFilter.type === 'BinaryExpression') {
-          leftValue.push(this.applyBinaryExpressionFilter(currentFilter));
-        }
-      } else {
-        // evaluate the right part of the current '&&' expression
-        rightValue.push(this.applyCallExpressionFilter(currentFilter.right));
-        currentFilter = currentFilter.left;
-        if (currentFilter.operator !== '&&' && currentFilter.type === 'CallExpression') {
-          leftValue.push(this.applyCallExpressionFilter(currentFilter));
-        }
-      }
-    }
-    return rightValue.every(Boolean) && leftValue.every(Boolean);
-  }
-
-  // filterString Example: ( type == "Employee" || location == "Austin" )
-  // Filter Evaluator Example for OR operation with multiple expressions:
-  // {
+  //   },
+  //   right: {
   //     type: 'BinaryExpression',
-  //     operator: '||',
-  //     left: {
-  //       type: 'BinaryExpression',
-  //       operator: '||',
-  //       left: {
-  //         type: 'BinaryExpression',
-  //         operator: '==',
-  //         left: [Object],
-  //         right: [Object]
-  //       },
-  //       right: {
-  //         type: 'BinaryExpression',
-  //         operator: '==',
-  //         left: [Object],
-  //         right: [Object]
-  //       }
-  //     },
-  //     right: {
-  //       type: 'BinaryExpression',
-  //       operator: '==',
-  //       left: { type: 'Identifier', name: 'age' },
-  //       right: { type: 'Literal', value: null, raw: 'null' }
-  //     }
+  //     operator: '==',
+  //     left: { type: 'Identifier', name: 'city' },
+  //     right: { type: 'Literal', value: 'punee', raw: '"punee"' }
   //   }
-  //  applyOrBinaryExpressionFilter applies OR BinaryExpression and CallExpression filters
-  private applyOrBinaryExpressionFilter(filter: any){
-    let currentFilter = filter;
-    let rightValue = [];
-    let leftValue = [];
+  // }
+  // applyAndOrComplexFilter applies filter based on BinaryExpression and CallExpression on complex as well as simple filters
+  private applyAndOrComplexFilter(filter: any): boolean {
+    // if the current expression is a comparison
+    if (filter.type === 'BinaryExpression' && ['==', '===', '!=', '!==', '<', '>', '<=', '>='].includes(filter.operator)) {
+      return this.applyBinaryExpressionFilter(filter);
+    }
 
-    // keep processing the filter as long as we have '||' operators
-    while (currentFilter.operator === '||') {
-      if (currentFilter.right.type === 'BinaryExpression') {
-        // evaluate the right part of the current '||' expression
-        rightValue.push(this.applyBinaryExpressionFilter(currentFilter.right));
-        currentFilter = currentFilter.left;
-        if (currentFilter.operator !== '||' && currentFilter.type === 'BinaryExpression') {
-          leftValue.push(this.applyBinaryExpressionFilter(currentFilter));
-        }
-      } else {
-        // evaluate the right part of the current '||' expression
-        rightValue.push(this.applyCallExpressionFilter(currentFilter.right));
-        currentFilter = currentFilter.left;
-        if (currentFilter.operator !== '||' && currentFilter.type === 'CallExpression') {
-          leftValue.push(this.applyCallExpressionFilter(currentFilter));
-        }
+    if (filter.type === 'CallExpression') {
+      return this.applyCallExpressionFilter(filter);
+    }
+    // if the current expression is a logical operator (e.g., ||, &&)
+    if (filter.type === 'BinaryExpression' && ['||', '&&'].includes(filter.operator)) {
+      const leftResult = this.applyAndOrComplexFilter(filter.left);  // apply to the left side
+      const rightResult = this.applyAndOrComplexFilter(filter.right); // apply to the right side
+      // combine the results if both sides are processed
+      if (filter.operator === '||') {
+        return leftResult || rightResult; // logical OR
+      }
+      if (filter.operator === '&&') {
+        return leftResult && rightResult; // logical AND
       }
     }
-    return rightValue.some(Boolean) || leftValue.some(Boolean);
+    return true
   }
 }

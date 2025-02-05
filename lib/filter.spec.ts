@@ -130,8 +130,17 @@ describe('Filter class', () => {
     // binaryExpression || binaryExpression
     expect(filterInstance.matcher('(age > 25 || name == "Alice")')).toBe(true);
     // binaryExpression || callExpression
-    expect(filterInstance.matcher('(age > 25 || name.isEmpty())')).toBe(false);
+    expect(filterInstance.matcher('(age <= 25 || name.isEmpty())')).toBe(false);
     // callExpression || callExpression
     expect(filterInstance.matcher('(department.notEmpty() || name.isEmpty())')).toBe(false);
   });
+
+  test('should handle complex AND/OR binary expression correctly', () => {
+		// binaryExpression && binaryExpression
+		expect(
+			filterInstance.matcher(
+				'(((age > 25 && name.notNull()) && email == "alice@example.com") || department.isEmpty())'
+			)
+		).toBe(true)
+	})
 });
