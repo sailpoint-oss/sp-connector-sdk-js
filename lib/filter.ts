@@ -8,7 +8,7 @@ export class Filter {
   }
 
   // matcher decides which operation to be performed based on resource object based on the provided filter object
-  public matcher(filterString: string) {
+  public matcher(filterString: string): boolean {
     let filter = jsep(filterString);
     switch (true) {
       case (filter.type === 'BinaryExpression' && filter.operator !== '&&' && filter.operator !== '||'):
@@ -20,6 +20,7 @@ export class Filter {
       case (filter.operator === '&&')|| (filter.operator === '||'):
         return this.applyAndOrComplexFilter(filter);
     }
+    return true
   }
 
   // filterString Example: (age > 20)
@@ -31,7 +32,7 @@ export class Filter {
   //  right: { type: 'Literal', value: 20 }
   //};
   // applyBinaryExpressionFilter applies binarry filters on an objects
-  private applyBinaryExpressionFilter(filter: any): any {
+  private applyBinaryExpressionFilter(filter: any): boolean {
     // check the type of the filter, which should be BinaryExpression for comparison
     if (filter.type === 'BinaryExpression') {
       const left = filter.left; // left part (field to compare)
@@ -57,6 +58,7 @@ export class Filter {
           return leftValue != right.value;
       }
     }
+    return true
   }
 
   // a mock of the isNull method that could be attached to an object like 'email' 'name' etc..
@@ -77,7 +79,7 @@ export class Filter {
   //   }
   // };
   // applyCallExpressionFilte applies filter based on CallExpression
-  private applyCallExpressionFilter(filter: any) {
+  private applyCallExpressionFilter(filter: any): boolean {
     // check if the filter is a CallExpression
     if (filter.type === 'CallExpression') {
       const callee = filter.callee;  // the MemberExpression for the method call
@@ -115,9 +117,12 @@ export class Filter {
           case 'containsAllIgnoreCase':// Check if the method is `containsAllIgnoreCase` and apply it to the value
             // ensure all values are present in the property
             return args.every((arg: { value: string }) => !value.includes(arg.value));// apply the containsAllIgnoreCase method
+          default:
+            return true
         }
       }
     }
+    return true
   }
 
   // // filterString Example 1: ( type == "Employee" && location == "Austin" )
