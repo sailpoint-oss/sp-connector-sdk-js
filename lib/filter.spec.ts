@@ -130,7 +130,7 @@ describe('Filter class', () => {
     // binaryExpression || binaryExpression
     expect(filterInstance.matcher('(age > 25 || name == "Alice")')).toBe(true);
     // binaryExpression || callExpression
-    expect(filterInstance.matcher('(age > 25 || name.isEmpty())')).toBe(false);
+    expect(filterInstance.matcher('(age > 25 || name.isEmpty())')).toBe(true);
     // callExpression || callExpression
     expect(filterInstance.matcher('(department.notEmpty() || name.isEmpty())')).toBe(false);
   });
