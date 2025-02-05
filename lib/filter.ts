@@ -161,13 +161,10 @@ export class Filter {
     if (filter.type === 'CallExpression') {
       return this.applyCallExpressionFilter(filter);
     }
-
-
     // if the current expression is a logical operator (e.g., ||, &&)
     if (filter.type === 'BinaryExpression' && ['||', '&&'].includes(filter.operator)) {
       const leftResult = this.applyAndOrComplexFilter(filter.left);  // apply to the left side
       const rightResult = this.applyAndOrComplexFilter(filter.right); // apply to the right side
-
       // combine the results if both sides are processed
       if (filter.operator === '||') {
         return leftResult || rightResult; // logical OR
@@ -176,7 +173,5 @@ export class Filter {
         return leftResult && rightResult; // logical AND
       }
     }
-
-    return null;
   }
 }
