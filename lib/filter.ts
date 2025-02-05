@@ -171,5 +171,6 @@ export class Filter {
         return leftResult && rightResult; // logical AND
       }
     }
+    return null
   }
 }
