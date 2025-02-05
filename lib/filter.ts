@@ -1,5 +1,3 @@
-import { Console } from "console";
-
 const jsep = require("jsep");
 
 export class Filter {
@@ -122,7 +120,8 @@ export class Filter {
     }
   }
 
-  // filterString Example: (((login == \"integrations-shtarko\" && name.isNull()) && company == \"sailpoint\") || city == \"pune\")
+  // // filterString Example 1: ( type == "Employee" && location == "Austin" )
+  // filterString Example 2: (((login == \"integrations-shtarko\" && name.isNull()) && company == \"sailpoint\") || city == \"pune\")
   // Filter evaluter output Example :
   // {
   //   type: 'BinaryExpression',
@@ -152,7 +151,6 @@ export class Filter {
   // }
   // applyAndOrComplexFilter applies filter based on BinaryExpression and CallExpression on complex as well as simple filters
   private applyAndOrComplexFilter(filter: any): any {
-    console.log('applyLeafFilter')
     // if the current expression is a comparison
     if (filter.type === 'BinaryExpression' && ['==', '===', '!=', '!==', '<', '>', '<=', '>='].includes(filter.operator)) {
       return this.applyBinaryExpressionFilter(filter);
