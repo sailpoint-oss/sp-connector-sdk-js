@@ -1,4 +1,6 @@
-const jsep = require("jsep");
+// const jsep = require("jsep");
+
+import jsep from "jsep"
 
 type filterObjectType = Record<string, any>;
 
@@ -12,7 +14,8 @@ export class Filter {
   // matcher decides which operation to be performed based on resource object based on the provided filter object
   public matcher(filterString: string): boolean {
     
-    let filter:filterObjectType = jsep(filterString);
+
+    let filter = jsep(filterString)
     
     switch (true) {
       case (filter.type === 'BinaryExpression' && filter.operator !== '&&' && filter.operator !== '||'):
