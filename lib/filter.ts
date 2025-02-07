@@ -1,4 +1,4 @@
-import jsep from 'jsep';
+import jsep, { Expression, BinaryExpression, CallExpression } from 'jsep';
 
 export class Filter {
   private data: any
@@ -9,8 +9,7 @@ export class Filter {
 
   // matcher decides which operation to be performed based on resource object based on the provided filter object
   public matcher(filterString: string): boolean {
-    let filter = jsep(filterString)
-    return this.applyFilter(filter)
+    return this.applyFilter(jsep(filterString))
   }
 
   // filterString Example: (age > 20)
@@ -22,14 +21,14 @@ export class Filter {
   //  right: { type: 'Literal', value: 20 }
   //};
   // applyBinaryExpressionFilter applies binarry filters on an objects
-  private applyBinaryExpressionFilter(filter: jsep.Expression): boolean {
-    const binaryExpression = filter as jsep.BinaryExpression // Type assertion
+  private applyBinaryExpressionFilter(filter: Expression): boolean {
+    const binaryExpression = filter as BinaryExpression // type assertion
     const left = binaryExpression.left
     const right = binaryExpression.right
     const operator = binaryExpression.operator
 
-    let leftValue = left.type === 'Identifier' ? this.data[`${left.name}`] : left.value
-    let rightValue = right.type === 'Identifier' ? this.data[`${right.name}`] : right.value
+    const leftValue = left.type === 'Identifier' ? this.data[`${left.name}`] : left.value
+    const rightValue = right.type === 'Identifier' ? this.data[`${right.name}`] : right.value
 
     switch (operator) {
       case '==':
@@ -68,18 +67,18 @@ export class Filter {
   //   }
   // };
   // applyCallExpressionFilte applies filter based on CallExpression
-  private applyCallExpressionFilter(filter: jsep.Expression): boolean {
+  private applyCallExpressionFilter(filter: Expression): boolean {
     // check if the filter is a CallExpression
-    const callExpression = filter as jsep.CallExpression
+    const callExpression = filter as CallExpression
     const callee = callExpression.callee
-    const object = callee.object as jsep.Expression
-    const property = callee.property as jsep.Expression
+    const object = callee.object as Expression
+    const property = callee.property as Expression
     const args = callExpression.arguments
 
     // check if the object in the filter matches the object's name in the input data
     if (this.data.hasOwnProperty(`${object.name}`)) {
       const value = this.data[`${object.name}`] // get the value of the object (e.g., email)
-      switch ( `${property.name}`) {
+      switch (`${property.name}`) {
         case 'isNull':  // check if the method is `isNull` and apply it to the value
           return this.isNullorEmpty(value)  // apply the isNull method
         case 'notNull': // check if the method is `notNull` and apply it to the value
@@ -143,9 +142,9 @@ export class Filter {
   //   }
   // }
   // applyFilter applies filter based on BinaryExpression, CallExpression, UnaryExpression filters on simple and complex filter string
-  private applyFilter(filter: jsep.Expression): boolean {
-    if (filter.type === 'UnaryExpression' && ['!'].includes(`${filter.operator}`)){
-      let filterArg = filter.argument as jsep.Expression
+  private applyFilter(filter: Expression): boolean {
+    if (filter.type === 'UnaryExpression' && ['!'].includes(`${filter.operator}`)) {
+      let filterArg = filter.argument as Expression
       return !this.applyBinaryExpressionFilter(filterArg)
     }
     // if the current expression is a comparison
@@ -158,8 +157,8 @@ export class Filter {
     }
     // if the current expression is a logical operator (e.g., ||, &&)
     if (filter.type === 'BinaryExpression' && ['||', '&&'].includes(`${filter.operator}`)) {
-      const leftFilter = filter.left as jsep.Expression
-      const rightFilter = filter.right as jsep.Expression
+      const leftFilter = filter.left as Expression
+      const rightFilter = filter.right as Expression
       const leftResult = this.applyFilter(leftFilter);  // apply to the left side
       const rightResult = this.applyFilter(rightFilter); // apply to the right side
       // combine the results if both sides are processed
