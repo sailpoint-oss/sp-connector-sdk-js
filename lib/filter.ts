@@ -1,12 +1,12 @@
 import jsep, { Expression, BinaryExpression, CallExpression } from 'jsep';
 
-type Data = {
+type data = {
 	[key: string]: boolean | string | string[] | number | number[] | any
 }
 export class Filter {
-  private data: Data
+  private data: data
 
-  constructor(data: Data) {
+  constructor(data: data) {
     this.data = data
   }
 
