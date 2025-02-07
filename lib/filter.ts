@@ -1,9 +1,12 @@
 import jsep, { Expression, BinaryExpression, CallExpression } from 'jsep';
 
+type Data = {
+	[key: string]: boolean | string | string[] | number | number[] | any
+}
 export class Filter {
-  private data: any
+  private data: Data
 
-  constructor(data: any) {
+  constructor(data: Data) {
     this.data = data
   }
 
@@ -50,7 +53,7 @@ export class Filter {
     }
   }
 
-  private isNullorEmpty(value: any) {
+  private isNullorEmpty(value: null | undefined | string) {
     return value === null || value === undefined || value === ''
   }
 
