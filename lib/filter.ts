@@ -1,5 +1,4 @@
- // import jsep from 'jsep';
-import jsep = require('jsep')
+import jsep from 'jsep';
 
 export class Filter {
   private data: any
