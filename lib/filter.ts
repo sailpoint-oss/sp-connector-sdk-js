@@ -1,14 +1,12 @@
-//import jsep, { Expression, BinaryExpression, CallExpression } from 'jsep';
+import jsep, { Expression, BinaryExpression, CallExpression } from 'jsep';
 
-import jsep = require('jsep')
-
-type data = {
+type Data = {
 	[key: string]: boolean | string | string[] | number | number[] | any
 }
 export class Filter {
-  private data: data
+  private data: Data
 
-  constructor(data: data) {
+  constructor(data: Data) {
     this.data = data
   }
 
@@ -26,8 +24,8 @@ export class Filter {
   //  right: { type: 'Literal', value: 20 }
   //};
   // applyBinaryExpressionFilter applies binarry filters on an objects
-  private applyBinaryExpressionFilter(filter: jsep.Expression): boolean {
-    const binaryExpression = filter as jsep.BinaryExpression // type assertion
+  private applyBinaryExpressionFilter(filter: Expression): boolean {
+    const binaryExpression = filter as BinaryExpression // type assertion
     const left = binaryExpression.left
     const right = binaryExpression.right
     const operator = binaryExpression.operator
@@ -72,12 +70,12 @@ export class Filter {
   //   }
   // };
   // applyCallExpressionFilte applies filter based on CallExpression
-  private applyCallExpressionFilter(filter: jsep.Expression): boolean {
+  private applyCallExpressionFilter(filter: Expression): boolean {
     // check if the filter is a CallExpression
-    const callExpression = filter as jsep.CallExpression
+    const callExpression = filter as CallExpression
     const callee = callExpression.callee
-    const object = callee.object as jsep.Expression
-    const property = callee.property as jsep.Expression
+    const object = callee.object as Expression
+    const property = callee.property as Expression
     const args = callExpression.arguments
 
     // check if the object in the filter matches the object's name in the input data
@@ -147,9 +145,9 @@ export class Filter {
   //   }
   // }
   // applyFilter applies filter based on BinaryExpression, CallExpression, UnaryExpression filters on simple and complex filter string
-  private applyFilter(filter: jsep.Expression): boolean {
+  private applyFilter(filter: Expression): boolean {
     if (filter.type === 'UnaryExpression' && ['!'].includes(`${filter.operator}`)) {
-      let filterArg = filter.argument as jsep.Expression
+      let filterArg = filter.argument as Expression
       return !this.applyBinaryExpressionFilter(filterArg)
     }
     // if the current expression is a comparison
@@ -162,8 +160,8 @@ export class Filter {
     }
     // if the current expression is a logical operator (e.g., ||, &&)
     if (filter.type === 'BinaryExpression' && ['||', '&&'].includes(`${filter.operator}`)) {
-      const leftFilter = filter.left as jsep.Expression
-      const rightFilter = filter.right as jsep.Expression
+      const leftFilter = filter.left as Expression
+      const rightFilter = filter.right as Expression
       const leftResult = this.applyFilter(leftFilter);  // apply to the left side
       const rightResult = this.applyFilter(rightFilter); // apply to the right side
       // combine the results if both sides are processed
@@ -177,18 +175,3 @@ export class Filter {
     return true
   }
 }
-const data = {
-  name: null,
-  login: "integrations-shtarko",
-  company: "sailpoint",
-  city: "pune",
-  age: 3,
-  isAdmin: false,
-  address: ["line1", "line2", "line3"]
-}
-
-const filterEvaluator = new Filter(data);
-// skip the RO if the filterString is not provided by the user or matcher returns false
-console.log(filterEvaluator.matcher("address.containsAll(\"line1\", \"line2\", \"line\")"))
-//console.log(filterEvaluator.matcher("(((login == \"ritesh\" && name.isNull()) && company == \"sailpoint\") || (isAdmin == true))"))
-
