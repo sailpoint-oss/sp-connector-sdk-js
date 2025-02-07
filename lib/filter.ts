@@ -46,7 +46,7 @@ export class Filter {
       case '!=':
         return leftValue != rightValue
       default:
-        return false
+        return true
     }
   }
 
