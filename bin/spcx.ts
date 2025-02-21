@@ -110,7 +110,7 @@ function runDev() {
 
 	const app = express()
 		.use(express.json({ strict: true }))
-		.post('/*path', async (req, res) => {
+		.post('/', async (req, res) => {
 			try {
 				res.type('application/x-ndjson')
 				const cmd: Command = req.body as Command
