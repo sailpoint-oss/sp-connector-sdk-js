@@ -11,3 +11,4 @@ export * from './response'
 export * from './logger'
 export * from './partitionAdapter'
 export * from './filter';
+export * from './parseHexadecimal';
