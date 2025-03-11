@@ -15,11 +15,11 @@ describe('UnescapeHexInObject', () => {
     } as StdAccountReadOutput;
 
     const expectedOutput = {
-      text: '450 Tynan Ct;Erie, CO 80516;United States of America',
-      name: ';',
+      text: '450 Tynan Ct\nErie, CO 80516\nUnited States of America',
+      name: '\n',
       number: 123,
       bool: true,
-      stringArray: [';', 123, true],
+      stringArray: ['\n', 123, true],
       numberArray: [111, 222, 123],
     };
 
@@ -106,4 +106,3 @@ describe('UnescapeHexInObject', () => {
     expect(UnescapeHexInObject(input.attributes)).toEqual(expectedOutput);
   });
 });
-

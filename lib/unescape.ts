@@ -20,7 +20,7 @@ export function UnescapeHexInObject(obj: Attributes): Attributes {
         if (uCurlyHex) return String.fromCodePoint(parseInt(uCurlyHex, 16));
         if (htmlHex) return String.fromCharCode(parseInt(htmlHex, 16));
         return match;
-      }).replace(/\n/g, ";"); // replace newlines with semicolons, in VA based connectors the newlines are handled this way.
+      });
       // handle []string type
     } else if (Array.isArray(value)) {
       processedObj[key] = value.map(item => {
@@ -31,7 +31,7 @@ export function UnescapeHexInObject(obj: Attributes): Attributes {
             if (uCurlyHex) return String.fromCodePoint(parseInt(uCurlyHex, 16));
             if (htmlHex) return String.fromCharCode(parseInt(htmlHex, 16));
             return match;
-          }).replace(/\n/g, ";"); // replace newlines with semicolons, in VA based connectors the newlines are handled this way.
+          });
         } else {
           return item; // Keep non-string array items as they are
         }
