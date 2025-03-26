@@ -34,5 +34,6 @@ export type StdAccountUpdateOutput = ObjectOutput & {
 	disabled?: boolean,
 	locked?: boolean,
 	attributes?: Attributes,
-	results?: Result[]
+	results?: Result[],
+	arguments: any //additional metadata of AttributeRequest, undefined if not send in plan
 }
