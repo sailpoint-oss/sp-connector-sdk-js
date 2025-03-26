@@ -15,6 +15,7 @@ export type AttributeChange = {
 	op: AttributeChangeOp
 	attribute: string // Attribute from account schema
 	value: any // Undefined for "Remove" op
+	arguments: Map<string,object> //additional metadata of AttributeRequest, undefined if not send in plan
 }
 
 /**
@@ -35,5 +36,4 @@ export type StdAccountUpdateOutput = ObjectOutput & {
 	locked?: boolean,
 	attributes?: Attributes,
 	results?: Result[],
-	arguments: any //additional metadata of AttributeRequest, undefined if not send in plan
 }
