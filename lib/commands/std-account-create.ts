@@ -3,11 +3,20 @@
 import { AccountSchema, Attributes, ObjectOutput, Result } from './command'
 
 /**
+ * Object describing account attribute create
+ */
+export type AttributeChange = {
+	attribute: string // Attribute from account schema
+	value: any
+	arguments: any // metadata for AttributeRequest
+}
+
+/**
  * Input object of `std:account:create` command
  */
 export type StdAccountCreateInput = {
 	identity?: string
-	attributes: any
+	attributes: any | AttributeChange
 	schema?: AccountSchema
 }
 
