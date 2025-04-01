@@ -9,7 +9,6 @@ export * from './std-account-enable'
 export * from './std-account-list'
 export * from './std-account-read'
 export * from './std-account-unlock'
-// @ts-ignore
 export * from './std-account-update'
 export * from './std-authenticate'
 export * from './std-entitlement-list'

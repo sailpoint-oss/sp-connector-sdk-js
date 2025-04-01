@@ -5,7 +5,7 @@ import { AccountSchema, Attributes, ObjectOutput, Result } from './command'
 /**
  * Object describing account attribute create
  */
-export type AttributeChange = {
+export type Attribute = {
 	attribute: string // Attribute from account schema
 	value: any
 	arguments: any // metadata for AttributeRequest
@@ -16,7 +16,7 @@ export type AttributeChange = {
  */
 export type StdAccountCreateInput = {
 	identity?: string
-	attributes: any | AttributeChange
+	attributes: any | Attribute
 	schema?: AccountSchema
 }
 
