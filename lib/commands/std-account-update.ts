@@ -15,7 +15,7 @@ export type AttributeChange = {
 	op: AttributeChangeOp
 	attribute: string // Attribute from account schema
 	value: any // Undefined for "Remove" op
-	arguments: Map<string,object> //additional metadata of AttributeRequest
+	metadata: Map<string,object> //additional metadata of AttributeRequest
 }
 
 /**
