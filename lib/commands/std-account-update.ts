@@ -15,7 +15,6 @@ export type AttributeChange = {
 	op: AttributeChangeOp
 	attribute: string // Attribute from account schema
 	value: any // Undefined for "Remove" op
-	metadata: Map<string,object> //additional metadata of AttributeRequest
 }
 
 /**
@@ -24,6 +23,7 @@ export type AttributeChange = {
 export type StdAccountUpdateInput = ObjectInput & {
 	changes: AttributeChange[]
 	schema?: AccountSchema
+	attributeMetadata: Map<string, object>
 }
 
 /**
