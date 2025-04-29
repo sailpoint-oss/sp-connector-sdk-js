@@ -49,7 +49,7 @@ export class Filter {
       case '!=':
         return leftValue != rightValue
       default:
-        return true
+        return false
     }
   }
 
@@ -109,10 +109,10 @@ export class Filter {
           // ensure all values are present in the property
           return args.every((arg => !value.includes(arg.value)))// apply the containsAllIgnoreCase method
         default:
-          return true
+          return false
       }
     }
-    return true
+    return false
   }
 
   // // filterString Example 1: ( type == "Employee" && location == "Austin" )
@@ -147,8 +147,13 @@ export class Filter {
   // applyFilter applies filter based on BinaryExpression, CallExpression, UnaryExpression filters on simple and complex filter string
   private applyFilter(filter: Expression): boolean {
     if (filter.type === 'UnaryExpression' && ['!'].includes(`${filter.operator}`)) {
-      let filterArg = filter.argument as Expression
-      return !this.applyBinaryExpressionFilter(filterArg)
+      let filterArg = filter.argument as Expression;
+      if (filterArg.type === 'CallExpression') {
+        return !this.applyCallExpressionFilter(filterArg);
+      } else if (filterArg.type === 'BinaryExpression') {
+        return !this.applyBinaryExpressionFilter(filterArg);
+      }
+      return !this.applyFilter(filterArg);
     }
     // if the current expression is a comparison
     if (filter.type === 'BinaryExpression' && ['==', '===', '!=', '!==', '<', '>', '<=', '>='].includes(`${filter.operator}`)) {
@@ -172,6 +177,15 @@ export class Filter {
         return leftResult && rightResult // logical AND
       }
     }
-    return true
+    return false
   }
 }
+
+const data = {
+name:'John Dor'
+}
+const filterInstance = new Filter(data)
+
+const result = filterInstance.matcher("name.Contains(\"John\")")
+console.log("result")
+console.log(result)
