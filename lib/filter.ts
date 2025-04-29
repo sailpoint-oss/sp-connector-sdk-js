@@ -180,12 +180,3 @@ export class Filter {
     return false
   }
 }
-
-const data = {
-name:'John Dor'
-}
-const filterInstance = new Filter(data)
-
-const result = filterInstance.matcher("name.Contains(\"John\")")
-console.log("result")
-console.log(result)
