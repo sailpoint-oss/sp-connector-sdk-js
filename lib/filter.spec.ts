@@ -135,6 +135,13 @@ describe('Filter class', () => {
     expect(filterInstance.matcher('(department.notEmpty() || name.isEmpty())')).toBe(false);
   });
 
+  test('should handle negation (!)', () => {
+    // ! callExpression
+    expect(filterInstance.matcher('!(name.isNull())')).toBe(true);
+    // ! binaryExpression
+    expect(filterInstance.matcher('!(name == "Alice")')).toBe(false);
+  });
+
   test('should handle complex AND/OR binary expression correctly', () => {
 		// binaryExpression && binaryExpression
 		expect(
