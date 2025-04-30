@@ -101,15 +101,15 @@ describe('Filter class', () => {
     expect(filterInstance.matcher('email.startsWithIgnoreCase("rit")')).toBe(false);
 
     // endsWithIgnoreCase
-    expect(filterInstance.matcher('email.endsWithIgnoreCase(".org")')).toBe(true);
-    expect(filterInstance.matcher('email.endsWithIgnoreCase(".com")')).toBe(false);
+    expect(filterInstance.matcher('email.endsWithIgnoreCase(".Com")')).toBe(true);
+    expect(filterInstance.matcher('email.endsWithIgnoreCase(".org")')).toBe(false);
 
     // containsIgnoreCase
-    expect(filterInstance.matcher('email.containsIgnoreCase("google")')).toBe(true);
-    expect(filterInstance.matcher('email.containsIgnoreCase("example")')).toBe(false);
+    expect(filterInstance.matcher('email.containsIgnoreCase("Example")')).toBe(true);
+    expect(filterInstance.matcher('email.containsIgnoreCase("google")')).toBe(false);
 
     // containsAllIgnoreCase
-    expect(filterInstance.matcher('address.containsAllIgnoreCase("NY", "Texas")')).toBe(true);
+    expect(filterInstance.matcher('address.containsAllIgnoreCase("pune", "Austin")')).toBe(true);
     expect(filterInstance.matcher('address.containsAllIgnoreCase("Pune", "NY")')).toBe(false);
   });
 
