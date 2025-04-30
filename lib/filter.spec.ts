@@ -150,4 +150,9 @@ describe('Filter class', () => {
 			)
 		).toBe(true)
 	})
+
+  test('should handle default return for invalid filter', () => {
+    expect(filterInstance.matcher('name')).toBe(false);
+    expect(filterInstance.matcher("name.isNull();")).toBe(false);
+  });
 });
