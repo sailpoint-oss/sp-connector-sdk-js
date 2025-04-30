@@ -48,8 +48,6 @@ export class Filter {
         return leftValue <= rightValue
       case '!=':
         return leftValue != rightValue
-      default:
-        return false
     }
   }
 
