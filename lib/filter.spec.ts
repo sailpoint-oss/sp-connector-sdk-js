@@ -155,6 +155,6 @@ describe('Filter class', () => {
     expect(filterInstance.matcher('name')).toBe(false);
     expect(filterInstance.matcher("name.isNull()")).toBe(false);
     expect(filterInstance.matcher("age.containsAllIgnoreCase1()")).toBe(false);
-    expect(filterInstance.matcher(" namew.isNull()")).toBe(false);
+    expect(filterInstance.matcher("unknown.isNull()")).toBe(false);
   });
 });
