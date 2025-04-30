@@ -97,7 +97,7 @@ describe('Filter class', () => {
      expect(filterInstance.matcher('address.containsAll("Pune", "NY")')).toBe(false);
 
     // startsWithIgnoreCase
-    expect(filterInstance.matcher('email.startsWithIgnoreCase("rit")')).toBe(true);
+    expect(filterInstance.matcher('email.startsWithIgnoreCase("Ali")')).toBe(true);
     expect(filterInstance.matcher('email.startsWithIgnoreCase("ali")')).toBe(false);
 
     // endsWithIgnoreCase
