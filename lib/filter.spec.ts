@@ -153,6 +153,7 @@ describe('Filter class', () => {
 
   test('should handle default return for invalid filter', () => {
     expect(filterInstance.matcher('name')).toBe(false);
+    expect(filterInstance.matcher('name !== t')).toBe(false);
     expect(filterInstance.matcher("name.isNull()")).toBe(false);
     expect(filterInstance.matcher("age.containsAllIgnoreCase1()")).toBe(false);
     expect(filterInstance.matcher("unknown.isNull()")).toBe(false);
