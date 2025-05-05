@@ -97,19 +97,19 @@ describe('Filter class', () => {
      expect(filterInstance.matcher('address.containsAll("Pune", "NY")')).toBe(false);
 
     // startsWithIgnoreCase
-    expect(filterInstance.matcher('email.startsWithIgnoreCase("rit")')).toBe(true);
-    expect(filterInstance.matcher('email.startsWithIgnoreCase("ali")')).toBe(false);
+    expect(filterInstance.matcher('email.startsWithIgnoreCase("Ali")')).toBe(true);
+    expect(filterInstance.matcher('email.startsWithIgnoreCase("rit")')).toBe(false);
 
     // endsWithIgnoreCase
-    expect(filterInstance.matcher('email.endsWithIgnoreCase(".org")')).toBe(true);
-    expect(filterInstance.matcher('email.endsWithIgnoreCase(".com")')).toBe(false);
+    expect(filterInstance.matcher('email.endsWithIgnoreCase(".Com")')).toBe(true);
+    expect(filterInstance.matcher('email.endsWithIgnoreCase(".org")')).toBe(false);
 
     // containsIgnoreCase
-    expect(filterInstance.matcher('email.containsIgnoreCase("google")')).toBe(true);
-    expect(filterInstance.matcher('email.containsIgnoreCase("example")')).toBe(false);
+    expect(filterInstance.matcher('email.containsIgnoreCase("Example")')).toBe(true);
+    expect(filterInstance.matcher('email.containsIgnoreCase("google")')).toBe(false);
 
     // containsAllIgnoreCase
-    expect(filterInstance.matcher('address.containsAllIgnoreCase("NY", "Texas")')).toBe(true);
+    expect(filterInstance.matcher('address.containsAllIgnoreCase("pune", "Austin")')).toBe(true);
     expect(filterInstance.matcher('address.containsAllIgnoreCase("Pune", "NY")')).toBe(false);
   });
 
@@ -150,4 +150,12 @@ describe('Filter class', () => {
 			)
 		).toBe(true)
 	})
+
+  test('should handle default return for invalid filter', () => {
+    expect(filterInstance.matcher('name')).toBe(false);
+    expect(filterInstance.matcher('name !== t')).toBe(false);
+    expect(filterInstance.matcher("name.isNull()")).toBe(false);
+    expect(filterInstance.matcher("age.containsAllIgnoreCase1()")).toBe(false);
+    expect(filterInstance.matcher("unknown.isNull()")).toBe(false);
+  });
 });

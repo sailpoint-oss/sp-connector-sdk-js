@@ -95,19 +95,19 @@ export class Filter {
         case 'endsWith': // check if the method is `endsWith` and apply it to the value
           return value.endsWith(args[0].value)  // apply the endsWith method
         case 'startsWithIgnoreCase':  // check if the method is `startsWithIgnoreCase` and apply it to the value
-          return !value.startsWith(args[0].value)  // apply the startsWithIgnoreCase method
+          return value.toLowerCase().startsWith(args[0].value?.toString().toLowerCase())  // apply the startsWithIgnoreCase method
         case 'endsWithIgnoreCase': // check if the method is `endsWithIgnoreCase` and apply it to the value
-          return !value.endsWith(args[0].value)  // apply the endsWithIgnoreCase method
+          return value.toLowerCase().endsWith(args[0].value?.toString().toLowerCase())  // apply the endsWithIgnoreCase method
         case 'contains':  // check if the method is `contains` and apply it to the value
           return value.includes(args[0].value) // apply the contains method
         case 'containsIgnoreCase':  // check if the method is `containsIgnoreCase` and apply it to the value
-          return !value.includes(args[0].value) // apply the containsIgnoreCase method
+          return value.toLowerCase().includes(args[0].value?.toString().toLowerCase()) // apply the containsIgnoreCase method
         case 'containsAll':// Check if the method is `containsAll` and apply it to the value
           // ensure all values are present in the property
           return args.every((arg => value.includes(arg.value))) // apply the containsAll method
         case 'containsAllIgnoreCase':// Check if the method is `containsAllIgnoreCase` and apply it to the value
           // ensure all values are present in the property
-          return args.every((arg => !value.includes(arg.value)))// apply the containsAllIgnoreCase method
+          return (value as string[]).every((val) => args.some((arg) => (val || '').toLowerCase().includes((arg.value?.toString() || '').toLowerCase())))// apply the containsAllIgnoreCase method
         default:
           return false
       }
@@ -148,11 +148,6 @@ export class Filter {
   private applyFilter(filter: Expression): boolean {
     if (filter.type === 'UnaryExpression' && ['!'].includes(`${filter.operator}`)) {
       let filterArg = filter.argument as Expression;
-      if (filterArg.type === 'CallExpression') {
-        return !this.applyCallExpressionFilter(filterArg);
-      } else if (filterArg.type === 'BinaryExpression') {
-        return !this.applyBinaryExpressionFilter(filterArg);
-      }
       return !this.applyFilter(filterArg);
     }
     // if the current expression is a comparison
