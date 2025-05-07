@@ -23,7 +23,6 @@ export type AttributeChange = {
 export type StdAccountUpdateInput = ObjectInput & {
 	changes: AttributeChange[]
 	schema?: AccountSchema
-	attributeMetadata: Map<string, object>
 }
 
 /**

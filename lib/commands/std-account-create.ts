@@ -3,12 +3,21 @@
 import { AccountSchema, Attributes, ObjectOutput, Result } from './command'
 
 /**
+ * Object describing account attribute create
+ */
+export type createAttributeWithMetadata = {
+	attribute: string // Attribute from account schema
+	value: any // Undefined for "Remove" op
+	attributeMetadata: any
+}
+
+/**
  * Input object of `std:account:create` command
  */
 export type StdAccountCreateInput = {
 	identity?: string
 	attributes: any
-	attributeMetadata: Map<string, object>
+	attributesWithMetadata: createAttributeWithMetadata[]
 	schema?: AccountSchema
 }
 
