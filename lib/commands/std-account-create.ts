@@ -5,7 +5,7 @@ import { AccountSchema, Attributes, ObjectOutput, Result } from './command'
 /**
  * Object describing account attribute create
  */
-export type createAttributeWithMetadata = {
+export type CreateAttributeWithMetadata = {
 	attribute: string // Attribute from account schema
 	value: any // Undefined for "Remove" op
 	attributeMetadata: any
@@ -17,7 +17,7 @@ export type createAttributeWithMetadata = {
 export type StdAccountCreateInput = {
 	identity?: string
 	attributes: any
-	attributesWithMetadata: createAttributeWithMetadata[]
+	attributesWithMetadata: CreateAttributeWithMetadata[]
 	schema?: AccountSchema
 }
 
