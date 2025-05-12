@@ -27,6 +27,7 @@ import {
 	StdEntitlementReadAfterHandler,
 	StdEntitlementReadBeforeHandler,
 	StdEntitlementListBeforeHandler,
+	StdEntitlementListAfterHandler,
 	StdChangePasswordAfterHandler,
 	StdChangePasswordBeforeHandler,
 	StdSourceDataDiscoverBeforeHandler,
@@ -300,6 +301,16 @@ export class ConnectorCustomizer {
 		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdEntitlementList), handler)
 		return this
 	}
+
+	/**
+	 * Add a after handler for 'std:entitlement:list' command
+	 * @param handler handler
+	 */
+	afterStdEntitlementList(handler: StdEntitlementListAfterHandler): this {
+		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdEntitlementList), handler)
+		return this
+	}
+
 
 	/**
 	 * Add a before handler for 'std:change-password' command

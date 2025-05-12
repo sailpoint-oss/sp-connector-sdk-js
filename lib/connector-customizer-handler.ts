@@ -25,6 +25,7 @@ import {
 	StdEntitlementReadInput,
 	StdEntitlementReadOutput,
 	StdEntitlementListInput,
+	StdEntitlementListOutput,
 	StdTestConnectionInput,
 	StdTestConnectionOutput,
 	StdChangePasswordInput,
@@ -152,6 +153,11 @@ export type StdEntitlementListBeforeHandler = (
 	context: Context,
 	input: StdEntitlementListInput
 ) => Promise<StdEntitlementListInput>
+
+export type StdEntitlementListAfterHandler = (
+	context: Context,
+	output: StdEntitlementListOutput
+) => Promise<StdEntitlementListOutput>
 
 export type StdChangePasswordBeforeHandler = (
 	context: Context,
