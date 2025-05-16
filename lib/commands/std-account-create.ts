@@ -8,7 +8,9 @@ import { AccountSchema, Attributes, ObjectOutput, Result } from './command'
 export type CreateAttributeWithMetadata = {
 	attribute: string // Attribute from account schema
 	value: any // Undefined for "Remove" op
-	metadata: any
+	// @ts-ignore
+	// @ts-ignore
+	metadata: Map<string, any>
 }
 
 /**
