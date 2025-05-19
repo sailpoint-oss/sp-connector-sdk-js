@@ -8,6 +8,8 @@ export enum AttributeChangeOp {
 	Remove = 'Remove',
 }
 
+type AttributeValue = string | number | boolean;
+
 /**
  * Object describing account attribute change
  */
@@ -15,7 +17,7 @@ export type AttributeChange = {
 	op: AttributeChangeOp
 	attribute: string // Attribute from account schema
 	value: any // Undefined for "Remove" op
-	metadata: Map<string, object>
+	metadata: Map<string, AttributeValue>
 }
 
 /**

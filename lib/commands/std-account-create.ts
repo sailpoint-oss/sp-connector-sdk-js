@@ -2,13 +2,15 @@
 
 import { AccountSchema, Attributes, ObjectOutput, Result } from './command'
 
+type AttributeValue = string | number | boolean;
+
 /**
  * Object describing account attribute create
  */
 export type CreateAttributeMetadata = {
 	attribute: string // Attribute from account schema
-	value: any // Undefined for "Remove" op
-	metadata: Map<string, object>
+	value: any
+	metadata: Map<string, AttributeValue>
 }
 
 /**
