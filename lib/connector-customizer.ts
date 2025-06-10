@@ -38,7 +38,7 @@ import {
 	StdConfigOptionsBeforeHandler,
 	StdApplicationDiscoveryListBeforeHandler,
 	StdApplicationDiscoveryListAfterHandler,
-	StdAccountListAfterHandler
+	StdAccountListAfterHandler,
 } from './connector-customizer-handler'
 
 /**
@@ -238,7 +238,6 @@ export class ConnectorCustomizer {
 		return this
 	}
 
-
 	/**
 	 * Add a before handler for 'std:config-options:read' command
 	 * @param handler handler
@@ -311,7 +310,6 @@ export class ConnectorCustomizer {
 		return this
 	}
 
-
 	/**
 	 * Add a before handler for 'std:change-password' command
 	 * @param handler handler
@@ -367,6 +365,27 @@ export class ConnectorCustomizer {
 	}
 
 	/**
+	 * Add a before handler for 'std:source-data:read' command
+	 * @param handler handler
+	 */
+	async beforeEndpoint(handler: any): Promise<any> {
+		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdEndpoint), handler)
+		return this
+		// //return this._execEndpoint(handler, context, input)
+		// return await contextState.run(context, () => handler)
+	}
+
+	/**
+	 * Add a before handler for 'std:source-data:read' command
+	 * @param handler handler
+	 */
+	async afterEndpoint(handler: any, context: Context, input: any): Promise<any> {
+		// this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdSourceDataRead), handler)
+		// return this
+		return await contextState.run(context, () => handler(context, input))
+	}
+
+	/**
 	 * Generate handler key base on customizer type and command type
 	 *
 	 * @param customizerType customizer type
@@ -385,6 +404,15 @@ export class ConnectorCustomizer {
 	 * @param input input to the handler function
 	 */
 	async _exec(type: string, context: Context, input: any): Promise<any> {
+		const handler: ConnectorCustomizerHandler | undefined = this._handlers.get(type)
+		if (!handler) {
+			throw new Error(`No handler found for type: ${type}`)
+		}
+
+		return await contextState.run(context, () => handler(context, input))
+	}
+
+	async _execEndpoint(context: Context, input: any, type:string): Promise<any> {
 		const handler: ConnectorCustomizerHandler | undefined = this._handlers.get(type)
 		if (!handler) {
 			throw new Error(`No handler found for type: ${type}`)

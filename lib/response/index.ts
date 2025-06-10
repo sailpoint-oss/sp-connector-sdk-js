@@ -61,18 +61,18 @@ export enum ResponseType {
 	Output = 'output',
 	State = 'state',
 	KeepAlive = 'keepAlive',
-	Config = 'config'
+	Config = 'config',
 }
 
 /**
  * RawResponse is the response that sdk sends out as command output
  */
 export class RawResponse {
-    type: ResponseType
+	type: ResponseType
 	data: string
 
-    constructor(data: any, type = ResponseType.Output) {
-       this.data = data
+	constructor(data: any, type = ResponseType.Output) {
+		this.data = data
 		this.type = type
 	}
 }
@@ -83,10 +83,10 @@ export class RawResponse {
 export enum PatchOp {
 	Add = 'add',
 	Replace = 'replace',
-	Remove = 'remove'
+	Remove = 'remove',
 }
 
 /**
  * Patch is a JSON patch for source config
  */
-export type Patch = { op: PatchOp, path: string, value?: any }
+export type Patch = { op: PatchOp; path: string; value?: any }

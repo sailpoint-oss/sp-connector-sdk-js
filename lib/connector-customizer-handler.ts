@@ -38,7 +38,6 @@ import {
 } from './commands'
 import { Context } from './connector-handler'
 
-
 export type StdTestConnectionBeforeHandler = (
 	context: Context,
 	input: StdTestConnectionInput
@@ -59,10 +58,7 @@ export type StdAccountCreateAfterHandler = (
 	output: StdAccountCreateOutput
 ) => Promise<StdAccountCreateOutput>
 
-export type StdAccountReadBeforeHandler = (
-	context: Context,
-	input: StdAccountReadInput
-) => Promise<StdAccountReadInput>
+export type StdAccountReadBeforeHandler = (context: Context, input: StdAccountReadInput) => Promise<StdAccountReadInput>
 
 export type StdAccountReadAfterHandler = (
 	context: Context,
@@ -119,10 +115,7 @@ export type StdAccountUnlockAfterHandler = (
 	output: StdAccountUnlockOutput
 ) => Promise<StdAccountUnlockOutput>
 
-export type StdAccountListBeforeHandler = (
-	context: Context,
-	input: StdAccountListInput
-) => Promise<StdAccountListInput>
+export type StdAccountListBeforeHandler = (context: Context, input: StdAccountListInput) => Promise<StdAccountListInput>
 
 export type StdAccountListAfterHandler = (
 	context: Context,

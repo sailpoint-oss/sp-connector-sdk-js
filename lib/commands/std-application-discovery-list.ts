@@ -9,10 +9,10 @@ export type StdApplicationDiscoveryInputList = {}
  * Output object of `std:application-discovery:list` command
  */
 export type StdApplicationDiscoveryOutputList = {
-	id: string,
-	primaryAppName: string,
+	id: string
+	primaryAppName: string
 	secondaryAppName?: string
-	description: string,
-	status?: string,
-	[properties: string]: string | string[] | undefined |  Record<string, string>[]
+	description: string
+	status?: string
+	[properties: string]: string | string[] | undefined | Record<string, string>[]
 }

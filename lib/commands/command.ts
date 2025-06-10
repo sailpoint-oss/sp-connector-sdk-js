@@ -7,7 +7,7 @@ export enum StandardCommand {
 	StdAccountCreate = 'std:account:create',
 	StdAccountDelete = 'std:account:delete',
 	StdAccountDisable = 'std:account:disable',
-	StdAccountDiscoverSchema = "std:account:discover-schema",
+	StdAccountDiscoverSchema = 'std:account:discover-schema',
 	StdAccountEnable = 'std:account:enable',
 	StdAccountList = 'std:account:list',
 	StdAccountRead = 'std:account:read',
@@ -23,6 +23,7 @@ export enum StandardCommand {
 	StdSourceDataRead = 'std:source-data:read',
 	StdConfigOptions = 'std:config-options:read',
 	StdApplicationDiscoveryList = 'std:application-discovery:list',
+	StdEndpoint = 'std:endpoint'
 }
 
 /**
@@ -85,10 +86,10 @@ export type Key = SimpleKeyType | CompoundKeyType
  * Extract ID for simple key
  */
 export function KeyID(input: { key: Key }): string {
-	if ("simple" in input.key) {
+	if ('simple' in input.key) {
 		return input.key.simple.id
 	} else {
-		throw new Error("expected simple key type")
+		throw new Error('expected simple key type')
 	}
 }
 
@@ -96,10 +97,10 @@ export function KeyID(input: { key: Key }): string {
  * Extract Lookup ID for compound key
  */
 export function KeyLookupID(input: { key: Key }): string {
-	if ("compound" in input.key) {
+	if ('compound' in input.key) {
 		return input.key.compound.lookupId
 	} else {
-		throw new Error("expected compound key type")
+		throw new Error('expected compound key type')
 	}
 }
 
@@ -107,10 +108,10 @@ export function KeyLookupID(input: { key: Key }): string {
  * Extract Unique ID for compound key
  */
 export function KeyUniqueID(input: { key: Key }): string {
-	if ("compound" in input.key) {
+	if ('compound' in input.key) {
 		return input.key.compound.uniqueId
 	} else {
-		throw new Error("expected compound key type")
+		throw new Error('expected compound key type')
 	}
 }
 
@@ -119,7 +120,7 @@ export function KeyUniqueID(input: { key: Key }): string {
  */
 export function SimpleKey(id: string): SimpleKeyType {
 	return {
-		simple: { id: id }
+		simple: { id: id },
 	}
 }
 
@@ -128,7 +129,7 @@ export function SimpleKey(id: string): SimpleKeyType {
  */
 export function CompoundKey(lookupId: string, uniqueId: string): CompoundKeyType {
 	return {
-		compound: { lookupId: lookupId, uniqueId: uniqueId }
+		compound: { lookupId: lookupId, uniqueId: uniqueId },
 	}
 }
 
@@ -137,7 +138,7 @@ export type ObjectInput = {
 	key: Key
 }
 
-export type ObjectOutput = { identity?: string, uuid?: string } & { key?: Key }
+export type ObjectOutput = { identity?: string; uuid?: string } & { key?: Key }
 
 /**
  * State input for stateful command
@@ -166,7 +167,7 @@ export type AccountSchema = Schema & {
  * Entitlement schema
  */
 export type EntitlementSchema = Schema & {
-	type: string,
+	type: string
 	includePermissions?: boolean
 }
 
@@ -174,8 +175,8 @@ export type EntitlementSchema = Schema & {
  * Granular result for an attribute to indicate partial attribule level success & warning & failure
  */
 export type Result = {
-	attribute: string,
-	status?: ResultStatus,
+	attribute: string
+	status?: ResultStatus
 	messages?: ResultMessage[]
 }
 
@@ -190,7 +191,7 @@ export enum ResultStatus {
  * Warning or error message for a result
  */
 export type ResultMessage = {
-	level: ResultMessageLevel,
+	level: ResultMessageLevel
 	message: string
 }
 

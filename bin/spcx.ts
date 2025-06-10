@@ -8,7 +8,6 @@ import { Connector, ConnectorError, ConnectorErrorType, CustomizerType, _withCon
 import archiver from 'archiver'
 import fs from 'fs'
 
-
 /**
  * Connector command
  */
@@ -35,15 +34,16 @@ if (!argv[0]) {
 // packageConnector packages connector files into a zip file
 function packageConnector() {
 	const zipName = process.env.npm_package_name + '-' + process.env.npm_package_version + '.zip'
-	const archive = archiver('zip', { zlib: { level: 9 }})
+	const archive = archiver('zip', { zlib: { level: 9 } })
 	const stream = fs.createWriteStream('dist/' + zipName)
 
-	archive.file('dist/index.js', {name: 'index.js'})
-	.file('connector-spec.json', {name: 'connector-spec.json'})
-	.on('error', err => {
-		console.error('Failed to generate connector zip file', err)
-	})
-	.pipe(stream)
+	archive
+		.file('dist/index.js', { name: 'index.js' })
+		.file('connector-spec.json', { name: 'connector-spec.json' })
+		.on('error', (err) => {
+			console.error('Failed to generate connector zip file', err)
+		})
+		.pipe(stream)
 
 	stream.on('close', () => {
 		console.log('Connector zip file created under dist folder: ' + zipName)
@@ -70,7 +70,11 @@ function runDev() {
 	 * spawn will fail in pure JS projects as typescript devDependency is expected to be missing
 	 */
 	const spawnTsc = (): ChildProcessWithoutNullStreams => {
-		const tsc = spawn(/^win/.test(process.platform) ? 'tsc.cmd' : 'tsc', ['--inlineSourcemap', 'true', '--sourceMap', 'false', '--watch'], { shell: true })
+		const tsc = spawn(
+			/^win/.test(process.platform) ? 'tsc.cmd' : 'tsc',
+			['--inlineSourcemap', 'true', '--sourceMap', 'false', '--watch'],
+			{ shell: true }
+		)
 			.once('spawn', () => {
 				tsc.stdout.on('data', (data) => console.log(`tsc: ${data}`))
 				tsc.stderr.on('data', (data) => console.error(`tsc: ${data}`))
@@ -104,7 +108,8 @@ function runDev() {
 
 		return {
 			connector: typeof connector === 'function' ? await connector() : connector,
-			connectorCustomizer: typeof connectorCustomizer === 'function' ? await connectorCustomizer() : connectorCustomizer
+			connectorCustomizer:
+				typeof connectorCustomizer === 'function' ? await connectorCustomizer() : connectorCustomizer,
 		}
 	}
 
@@ -145,13 +150,22 @@ function runDev() {
 
 							// Running connector is exists. This will also run customizer if customizer exists.
 							if (c.connector != null) {
-								return await c.connector._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
-									cmd.input, out, c.connectorCustomizer)
+								return await c.connector._exec(
+									cmd.type,
+									{ version: cmd.version, commandType: cmd.type },
+									cmd.input,
+									out,
+									c.connectorCustomizer
+								)
 							}
 
 							// Run customizer only
-							let output = await c.connectorCustomizer._exec(cmd.type, { version: cmd.version, commandType: cmd.type },
-								cmd.input, out)
+							let output = await c.connectorCustomizer._exec(
+								cmd.type,
+								{ version: cmd.version, commandType: cmd.type },
+								cmd.input,
+								out
+							)
 							out.write(output)
 						} catch (e) {
 							reject(e)
@@ -163,7 +177,7 @@ function runDev() {
 					res.status(200)
 				})
 			} catch (e: any) {
-				console.error(typeof e === "string" ? e : e?.message)
+				console.error(typeof e === 'string' ? e : e?.message)
 
 				let errorType = ConnectorErrorType.Generic
 				if (e instanceof ConnectorError) {
@@ -179,4 +193,3 @@ function runDev() {
 		console.log(`SailPoint connector local development server listening at http://localhost:${port}`)
 	})
 }
-

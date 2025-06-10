@@ -6,9 +6,9 @@ import { AccountSchema, Attributes, ObjectInput, ObjectOutput, Permission } from
  * Input object of `std:authenticate` command
  */
 export type StdAuthenticateInput = ObjectInput & {
-    username: string
+	username: string
 	password: string
-    options? : any
+	options?: any
 	schema: AccountSchema
 }
 
