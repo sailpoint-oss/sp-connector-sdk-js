@@ -10,7 +10,7 @@ type AttributeValue = string | number | boolean;
 export type CreateAttributeMetadata = {
 	attribute: string // Attribute from account schema
 	value: any
-	metadata: Map<string, AttributeValue>
+	metadata?: Map<string, AttributeValue>
 }
 
 /**
