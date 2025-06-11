@@ -368,8 +368,8 @@ export class ConnectorCustomizer {
 	 * Add a before handler for 'std:source-data:read' command
 	 * @param handler handler
 	 */
-	async beforeEndpoint(handler: any): Promise<any> {
-		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdEndpoint), handler)
+	beforeEndpoint(handler: any, endpointPointName: string): this {
+		this._handlers.set(endpointPointName, handler)
 		return this
 		// //return this._execEndpoint(handler, context, input)
 		// return await contextState.run(context, () => handler)
@@ -379,10 +379,10 @@ export class ConnectorCustomizer {
 	 * Add a before handler for 'std:source-data:read' command
 	 * @param handler handler
 	 */
-	async afterEndpoint(handler: any, context: Context, input: any): Promise<any> {
-		// this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdSourceDataRead), handler)
-		// return this
-		return await contextState.run(context, () => handler(context, input))
+	async afterEndpoint(handler: any, endpointPointName: string): Promise<any> {
+		this._handlers.set(endpointPointName, handler)
+		return this
+		//return await contextState.run(context, () => handler(context, input))
 	}
 
 	/**
@@ -412,10 +412,10 @@ export class ConnectorCustomizer {
 		return await contextState.run(context, () => handler(context, input))
 	}
 
-	async _execEndpoint(context: Context, input: any, type:string): Promise<any> {
-		const handler: ConnectorCustomizerHandler | undefined = this._handlers.get(type)
+	async _execEndpoint(context: Context, input: any, endpointPointName:string): Promise<any> {
+		const handler = this._handlers.get(endpointPointName)
 		if (!handler) {
-			throw new Error(`No handler found for type: ${type}`)
+			throw new Error(`No handler found for type: ${endpointPointName}`)
 		}
 
 		return await contextState.run(context, () => handler(context, input))

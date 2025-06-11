@@ -1,6 +1,5 @@
 /* Copyright (c) 2023. SailPoint Technologies, Inc. All rights reserved. */
 
-import { StandardCommand } from './commands'
 import { ConnectorCustomizer, CustomizerType, createConnectorCustomizer } from './connector-customizer'
 import { Context, AssumeAwsRoleRequest, AssumeAwsRoleResponse } from './connector-handler'
 
@@ -172,18 +171,18 @@ describe('exec handlers', () => {
 	// })
 
 	it('should customizer handle endpoints', async () => {
-		const customizer = await createConnectorCustomizer().beforeEndpoint(
+		const customizer = createConnectorCustomizer().beforeEndpoint(
 			async (context: any, input: any) => {
 				input.attributes.firstname = 'jane'
 				return input
-			}
+			},'TC'
 		)
 
 		let customizedInput=  await customizer._execEndpoint(MOCK_CONTEXT,{
 				attributes: {
 					firstname: 'john',
 				},
-			}, 'before:std:endpoint')
+			}, 'TC')
 		expect(customizedInput.attributes.firstname).toBe('jane')
 	})
 })
