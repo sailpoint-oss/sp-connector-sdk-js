@@ -31,8 +31,8 @@ export type StdAccountUpdateInput = ObjectInput & {
  * All properties are optional for this output
  */
 export type StdAccountUpdateOutput = ObjectOutput & {
-	disabled?: boolean,
-	locked?: boolean,
-	attributes?: Attributes,
+	disabled?: boolean
+	locked?: boolean
+	attributes?: Attributes
 	results?: Result[]
 }

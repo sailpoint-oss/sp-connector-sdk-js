@@ -12,7 +12,7 @@ import { createConnectorCustomizer } from './connector-customizer'
 import { Context, AssumeAwsRoleRequest, AssumeAwsRoleResponse } from './connector-handler'
 import path from 'path'
 
-const mockFS = require('mock-fs');
+const mockFS = require('mock-fs')
 
 class MockContext implements Context {
 	config = {}
@@ -171,11 +171,10 @@ describe('exec handlers', () => {
 		await connector._exec(
 			StandardCommand.StdAuthenticate,
 			MOCK_CONTEXT,
-			{ identity: 'mockIdentity', username: 'mockUsername', password: 'mockPassword', options :{}},
+			{ identity: 'mockIdentity', username: 'mockUsername', password: 'mockPassword', options: {} },
 			new PassThrough({ objectMode: true })
 		)
 	})
-
 
 	it('should execute stdConfigOptionsHandler', async () => {
 		const connector = createConnector().stdConfigOptions(async (context, input, res) => {
@@ -187,7 +186,7 @@ describe('exec handlers', () => {
 		await connector._exec(
 			StandardCommand.StdConfigOptions,
 			MOCK_CONTEXT,
-			{ key: 'mockKey'},
+			{ key: 'mockKey' },
 			new PassThrough({ objectMode: true })
 		)
 	})
@@ -250,22 +249,24 @@ describe('exec handlers', () => {
 			StandardCommand.StdTestConnection,
 			MOCK_CONTEXT,
 			undefined,
-			new PassThrough({ objectMode: true }).on('data', (chunk) => expect(chunk).toEqual({
-				"type": "output",
-				"data": {},
-			}))
+			new PassThrough({ objectMode: true }).on('data', (chunk) =>
+				expect(chunk).toEqual({
+					type: 'output',
+					data: {},
+				})
+			)
 		)
 	})
 
 	it('should execute std:spec:read handler', async () => {
 		const spec = {
-			name: "empty connector",
-			visibility: "public",
-			topology: "private",
+			name: 'empty connector',
+			visibility: 'public',
+			topology: 'private',
 			commands: [],
 			sourceConfig: [],
 		}
-		const res = new PassThrough({objectMode: true})
+		const res = new PassThrough({ objectMode: true })
 		const connector = createConnector()
 
 		mockFS({
@@ -277,8 +278,8 @@ describe('exec handlers', () => {
 
 		const out = res.read(1)
 		expect(out).toEqual({
-			"type": "output",
-			"data": {"specification": spec},
+			type: 'output',
+			data: { specification: spec },
 		})
 	})
 
@@ -295,8 +296,7 @@ describe('exec handlers', () => {
 	})
 
 	it('should customizer handler handle output with mixed response types', async () => {
-		const connector = createConnector()
-		.stdTestConnection(async (context, input, res) => {
+		const connector = createConnector().stdTestConnection(async (context, input, res) => {
 			expect(input).toEqual({})
 
 			res.keepAlive()
@@ -304,16 +304,19 @@ describe('exec handlers', () => {
 		})
 
 		const customizer = createConnectorCustomizer()
-		.beforeStdTestConnection(async (context, input) => {
-			expect(input).toEqual({})
-			return input
-		})
-		.afterStdTestConnection(async (context, output) => {
-			expect(output).toEqual({})
-			return output
-		})
+			.beforeStdTestConnection(async (context, input) => {
+				expect(input).toEqual({})
+				return input
+			})
+			.afterStdTestConnection(async (context, output) => {
+				expect(output).toEqual({})
+				return output
+			})
 
-		await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, {},
+		await connector._exec(
+			StandardCommand.StdTestConnection,
+			MOCK_CONTEXT,
+			{},
 			new PassThrough({ objectMode: true }).on('data', (chunk) => {
 				if (chunk.type == 'keepAlive') {
 					expect(chunk.data).toEqual({})
@@ -321,21 +324,22 @@ describe('exec handlers', () => {
 				if (chunk.type == 'data') {
 					expect(chunk.data).toEqual({})
 				}
-		}), customizer)
+			}),
+			customizer
+		)
 	})
 
 	it('should customizer handler customize input and output', async () => {
-		const connector = createConnector()
-		.stdAccountCreate(async (context, input, res) => {
+		const connector = createConnector().stdAccountCreate(async (context, input, res) => {
 			expect(input).toEqual({
 				attributes: {
 					firstname: 'jane',
-					lastname: 'doe'
-				}
+					lastname: 'doe',
+				},
 			})
 			res.send({
 				identity: 'jane.doe',
-				attributes: input.attributes
+				attributes: input.attributes,
 			})
 		})
 
@@ -344,8 +348,8 @@ describe('exec handlers', () => {
 				expect(input).toEqual({
 					attributes: {
 						firstname: 'john',
-						lastname: 'doe'
-					}
+						lastname: 'doe',
+					},
 				})
 				input.attributes.firstname = 'jane'
 				return input
@@ -355,29 +359,37 @@ describe('exec handlers', () => {
 					identity: 'jane.doe',
 					attributes: {
 						firstname: 'jane',
-						lastname: 'doe'
-					}
+						lastname: 'doe',
+					},
 				})
 				output.attributes.location = 'austin'
 				return output
 			})
 
-		await connector._exec(StandardCommand.StdAccountCreate, MOCK_CONTEXT, {
-			attributes: {
-				firstname: 'john',
-				lastname: 'doe'
-			}
-		}, new PassThrough({ objectMode: true }).on('data', (chunk) => expect(chunk).toEqual({
-			"type": "output",
-			"data": {
-				identity: 'jane.doe',
+		await connector._exec(
+			StandardCommand.StdAccountCreate,
+			MOCK_CONTEXT,
+			{
 				attributes: {
-					firstname: 'jane',
+					firstname: 'john',
 					lastname: 'doe',
-					location: 'austin'
-				}
+				},
 			},
-		})), customizer)
+			new PassThrough({ objectMode: true }).on('data', (chunk) =>
+				expect(chunk).toEqual({
+					type: 'output',
+					data: {
+						identity: 'jane.doe',
+						attributes: {
+							firstname: 'jane',
+							lastname: 'doe',
+							location: 'austin',
+						},
+					},
+				})
+			),
+			customizer
+		)
 	})
 
 	it('should execute custom handler with save state', async () => {
@@ -388,18 +400,22 @@ describe('exec handlers', () => {
 			expect(input).toBeUndefined()
 			expect(res).toBeInstanceOf(ResponseStream)
 
-			res.saveState({newState: 'value'})
+			res.saveState({ newState: 'value' })
 		})
 
-		await connector._exec(customCommandType, MOCK_CONTEXT, undefined, new PassThrough({ objectMode: true }).on('data', (chunk) => {
-			expect(chunk).toEqual({
-				type: 'state',
-				data: {
-					newState: 'value'
-				}
+		await connector._exec(
+			customCommandType,
+			MOCK_CONTEXT,
+			undefined,
+			new PassThrough({ objectMode: true }).on('data', (chunk) => {
+				expect(chunk).toEqual({
+					type: 'state',
+					data: {
+						newState: 'value',
+					},
+				})
 			})
-		}))
-
+		)
 	})
 
 	it('should execute custom handler with connector request', async () => {
@@ -431,14 +447,19 @@ describe('connector errors', () => {
 	})
 
 	it('should connector error be handled gracefully', async () => {
-		const connector = createConnector()
-		.stdTestConnection(async (context, input, res) => {
+		const connector = createConnector().stdTestConnection(async (context, input, res) => {
 			throw new Error('Error from connector')
 		})
 
 		try {
-			await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, undefined,
-				new PassThrough({ objectMode: true }).on('data', (chunk) => {throw new Error('no data should be received here')}))
+			await connector._exec(
+				StandardCommand.StdTestConnection,
+				MOCK_CONTEXT,
+				undefined,
+				new PassThrough({ objectMode: true }).on('data', (chunk) => {
+					throw new Error('no data should be received here')
+				})
+			)
 			throw new Error('connector execution should not work')
 		} catch (e) {
 			expect(e).toStrictEqual(new Error('Error from connector'))
@@ -446,19 +467,24 @@ describe('connector errors', () => {
 	})
 
 	it('should customizer before handler error be handled gracefully', async () => {
-		const connector = createConnector()
-		.stdTestConnection(async (context, input, res) => {
+		const connector = createConnector().stdTestConnection(async (context, input, res) => {
 			res.send({})
 		})
 
-		const customizer = createConnectorCustomizer()
-			.beforeStdTestConnection(async (context, input) => {
-				throw new Error('Error from customizer after handler')
-			})
+		const customizer = createConnectorCustomizer().beforeStdTestConnection(async (context, input) => {
+			throw new Error('Error from customizer after handler')
+		})
 
 		try {
-			await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, undefined,
-				new PassThrough({ objectMode: true }).on('data', (chunk) => {throw new Error('no data should be received here')}), customizer)
+			await connector._exec(
+				StandardCommand.StdTestConnection,
+				MOCK_CONTEXT,
+				undefined,
+				new PassThrough({ objectMode: true }).on('data', (chunk) => {
+					throw new Error('no data should be received here')
+				}),
+				customizer
+			)
 
 			throw new Error('connector execution should not work')
 		} catch (e) {
@@ -467,21 +493,24 @@ describe('connector errors', () => {
 	})
 
 	it('should customizer after handler error be handled gracefully', async () => {
-		const connector = createConnector()
-		.stdTestConnection(async (context, input, res) => {
+		const connector = createConnector().stdTestConnection(async (context, input, res) => {
 			res.send({})
 		})
 
-		const customizer = createConnectorCustomizer()
-			.afterStdTestConnection(async (context, output) => {
-				throw new Error('Error from customizer before handler')
-			})
+		const customizer = createConnectorCustomizer().afterStdTestConnection(async (context, output) => {
+			throw new Error('Error from customizer before handler')
+		})
 
 		try {
-			await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, undefined,
+			await connector._exec(
+				StandardCommand.StdTestConnection,
+				MOCK_CONTEXT,
+				undefined,
 				new PassThrough({ objectMode: true }).on('data', (chunk) => {
-          throw new Error('no data should be received here')
-        }), customizer)
+					throw new Error('no data should be received here')
+				}),
+				customizer
+			)
 
 			throw new Error('connector execution should not work')
 		} catch (e) {
@@ -493,7 +522,6 @@ describe('connector errors', () => {
 describe('read config', () => {
 	it('should parse config from base64 encoded string env var', async () => {
 		process.env.CONNECTOR_CONFIG = 'eyJrZXkiOiJ2YWx1ZSJ9'
-
 
 		expect(await readConfig()).toStrictEqual({ key: 'value' })
 	})

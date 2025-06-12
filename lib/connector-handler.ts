@@ -47,34 +47,34 @@ export interface Context {
 	name?: string
 	version?: number
 	invocationId?: string
-	spanId? :string
+	spanId?: string
 	requestId?: string
 	commandType?: string
 	[prop: string]: any
 
 	reloadConfig(): Promise<any>
-	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse>;
+	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse>
 }
 export class AssumeAwsRoleRequest {
-	roleArn: string;
-	externalId     : string;
-	roleSessionName :string;
+	roleArn: string
+	externalId: string
+	roleSessionName: string
 	constructor(roleArn: string, externalId: string, roleSessionName: string) {
-		this.roleArn = roleArn;
-		this.externalId = externalId;
-		this.roleSessionName = roleSessionName;
+		this.roleArn = roleArn
+		this.externalId = externalId
+		this.roleSessionName = roleSessionName
 	}
 }
 export class AssumeAwsRoleResponse {
-    accessKeyId: string;
-    secretAccessKey: string;
-    sessionToken: string;
-	expiration : string;
-    constructor(accessKeyId: string, secretAccessKey: string, sessionToken: string, expiration: string) {
-		this.accessKeyId = accessKeyId;
-		this.secretAccessKey = secretAccessKey;
-		this.sessionToken = sessionToken;
-		this.expiration = expiration;
+	accessKeyId: string
+	secretAccessKey: string
+	sessionToken: string
+	expiration: string
+	constructor(accessKeyId: string, secretAccessKey: string, sessionToken: string, expiration: string) {
+		this.accessKeyId = accessKeyId
+		this.secretAccessKey = secretAccessKey
+		this.sessionToken = sessionToken
+		this.expiration = expiration
 	}
 }
 export type StdAccountCreateHandler = (

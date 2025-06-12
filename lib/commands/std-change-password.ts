@@ -1,6 +1,6 @@
 /* Copyright (c) 2023. SailPoint Technologies, Inc. All rights reserved. */
 
-import { ObjectInput } from "./command"
+import { ObjectInput } from './command'
 
 /**
  * Input object of `std:change-password` command
@@ -12,4 +12,4 @@ export type StdChangePasswordInput = ObjectInput & {
 /**
  * Output object of `std:change-password` command
  */
- export type StdChangePasswordOutput = {}
+export type StdChangePasswordOutput = {}

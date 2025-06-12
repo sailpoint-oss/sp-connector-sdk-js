@@ -1,19 +1,19 @@
 /* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
-import { AsyncLocalStorage } from 'async_hooks';
+import { AsyncLocalStorage } from 'async_hooks'
 
 interface configState {
 	cfg: any
 }
 
-const _configState = new AsyncLocalStorage<configState>();
+const _configState = new AsyncLocalStorage<configState>()
 
 /**
  * Reads in connector config
  */
 export const readConfig = async (): Promise<any> => {
-	const store: configState | undefined = _configState.getStore();
+	const store: configState | undefined = _configState.getStore()
 	if (store) {
-		return store.cfg;
+		return store.cfg
 	}
 
 	const config = process.env['CONNECTOR_CONFIG']
@@ -33,6 +33,6 @@ export const readConfig = async (): Promise<any> => {
  * callback return cfg
  */
 export const _withConfig = async (cfg: any, callback: () => unknown): Promise<void> => {
-	const newState: configState = { cfg: cfg };
-	await _configState.run(newState, callback);
+	const newState: configState = { cfg: cfg }
+	await _configState.run(newState, callback)
 }

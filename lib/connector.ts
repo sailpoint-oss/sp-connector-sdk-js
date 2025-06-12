@@ -20,13 +20,13 @@ import {
 	StdSourceDataDiscoverHandler,
 	StdSourceDataReadHandler,
 	StdConfigOptionsHandler,
-	StdApplicationDiscoveryListHandler
+	StdApplicationDiscoveryListHandler,
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import { StandardCommand } from './commands'
 import { RawResponse, ResponseStream, ResponseType } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
-import { contextState } from './async-context';
+import { contextState } from './async-context'
 import { ConnectorCustomizer, CustomizerType as CustomizerType } from './connector-customizer'
 import { ConnectorCustomizerHandler } from './connector-customizer-handler'
 
@@ -87,7 +87,7 @@ export class Connector {
 	 * Add a handler for 'std:account:discover-schema' command
 	 * @param handler handler
 	 */
-	 stdAccountDiscoverSchema(handler: StdAccountDiscoverSchemaHandler): this {
+	stdAccountDiscoverSchema(handler: StdAccountDiscoverSchemaHandler): this {
 		return this.command(StandardCommand.StdAccountDiscoverSchema, handler)
 	}
 
@@ -203,7 +203,6 @@ export class Connector {
 		return this.command(StandardCommand.StdSourceDataRead, handler)
 	}
 
-
 	/**
 	 * Add a handler for a command of specified type
 	 * @param type command type
@@ -224,9 +223,15 @@ export class Connector {
 	 * @param input command input
 	 * @param res writable
 	 */
-	async _exec(type: string, context: Context, input: any, res: Writable, customizer?: ConnectorCustomizer): Promise<void> {
-		let totalTime: number = 0;
-		let roCount: number = 0;
+	async _exec(
+		type: string,
+		context: Context,
+		input: any,
+		res: Writable,
+		customizer?: ConnectorCustomizer
+	): Promise<void> {
+		let totalTime: number = 0
+		let roCount: number = 0
 		const handler: CommandHandler | undefined = this._handlers.get(type)
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
@@ -239,13 +244,17 @@ export class Connector {
 			}
 
 			// If before handler exists, run the before handler and updates the command input
-			let beforeHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(CustomizerType.Before, type))
+			let beforeHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(
+				customizer.handlerKey(CustomizerType.Before, type)
+			)
 			if (beforeHandler) {
 				input = await beforeHandler(context, input)
 			}
 
 			// If after handler does not exist, run the command handler with updated input
-			let afterHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(CustomizerType.After, type))
+			let afterHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(
+				customizer.handlerKey(CustomizerType.After, type)
+			)
 			if (!afterHandler) {
 				return handler(context, input, new ResponseStream<any>(res))
 			}
@@ -258,14 +267,14 @@ export class Connector {
 				async transform(rawResponse: RawResponse, encoding: BufferEncoding, callback: TransformCallback) {
 					if (rawResponse.type == ResponseType.Output) {
 						try {
-							const start = performance.now();
+							const start = performance.now()
 							rawResponse.data = await afterHandler!(context, rawResponse.data)
-							const end = performance.now();
+							const end = performance.now()
 							res.write(rawResponse)
-							
+
 							// Accumulate the total time
-							totalTime += end - start;
-							roCount++;
+							totalTime += end - start
+							roCount++
 							callback()
 						} catch (e: any) {
 							callback(e)
@@ -281,19 +290,19 @@ export class Connector {
 			// the interceptor could be ended but is still flushing while this _exec method is resolved. That would cause the writable
 			// stream that get passed into this _exec method to end as well, and then receive another write call, causing that stream to fail.
 			let interceptorComplete = new Promise<void>((resolve, reject) => {
-				resInterceptor.on('finish', function(){
-					// Calculate the average time once all chunks are processed. Here roCount should never be 0 
-    				const averageTime = totalTime / roCount;
-					console.log(`After customizer time total execution time: ${totalTime} ms`);
-					console.log(`Average time per output: ${averageTime.toFixed(2)} ms`);
+				resInterceptor.on('finish', function () {
+					// Calculate the average time once all chunks are processed. Here roCount should never be 0
+					const averageTime = totalTime / roCount
+					console.log(`After customizer time total execution time: ${totalTime} ms`)
+					console.log(`Average time per output: ${averageTime.toFixed(2)} ms`)
 					resolve()
 				})
 
 				resInterceptor.on('error', function (e) {
 					// Calculate the average time once all chunks are processed
-    				const averageTime = roCount > 0 ? totalTime / roCount : 0;
-					console.log(`After customizer time total execution time: ${totalTime} ms`);
-					console.log(`Average time per output: ${averageTime.toFixed(2)} ms`);
+					const averageTime = roCount > 0 ? totalTime / roCount : 0
+					console.log(`After customizer time total execution time: ${totalTime} ms`)
+					console.log(`Average time per output: ${averageTime.toFixed(2)} ms`)
 					reject(e)
 				})
 			})
