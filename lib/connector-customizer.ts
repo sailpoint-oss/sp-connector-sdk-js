@@ -40,6 +40,7 @@ import {
 	StdApplicationDiscoveryListAfterHandler,
 	StdAccountListAfterHandler,
 } from './connector-customizer-handler'
+import { logger } from './logger'
 
 /**
  * Connector customizer to build by attaching handlers for supported commands.
@@ -414,6 +415,7 @@ export class ConnectorCustomizer {
 
 	async _execEndpoint(context: Context, input: any, endpointPointName:string): Promise<any> {
 		const handler = this._handlers.get(endpointPointName)
+		logger.info("Handler " + JSON.stringify(this._handlers));
 		if (!handler) {
 			throw new Error(`No handler found for type: ${endpointPointName}`)
 		}
