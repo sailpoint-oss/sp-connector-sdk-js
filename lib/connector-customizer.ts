@@ -38,8 +38,9 @@ import {
 	StdConfigOptionsBeforeHandler,
 	StdApplicationDiscoveryListBeforeHandler,
 	StdApplicationDiscoveryListAfterHandler,
-	StdAccountListAfterHandler
+	StdAccountListAfterHandler,
 } from './connector-customizer-handler'
+import { logger } from './logger'
 
 /**
  * Connector customizer to build by attaching handlers for supported commands.
@@ -238,7 +239,6 @@ export class ConnectorCustomizer {
 		return this
 	}
 
-
 	/**
 	 * Add a before handler for 'std:config-options:read' command
 	 * @param handler handler
@@ -311,7 +311,6 @@ export class ConnectorCustomizer {
 		return this
 	}
 
-
 	/**
 	 * Add a before handler for 'std:change-password' command
 	 * @param handler handler
@@ -367,6 +366,27 @@ export class ConnectorCustomizer {
 	}
 
 	/**
+	 * Add a before handler for 'std:source-data:read' command
+	 * @param handler handler
+	 */
+	beforeEndpoint(handler: any, endpointPointName: string): this {
+		this._handlers.set(endpointPointName, handler)
+		return this
+		// //return this._execEndpoint(handler, context, input)
+		// return await contextState.run(context, () => handler)
+	}
+
+	/**
+	 * Add a before handler for 'std:source-data:read' command
+	 * @param handler handler
+	 */
+	async afterEndpoint(handler: any, endpointPointName: string): Promise<any> {
+		this._handlers.set(endpointPointName, handler)
+		return this
+		//return await contextState.run(context, () => handler(context, input))
+	}
+
+	/**
 	 * Generate handler key base on customizer type and command type
 	 *
 	 * @param customizerType customizer type
@@ -388,6 +408,16 @@ export class ConnectorCustomizer {
 		const handler: ConnectorCustomizerHandler | undefined = this._handlers.get(type)
 		if (!handler) {
 			throw new Error(`No handler found for type: ${type}`)
+		}
+
+		return await contextState.run(context, () => handler(context, input))
+	}
+
+	async _execEndpoint(context: Context, input: any, endpointPointName:string): Promise<any> {
+		const handler = this._handlers.get(endpointPointName)
+		logger.info("Handler " + JSON.stringify(this._handlers));
+		if (!handler) {
+			throw new Error(`No handler found for type: ${endpointPointName}`)
 		}
 
 		return await contextState.run(context, () => handler(context, input))

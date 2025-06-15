@@ -21,8 +21,10 @@ const config = readConfig()
 
 // Use the vendor SDK, or implement own client as necessary, to initialize a client
 const myClient = new MyClient(config)
-const childLogger = logger.child({connectorName:"example"  }, { redact: { paths: [ 'email','password'], censor: '****' } })
-
+const childLogger = logger.child(
+	{ connectorName: 'example' },
+	{ redact: { paths: ['email', 'password'], censor: '****' } }
+)
 
 // Connector must be exported as module property named `connector`
 export const connector: Connector = createConnector()
@@ -33,7 +35,7 @@ export const connector: Connector = createConnector()
 		const accounts = await myClient.getAllAccounts()
 
 		for (const account of accounts) {
-			childLogger.info(account,`stdAccountList sending account`)
+			childLogger.info(account, `stdAccountList sending account`)
 			res.send({
 				key: CompoundKey(account.username, account.id),
 				attributes: {
@@ -43,7 +45,7 @@ export const connector: Connector = createConnector()
 				},
 			})
 		}
-		
+
 		logger.info(`stdAccountList sent ${accounts.length} accounts`)
 	})
 	.stdAccountRead(async (context: Context, input: StdAccountReadInput, res: Response<StdAccountReadOutput>) => {
