@@ -51,6 +51,7 @@ export interface Context {
 	requestId?: string
 	commandType?: string
 	[prop: string]: any
+	handler?: any
 
 	reloadConfig(): Promise<any>
 	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse>

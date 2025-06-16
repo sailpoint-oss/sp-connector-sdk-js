@@ -191,6 +191,7 @@ export class ConnectorCustomizer {
 	 */
 	beforeStdAccountUnlock(handler: StdAccountUnlockBeforeHandler): this {
 		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdAccountUnlock), handler)
+		
 		return this
 	}
 
@@ -371,6 +372,8 @@ export class ConnectorCustomizer {
 	 */
 	beforeEndpoint(handler: any, endpointPointName: string): this {
 		this._handlers.set(endpointPointName, handler)
+		handler.context = handler
+		logger.info("Before endpoint context " + JSON.stringify(handler.context));
 		return this
 		// //return this._execEndpoint(handler, context, input)
 		// return await contextState.run(context, () => handler)
