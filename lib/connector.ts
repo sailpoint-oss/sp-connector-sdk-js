@@ -29,6 +29,7 @@ import { Transform, TransformCallback, Writable } from 'stream'
 import { contextState } from './async-context'
 import { ConnectorCustomizer, CustomizerType as CustomizerType } from './connector-customizer'
 import { ConnectorCustomizerHandler } from './connector-customizer-handler'
+import { logger } from './logger'
 
 const SDK_VERSION = 1
 
@@ -236,6 +237,8 @@ export class Connector {
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
 		}
+
+		logger.info("Context object in sdk: " + JSON.stringify(context));
 
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
