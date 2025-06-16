@@ -63,8 +63,10 @@ export class ConnectorCustomizer {
 	 * Add a before handler for 'std:test-connection' command
 	 * @param handler handler
 	 */
-	beforeStdTestConnection(handler: StdTestConnectionBeforeHandler): this {
+	beforeStdTestConnection(handler: any): this {
 		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdTestConnection), handler)
+		handler.context = handler
+		logger.info("Before endpoint context " + JSON.stringify(handler.context));
 		return this
 	}
 
