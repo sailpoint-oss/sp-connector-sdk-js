@@ -66,7 +66,7 @@ export class ConnectorCustomizer {
 	beforeStdTestConnection(handler: any): this {
 		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdTestConnection), handler)
 		handler.context = handler
-		logger.info("Before endpoint context " + JSON.stringify(handler.context));
+		logger.info("Before endpoint context " + JSON.stringify(handler));
 		return this
 	}
 
