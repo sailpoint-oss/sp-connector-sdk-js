@@ -237,6 +237,7 @@ export class Connector {
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
 		}
+		context.handler = this._handlers;
 
 		logger.info("Context object in sdk: " + JSON.stringify(context));
 		logger.info("Customizer object in sdk: " + JSON.stringify(this._handlers));
@@ -244,6 +245,7 @@ export class Connector {
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
 			if (!customizer) {
+				logger.info("Customizer not found " + JSON.stringify(customizer));
 				return handler(context, input, new ResponseStream<any>(res))
 			}
 
@@ -252,6 +254,7 @@ export class Connector {
 				customizer.handlerKey(CustomizerType.Before, type)
 			)
 			if (beforeHandler) {
+				logger.info("before Customizer found " + JSON.stringify(beforeHandler));
 				input = await beforeHandler(context, input)
 			}
 
