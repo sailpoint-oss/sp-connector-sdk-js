@@ -418,7 +418,7 @@ export class ConnectorCustomizer {
 
 	async _execEndpoint(context: Context, input: any, endpointPointName:string): Promise<any> {
 		const handler = this._handlers.get(endpointPointName)
-		logger.info("Handler " + JSON.stringify(this._handlers));
+		logger.info("Context in exec endpoint " + JSON.stringify(context));
 		if (!handler) {
 			throw new Error(`No handler found for type: ${endpointPointName}`)
 		}
