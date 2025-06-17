@@ -237,9 +237,12 @@ export class Connector {
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
 		}
-		context.handler = this._handlers;
+		// context.handler = this._handlers;
+		const newContext = { ...context, handler: this._handlers };
+
 
 		logger.info("Context object in sdk: " + JSON.stringify(context));
+		logger.info("New Context object in sdk: " + JSON.stringify(newContext));
 		logger.info("Customizer object in sdk: " + JSON.stringify(this._handlers));
 
 		await contextState.run(context, async () => {
