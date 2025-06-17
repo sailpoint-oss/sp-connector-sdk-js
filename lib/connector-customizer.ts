@@ -381,7 +381,7 @@ export class ConnectorCustomizer {
 	 * Add a before handler for 'std:source-data:read' command
 	 * @param handler handler
 	 */
-	async afterEndpoint(handler: any, endpointPointName: string): Promise<any> {
+	afterEndpoint(handler: any, endpointPointName: string): this {
 		this._handlers.set(endpointPointName, handler)
 		return this
 		//return await contextState.run(context, () => handler(context, input))
