@@ -420,7 +420,7 @@ export class ConnectorCustomizer {
 		const handler = this._handlers.get(endpointPointName)
 		logger.info("Context in exec endpoint " + JSON.stringify(context));
 		if (!handler) {
-			throw new Error(`No handler found for type: ${endpointPointName}`)
+			throw new Error(`No handler found for endpoint: ${endpointPointName}`)
 		}
 
 		return await contextState.run(context, () => handler(context, input))
