@@ -407,6 +407,8 @@ export class ConnectorCustomizer {
 	 */
 	async _exec(type: string, context: Context, input: any): Promise<any> {
 		const handler: ConnectorCustomizerHandler | undefined = this._handlers.get(type)
+		logger.info("Handler xxxx " + JSON.stringify(this._handlers));
+		logger.info("Context xxxx " + JSON.stringify(context));
 		if (!handler) {
 			throw new Error(`No handler found for type: ${type}`)
 		}
