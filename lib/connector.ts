@@ -239,6 +239,7 @@ export class Connector {
 		}
 
 		logger.info("Context object in sdk: " + JSON.stringify(context));
+		logger.info("Customizer object in sdk: " + JSON.stringify(customizer));
 
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.

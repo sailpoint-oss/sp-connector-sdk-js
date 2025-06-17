@@ -63,10 +63,8 @@ export class ConnectorCustomizer {
 	 * Add a before handler for 'std:test-connection' command
 	 * @param handler handler
 	 */
-	beforeStdTestConnection(handler: any): this {
+	beforeStdTestConnection(handler: StdTestConnectionBeforeHandler): this {
 		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdTestConnection), handler)
-		logger.info("Before endpoint context " + JSON.stringify(this._handlers));
-		logger.info("Before endpoint context11 " + JSON.stringify(handler));
 		return this
 	}
 
@@ -374,8 +372,6 @@ export class ConnectorCustomizer {
 	 */
 	beforeEndpoint(handler: any, endpointPointName: string): this {
 		this._handlers.set(endpointPointName, handler)
-		handler.context = handler
-		logger.info("Before endpoint context " + JSON.stringify(handler.context));
 		return this
 		// //return this._execEndpoint(handler, context, input)
 		// return await contextState.run(context, () => handler)
