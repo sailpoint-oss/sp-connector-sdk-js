@@ -241,13 +241,13 @@ export class Connector {
 			throw new Error(`unsupported command: ${type}`)
 		}
 
-		// logger.info("Context object in sdk handler : " + JSON.stringify(handler));
+		//logger.info("Context object in sdk handler : " + JSON.stringify(handler));
 		// context.handler = this._handlers;
 		const newContext = { ...context, handler: this._handlers };
 
 		logger.info("Context object in sdk: " + JSON.stringify(context));
 		logger.info("New Context object in sdk: " + JSON.stringify(newContext));
-		logger.info("Customizer object in sdk: " + JSON.stringify(customizer?.handlers));
+		logger.info("Customizer object in sdk: " + JSON.stringify(customizer));
 
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
