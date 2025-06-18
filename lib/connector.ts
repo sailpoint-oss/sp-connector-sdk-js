@@ -234,7 +234,7 @@ export class Connector {
 		let totalTime: number = 0
 		let roCount: number = 0
 
-		// logger.info("Context object in sdk type : " + JSON.stringify(type));
+		logger.info("Context object in sdk type : " + JSON.stringify(type));
 
 		const handler: CommandHandler | undefined = this._handlers.get(type)
 		if (!handler) {
