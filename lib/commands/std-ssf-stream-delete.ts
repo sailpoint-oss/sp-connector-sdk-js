@@ -6,8 +6,7 @@ import { ObjectOutput } from './command'
  * Input object of `std:ssf-stream:delete` command
  */
 export type StdSsfStreamDeleteInput = {
-    id: string
-    payload: any
+    streamId: string
     headers: any
 }
 

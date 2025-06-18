@@ -6,7 +6,7 @@ import { ObjectOutput } from './command'
  * Input object of `std:ssf-stream:create` command
  */
 export type StdSsfStreamCreateInput = {
-    id: string
+    streamId: string
     payload: any
     headers: any
 }

@@ -6,8 +6,7 @@ import { ObjectOutput } from './command'
  * Input object of `std:ssf-stream:discover` command
  */
 export type StdSsfStreamDiscoverInput = {
-    id: string
-    payload: any
+    url: string
     headers: any
 }
 

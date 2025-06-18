@@ -6,7 +6,7 @@ import { ObjectOutput } from './command'
  * Input object of `std:ssf-stream:replace` command
  */
 export type StdSsfStreamReplaceInput = {
-    id: string
+    streamId: string
     payload: any
     headers: any
 }

@@ -6,7 +6,7 @@ import { ObjectOutput } from './command'
  * Input object of `std:ssf-stream:verify` command
  */
 export type StdSsfStreamVerifyInput = {
-    id: string
+    streamId: string
     payload: any
     headers: any
 }
