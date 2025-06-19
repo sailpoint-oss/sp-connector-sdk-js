@@ -54,9 +54,17 @@ describe('class properties and methods', () => {
 			.stdEntitlementList(async (context, input, res) => {})
 			.stdEntitlementRead(async (context, input, res) => {})
 			.stdTestConnection(async (context, input, res) => {})
+			.stdSsfStreamCreate(async (context, input, res) => {})
+			.stdSsfStreamDelete(async (context, input, res) => {})
+			.stdSsfStreamDiscover(async (context, input, res) => {})
+			.stdSsfStreamRead(async (context, input, res) => {})
+			.stdSsfStreamReplace(async (context, input, res) => {})
+			.stdSsfStreamStatusUpdate(async (context, input, res) => {})
+			.stdSsfStreamVerify(async (context, input, res) => {})
+			.stdSsfStreamUpdate(async (context, input, res) => {})
 			.command('mock:custom:command', async (context, input, res) => {})
 
-		expect(connector.handlers.size).toBe(17)
+		expect(connector.handlers.size).toBe(25)
 	})
 })
 
