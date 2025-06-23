@@ -236,6 +236,8 @@ export class Connector {
 
 		logger.info("Context object in sdk type : " + JSON.stringify(type));
 
+		logger.info("Input object in sdk : " + JSON.stringify(input));
+
 		const handler: CommandHandler | undefined = this._handlers.get(type)
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
