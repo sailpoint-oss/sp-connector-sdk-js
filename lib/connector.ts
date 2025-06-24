@@ -243,6 +243,8 @@ export class Connector {
 			throw new Error(`unsupported command: ${type}`)
 		}
 
+		input.set(this._handlers);
+
 		//logger.info("Context object in sdk handler : " + JSON.stringify(handler));
 		// context.handler = this._handlers;
 		const newContext = { ...context, handler: this._handlers };
