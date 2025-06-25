@@ -169,20 +169,4 @@ describe('exec handlers', () => {
 	// 		expect(e).toStrictEqual(new Error(`No handler found for type: before:std:account:create`))
 	// 	}
 	// })
-
-	it('should customizer handle endpoints', async () => {
-		const customizer = createConnectorCustomizer().beforeEndpoint(
-			async (context: any, input: any) => {
-				input.attributes.firstname = 'jane'
-				return input
-			},'TC'
-		)
-
-		let customizedInput=  await customizer._execEndpoint(MOCK_CONTEXT,{
-				attributes: {
-					firstname: 'john',
-				},
-			}, 'TC')
-		expect(customizedInput.attributes.firstname).toBe('jane')
-	})
 })

@@ -233,43 +233,30 @@ export class Connector {
 	): Promise<void> {
 		let totalTime: number = 0
 		let roCount: number = 0
-		let newInput = { ...input };
-		logger.info("Context object in sdk type : " + JSON.stringify(type));
-
-		logger.info("Input object in sdk : " + JSON.stringify(input));
-
+		let newContext = { ...context };
+		
 		const handler: CommandHandler | undefined = this._handlers.get(type)
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
 		}
 
-		newInput.handler = customizer?.handlers;
-
-		logger.info("new Input object in sdk : " + JSON.stringify(newInput));
+		newContext.handler = customizer?.handlers;
 
 		//logger.info("Context object in sdk handler : " + JSON.stringify(handler));
 		// context.handler = this._handlers;
-		const newContext = { ...context, handler: this._handlers };
-
-		logger.info("Context object in sdk: " + JSON.stringify(context));
-		logger.info("New Context object in sdk: " + JSON.stringify(newContext));
-		logger.info("Customizer object in sdk: " + JSON.stringify(customizer));
-
-
+		
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
 			if (!customizer) {
-				logger.info("Customizer not found " + JSON.stringify(customizer));
-				return handler(context, newInput, new ResponseStream<any>(res))
+				return handler(newContext, input, new ResponseStream<any>(res))
 			}
 
 			// If before handler exists, run the before handler and updates the command input
 			let beforeHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(
 				customizer.handlerKey(CustomizerType.Before, type)
 			)
-			if (beforeHandler!=undefined) {
-				logger.info("before Customizer found " + JSON.stringify(beforeHandler));
-				newInput = await beforeHandler(context, newInput)
+			if (beforeHandler) {
+				input = await beforeHandler(newContext, input)
 			}
 
 			// If after handler does not exist, run the command handler with updated input
@@ -277,7 +264,7 @@ export class Connector {
 				customizer.handlerKey(CustomizerType.After, type)
 			)
 			if (!afterHandler) {
-				return handler(context, newInput, new ResponseStream<any>(res))
+				return handler(newContext, input, new ResponseStream<any>(res))
 			}
 
 			// If after handler exists, run the after handler with an interceptor. Because we pass in writable to the command handlder,
@@ -328,7 +315,7 @@ export class Connector {
 				})
 			})
 
-			await handler(context, newInput, new ResponseStream<any>(resInterceptor))
+			await handler(newContext, input, new ResponseStream<any>(resInterceptor))
 			resInterceptor.end()
 			await interceptorComplete
 		})
