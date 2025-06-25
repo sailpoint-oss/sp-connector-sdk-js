@@ -243,7 +243,7 @@ export class Connector {
 			throw new Error(`unsupported command: ${type}`)
 		}
 
-		newInput.handler = this._handlers;
+		newInput.handler = customizer?.handlers;
 
 		logger.info("new Input object in sdk : " + JSON.stringify(newInput));
 
