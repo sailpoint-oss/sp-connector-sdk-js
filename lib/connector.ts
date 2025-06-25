@@ -255,6 +255,7 @@ export class Connector {
 		logger.info("New Context object in sdk: " + JSON.stringify(newContext));
 		logger.info("Customizer object in sdk: " + JSON.stringify(customizer));
 
+
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
 			if (!customizer) {
@@ -266,7 +267,7 @@ export class Connector {
 			let beforeHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(
 				customizer.handlerKey(CustomizerType.Before, type)
 			)
-			if (beforeHandler) {
+			if (beforeHandler!=undefined) {
 				logger.info("before Customizer found " + JSON.stringify(beforeHandler));
 				newInput = await beforeHandler(context, newInput)
 			}
