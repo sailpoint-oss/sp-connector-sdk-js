@@ -233,7 +233,7 @@ export class Connector {
 	): Promise<void> {
 		let totalTime: number = 0
 		let roCount: number = 0
-
+		let newInput = { ...input };
 		logger.info("Context object in sdk type : " + JSON.stringify(type));
 
 		logger.info("Input object in sdk : " + JSON.stringify(input));
@@ -243,7 +243,7 @@ export class Connector {
 			throw new Error(`unsupported command: ${type}`)
 		}
 
-		input.handler = this._handlers;
+		newInput.handler = this._handlers;
 
 		//logger.info("Context object in sdk handler : " + JSON.stringify(handler));
 		// context.handler = this._handlers;
