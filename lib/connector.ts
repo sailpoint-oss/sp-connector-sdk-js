@@ -245,6 +245,8 @@ export class Connector {
 
 		newInput.handler = this._handlers;
 
+		logger.info("new Input object in sdk : " + JSON.stringify(newInput));
+
 		//logger.info("Context object in sdk handler : " + JSON.stringify(handler));
 		// context.handler = this._handlers;
 		const newContext = { ...context, handler: this._handlers };
@@ -257,7 +259,7 @@ export class Connector {
 			// If customizer does not exist, we just run the command handler itself.
 			if (!customizer) {
 				logger.info("Customizer not found " + JSON.stringify(customizer));
-				return handler(context, input, new ResponseStream<any>(res))
+				return handler(context, newInput, new ResponseStream<any>(res))
 			}
 
 			// If before handler exists, run the before handler and updates the command input
@@ -266,7 +268,7 @@ export class Connector {
 			)
 			if (beforeHandler) {
 				logger.info("before Customizer found " + JSON.stringify(beforeHandler));
-				input = await beforeHandler(context, input)
+				newInput = await beforeHandler(context, newInput)
 			}
 
 			// If after handler does not exist, run the command handler with updated input
@@ -274,7 +276,7 @@ export class Connector {
 				customizer.handlerKey(CustomizerType.After, type)
 			)
 			if (!afterHandler) {
-				return handler(context, input, new ResponseStream<any>(res))
+				return handler(context, newInput, new ResponseStream<any>(res))
 			}
 
 			// If after handler exists, run the after handler with an interceptor. Because we pass in writable to the command handlder,
@@ -325,7 +327,7 @@ export class Connector {
 				})
 			})
 
-			await handler(context, input, new ResponseStream<any>(resInterceptor))
+			await handler(context, newInput, new ResponseStream<any>(resInterceptor))
 			resInterceptor.end()
 			await interceptorComplete
 		})
