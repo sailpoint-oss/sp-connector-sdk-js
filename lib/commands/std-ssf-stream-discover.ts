@@ -7,7 +7,7 @@ import { ObjectOutput } from './command'
  */
 export type StdSsfStreamDiscoverInput = {
     url: string
-    headers: any
+    headers: Map<string, string>
 }
 
 /**

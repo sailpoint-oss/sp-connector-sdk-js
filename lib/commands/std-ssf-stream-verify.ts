@@ -8,7 +8,7 @@ import { ObjectOutput } from './command'
 export type StdSsfStreamVerifyInput = {
     streamId: string
     payload: any
-    headers: any
+    headers: Map<string, string>
 }
 
 /**

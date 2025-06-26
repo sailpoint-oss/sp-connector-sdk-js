@@ -7,7 +7,7 @@ import { ObjectOutput } from './command'
  */
 export type StdSsfStreamDeleteInput = {
     streamId: string
-    headers: any
+    headers: Map<string, string>
 }
 
 /**

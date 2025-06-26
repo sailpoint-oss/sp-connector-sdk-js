@@ -8,7 +8,7 @@ import { ObjectOutput } from './command'
 export type StdSsfStreamStatusUpdateInput = {
     streamId: string
     payload: any
-    headers: any
+    headers: Map<string, string>
 }
 
 /**
