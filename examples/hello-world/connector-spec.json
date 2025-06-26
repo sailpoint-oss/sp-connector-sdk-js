@@ -1,23 +1,19 @@
 {
-    "name": "Hello World",
-		"visibility": "private",
-		"topology": "runtime",
-		"commands": [
-			"std:test-connection",
-			"std:account:read",
-			"std:account:list"
-		],
-		"sourceConfig": [
+	"name": "Hello World",
+	"visibility": "private",
+	"topology": "runtime",
+	"commands": ["std:test-connection", "std:account:read", "std:account:list"],
+	"sourceConfig": [
+		{
+			"type": "section",
+			"items": [
 				{
-					"type": "section",
-					"items": [
-						{
-							"key": "token",
-							"label": "Authentication token Hello World Service",
-							"type": "text",
-							"required": true
-						}
-					]
+					"key": "token",
+					"label": "Authentication token Hello World Service",
+					"type": "text",
+					"required": true
 				}
-		]
+			]
+		}
+	]
 }

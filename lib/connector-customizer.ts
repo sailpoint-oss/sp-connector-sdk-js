@@ -38,8 +38,9 @@ import {
 	StdConfigOptionsBeforeHandler,
 	StdApplicationDiscoveryListBeforeHandler,
 	StdApplicationDiscoveryListAfterHandler,
-	StdAccountListAfterHandler
+	StdAccountListAfterHandler,
 } from './connector-customizer-handler'
+import { logger } from './logger'
 
 /**
  * Connector customizer to build by attaching handlers for supported commands.
@@ -190,6 +191,7 @@ export class ConnectorCustomizer {
 	 */
 	beforeStdAccountUnlock(handler: StdAccountUnlockBeforeHandler): this {
 		this._handlers.set(this.handlerKey(CustomizerType.Before, StandardCommand.StdAccountUnlock), handler)
+		
 		return this
 	}
 
@@ -237,7 +239,6 @@ export class ConnectorCustomizer {
 		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdAuthenticate), handler)
 		return this
 	}
-
 
 	/**
 	 * Add a before handler for 'std:config-options:read' command
@@ -311,7 +312,6 @@ export class ConnectorCustomizer {
 		return this
 	}
 
-
 	/**
 	 * Add a before handler for 'std:change-password' command
 	 * @param handler handler
@@ -367,6 +367,27 @@ export class ConnectorCustomizer {
 	}
 
 	/**
+	 * Add a before handler for 'std:source-data:read' command
+	 * @param handler handler
+	 */
+	beforeEndpoint(handler: any, endpointPointName: string): this {
+		this._handlers.set(endpointPointName, handler)
+		return this
+		// //return this._execEndpoint(handler, context, input)
+		// return await contextState.run(context, () => handler)
+	}
+
+	/**
+	 * Add a before handler for 'std:source-data:read' command
+	 * @param handler handler
+	 */
+	afterEndpoint(handler: any, endpointPointName: string): this {
+		this._handlers.set(endpointPointName, handler)
+		return this
+		//return await contextState.run(context, () => handler(context, input))
+	}
+
+	/**
 	 * Generate handler key base on customizer type and command type
 	 *
 	 * @param customizerType customizer type
@@ -386,6 +407,8 @@ export class ConnectorCustomizer {
 	 */
 	async _exec(type: string, context: Context, input: any): Promise<any> {
 		const handler: ConnectorCustomizerHandler | undefined = this._handlers.get(type)
+		logger.info("Handler xxxx " + JSON.stringify(this._handlers));
+		logger.info("Context xxxx " + JSON.stringify(context));
 		if (!handler) {
 			throw new Error(`No handler found for type: ${type}`)
 		}

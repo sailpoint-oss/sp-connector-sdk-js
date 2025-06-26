@@ -5,17 +5,17 @@
  */
 export enum ConnectorErrorType {
 	Generic = 'generic',
-	NotFound = 'notFound'
+	NotFound = 'notFound',
 }
 
 /**
  * Connector error types
  */
 export class ConnectorError extends Error {
-    type: ConnectorErrorType
+	type: ConnectorErrorType
 
-    constructor(message:string, type = ConnectorErrorType.Generic) {
-        super(message)
+	constructor(message: string, type = ConnectorErrorType.Generic) {
+		super(message)
 		this.type = type
 	}
 }

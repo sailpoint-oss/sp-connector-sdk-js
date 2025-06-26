@@ -26,4 +26,3 @@ type SourceDataRead = {
  * Output object of `std:source-data:read` command
  */
 export type StdSourceDataReadOutput = SourceDataRead[]
-	

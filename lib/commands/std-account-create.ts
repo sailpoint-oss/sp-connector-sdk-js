@@ -29,6 +29,6 @@ export type StdAccountCreateInput = {
 export type StdAccountCreateOutput = ObjectOutput & {
 	disabled?: boolean
 	locked?: boolean
-	attributes: Attributes,
+	attributes: Attributes
 	results?: Result[]
 }
