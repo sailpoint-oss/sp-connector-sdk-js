@@ -23,6 +23,14 @@ export enum StandardCommand {
 	StdSourceDataRead = 'std:source-data:read',
 	StdConfigOptions = 'std:config-options:read',
 	StdApplicationDiscoveryList = 'std:application-discovery:list',
+	StdSsfStreamDiscover = 'std:ssf-stream:discover',
+    StdSsfStreamRead = 'std:ssf-stream:read',
+    StdSsfStreamCreate = 'std:ssf-stream:create',
+    StdSsfStreamUpdate = 'std:ssf-stream:update',
+    StdSsfStreamStatusUpdate = 'std:ssf-stream:status-update',
+    StdSsfStreamDelete = 'std:ssf-stream:delete',
+    StdSsfStreamVerify = 'std:ssf-stream:verify',
+    StdSsfStreamReplace = 'std:ssf-stream:replace',
 }
 
 /**

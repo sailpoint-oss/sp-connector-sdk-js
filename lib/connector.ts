@@ -20,7 +20,15 @@ import {
 	StdSourceDataDiscoverHandler,
 	StdSourceDataReadHandler,
 	StdConfigOptionsHandler,
-	StdApplicationDiscoveryListHandler
+	StdApplicationDiscoveryListHandler,
+	StdSsfStreamCreateHandler,
+	StdSsfStreamDiscoverHandler,
+	StdSsfStreamReadHandler,
+	StdSsfStreamUpdateHandler,
+	StdSsfStreamStatusUpdateHandler,
+	StdSsfStreamDeleteHandler,
+	StdSsfStreamVerifyHandler,
+	StdSsfStreamReplaceHandler
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import { StandardCommand } from './commands'
@@ -201,6 +209,71 @@ export class Connector {
 	 */
 	stdSourceDataRead(handler: StdSourceDataReadHandler): this {
 		return this.command(StandardCommand.StdSourceDataRead, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:discover' command
+	 * @param handler handler
+	 */
+	stdSsfStreamDiscover(handler: StdSsfStreamDiscoverHandler): this {
+		return this.command(StandardCommand.StdSsfStreamDiscover, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:read' command
+	 * @param handler handler
+	 */
+	stdSsfStreamRead(handler: StdSsfStreamReadHandler): this {
+		return this.command(StandardCommand.StdSsfStreamRead, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:create' command
+	 * @param handler handler
+	 */
+	stdSsfStreamCreate(handler: StdSsfStreamCreateHandler): this {
+		return this.command(StandardCommand.StdSsfStreamCreate, handler)
+	}
+
+
+	/**
+	 * Add a handler for 'std:ssf-stream:update' command
+	 * @param handler handler
+	 */
+	stdSsfStreamUpdate(handler: StdSsfStreamUpdateHandler): this {
+		return this.command(StandardCommand.StdSsfStreamUpdate, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:status-update' command
+	 * @param handler handler
+	 */
+	stdSsfStreamStatusUpdate(handler: StdSsfStreamStatusUpdateHandler): this {
+		return this.command(StandardCommand.StdSsfStreamStatusUpdate, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:delete' command
+	 * @param handler handler
+	 */
+	stdSsfStreamDelete(handler: StdSsfStreamDeleteHandler): this {
+		return this.command(StandardCommand.StdSsfStreamDelete, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:verify' command
+	 * @param handler handler
+	 */
+	stdSsfStreamVerify(handler: StdSsfStreamVerifyHandler): this {
+		return this.command(StandardCommand.StdSsfStreamVerify, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:replace' command
+	 * @param handler handler
+	 */
+	stdSsfStreamReplace(handler: StdSsfStreamReplaceHandler): this {
+		return this.command(StandardCommand.StdSsfStreamReplace, handler)
 	}
 
 
