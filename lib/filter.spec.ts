@@ -10,8 +10,8 @@ describe('Filter class', () => {
       email: 'alice@example.com',
       address: ['Pune','Austin'],
       department: '',
-		tags: ['developer@example.com', 'TeamLead@Example.org'],
-		locations: ['Hyderabad', 'Chennai', 'Mumbai'],
+      tags: ['developer@example.com', 'TeamLead@Example.org'],
+      locations: ['Hyderabad', 'Chennai', 'Mumbai'],
     }
     filterInstance = new Filter(data);
   });
@@ -161,18 +161,18 @@ describe('Filter class', () => {
     expect(filterInstance.matcher("unknown.isNull()")).toBe(false);
   });
 
-	test('should apply containsIgnoreCase on multi-valued "tags"', () => {
-		expect(filterInstance.matcher('tags.containsIgnoreCase("example")')).toBe(true); // partial
-		expect(filterInstance.matcher('tags.containsIgnoreCase("TEAMLEAD")')).toBe(true); // partial, different case
-		expect(filterInstance.matcher('tags.containsIgnoreCase("developer@example.com")')).toBe(true); // exact match
-		expect(filterInstance.matcher('tags.containsIgnoreCase("manager")')).toBe(false); // no match
+  test('should apply containsIgnoreCase on multi-valued "tags"', () => {
+    expect(filterInstance.matcher('tags.containsIgnoreCase("example")')).toBe(true);
+		expect(filterInstance.matcher('tags.containsIgnoreCase("TEAMLEAD")')).toBe(true);
+		expect(filterInstance.matcher('tags.containsIgnoreCase("developer@example.com")')).toBe(true);
+		expect(filterInstance.matcher('tags.containsIgnoreCase("manager")')).toBe(false);
 	});
-
-	test('should apply containsAllIgnoreCase on multi-valued "locations"', () => {
-		expect(filterInstance.matcher('locations.containsAllIgnoreCase("hyderabad", "CHENNAI")')).toBe(true); // different cases
-		expect(filterInstance.matcher('locations.containsAllIgnoreCase("Mumbai", "chennai")')).toBe(true);    // different order
-		expect(filterInstance.matcher('locations.containsAllIgnoreCase("Hyderabad", "Delhi")')).toBe(false);  // one missing
-		expect(filterInstance.matcher('locations.containsAllIgnoreCase("Chennai")')).toBe(true);              // single arg
+  
+  test('should apply containsAllIgnoreCase on multi-valued "locations"', () => {
+    expect(filterInstance.matcher('locations.containsAllIgnoreCase("hyderabad", "CHENNAI")')).toBe(true);
+		expect(filterInstance.matcher('locations.containsAllIgnoreCase("Mumbai", "chennai")')).toBe(true);
+		expect(filterInstance.matcher('locations.containsAllIgnoreCase("Hyderabad", "Delhi")')).toBe(false);
+		expect(filterInstance.matcher('locations.containsAllIgnoreCase("Chennai")')).toBe(true);
 	});
 
 });
