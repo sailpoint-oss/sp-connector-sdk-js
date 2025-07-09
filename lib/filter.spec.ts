@@ -163,16 +163,16 @@ describe('Filter class', () => {
 
   test('should apply containsIgnoreCase on multi-valued "tags"', () => {
     expect(filterInstance.matcher('tags.containsIgnoreCase("example")')).toBe(true);
-		expect(filterInstance.matcher('tags.containsIgnoreCase("TEAMLEAD")')).toBe(true);
-		expect(filterInstance.matcher('tags.containsIgnoreCase("developer@example.com")')).toBe(true);
-		expect(filterInstance.matcher('tags.containsIgnoreCase("manager")')).toBe(false);
+	expect(filterInstance.matcher('tags.containsIgnoreCase("TEAMLEAD")')).toBe(true);
+	expect(filterInstance.matcher('tags.containsIgnoreCase("developer@example.com")')).toBe(true);
+	expect(filterInstance.matcher('tags.containsIgnoreCase("manager")')).toBe(false);
 	});
-  
+
   test('should apply containsAllIgnoreCase on multi-valued "locations"', () => {
     expect(filterInstance.matcher('locations.containsAllIgnoreCase("hyderabad", "CHENNAI")')).toBe(true);
-		expect(filterInstance.matcher('locations.containsAllIgnoreCase("Mumbai", "chennai")')).toBe(true);
-		expect(filterInstance.matcher('locations.containsAllIgnoreCase("Hyderabad", "Delhi")')).toBe(false);
-		expect(filterInstance.matcher('locations.containsAllIgnoreCase("Chennai")')).toBe(true);
+	expect(filterInstance.matcher('locations.containsAllIgnoreCase("Mumbai", "chennai")')).toBe(true);
+	expect(filterInstance.matcher('locations.containsAllIgnoreCase("Hyderabad", "Delhi")')).toBe(false);
+	expect(filterInstance.matcher('locations.containsAllIgnoreCase("Chennai")')).toBe(true);
 	});
 
 });
