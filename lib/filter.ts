@@ -101,13 +101,34 @@ export class Filter {
         case 'contains':  // check if the method is `contains` and apply it to the value
           return value.includes(args[0].value) // apply the contains method
         case 'containsIgnoreCase':  // check if the method is `containsIgnoreCase` and apply it to the value
-          return value.toLowerCase().includes(args[0].value?.toString().toLowerCase()) // apply the containsIgnoreCase method
+          const searchValue = (args[0].value?.toString() || '').toLowerCase();  
+          if (Array.isArray(value)) {
+            return value.some(val =>
+              typeof val === 'string' &&
+              val.toLowerCase().includes(searchValue)
+            );
+          } else if (typeof value === 'string') {
+            return value.toLowerCase().includes(searchValue);
+          } else {
+            console.warn(`Unexpected type for 'containsIgnoreCase':`, value);
+            return false;
+          } // apply the containsIgnoreCase method
         case 'containsAll':// Check if the method is `containsAll` and apply it to the value
           // ensure all values are present in the property
           return args.every((arg => value.includes(arg.value))) // apply the containsAll method
         case 'containsAllIgnoreCase':// Check if the method is `containsAllIgnoreCase` and apply it to the value
           // ensure all values are present in the property
-          return (value as string[]).every((val) => args.some((arg) => (val || '').toLowerCase().includes((arg.value?.toString() || '').toLowerCase())))// apply the containsAllIgnoreCase method
+            if (!Array.isArray(value)) {
+              console.warn(`Expected an array for 'containsAllIgnoreCase', but got:`, value);
+              return false;
+            }
+            return args.every(arg => {
+              const searchValue = (arg.value?.toString() || '').toLowerCase();
+              return value.some(val =>
+                typeof val === 'string' &&
+                val.toLowerCase() === searchValue
+              );
+            });// apply the containsAllIgnoreCase method
         default:
           return false
       }
