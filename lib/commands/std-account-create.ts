@@ -19,7 +19,7 @@ export type CreateAttributeMetadata = {
 export type StdAccountCreateInput = {
 	identity?: string
 	attributes: any
-	attributesWithMetadata: CreateAttributeMetadata[]
+	attributesWithMetadata?: CreateAttributeMetadata[]
 	schema?: AccountSchema
 }
 
