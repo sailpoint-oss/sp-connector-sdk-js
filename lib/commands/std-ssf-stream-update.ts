@@ -6,9 +6,7 @@ import { ObjectOutput } from './command'
  * Input object of `std:ssf-stream:update` command
  */
 export type StdSsfStreamUpdateInput = {
-    streamId: string
-    payload: any
-    headers: Map<string, string>
+    stream: any
 }
 
 /**
