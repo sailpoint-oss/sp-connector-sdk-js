@@ -6,8 +6,7 @@ import { ObjectOutput } from './command'
  * Input object of `std:ssf-stream:read` command
  */
 export type StdSsfStreamReadInput = {
-    streamId: string
-    headers: Map<string, string>
+    stream: any
 }
 
 /**
