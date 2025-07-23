@@ -233,14 +233,15 @@ export class Connector {
 	): Promise<void> {
 		let totalTime: number = 0
 		let roCount: number = 0
-		let newContext = { ...context };
+		context.handler = customizer?.handlers;
+		//let newContext = { ...context };
 		
 		const handler: CommandHandler | undefined = this._handlers.get(type)
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
 		}
 
-		newContext.handler = customizer?.handlers;
+		//newContext.handler = customizer?.handlers;
 
 		//logger.info("Context object in sdk handler : " + JSON.stringify(handler));
 		// context.handler = this._handlers;
@@ -248,7 +249,7 @@ export class Connector {
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
 			if (!customizer) {
-				return handler(newContext, input, new ResponseStream<any>(res))
+				return handler(context, input, new ResponseStream<any>(res))
 			}
 
 			// If before handler exists, run the before handler and updates the command input
@@ -256,7 +257,7 @@ export class Connector {
 				customizer.handlerKey(CustomizerType.Before, type)
 			)
 			if (beforeHandler) {
-				input = await beforeHandler(newContext, input)
+				input = await beforeHandler(context, input)
 			}
 
 			// If after handler does not exist, run the command handler with updated input
@@ -264,7 +265,7 @@ export class Connector {
 				customizer.handlerKey(CustomizerType.After, type)
 			)
 			if (!afterHandler) {
-				return handler(newContext, input, new ResponseStream<any>(res))
+				return handler(context, input, new ResponseStream<any>(res))
 			}
 
 			// If after handler exists, run the after handler with an interceptor. Because we pass in writable to the command handlder,
@@ -315,7 +316,7 @@ export class Connector {
 				})
 			})
 
-			await handler(newContext, input, new ResponseStream<any>(resInterceptor))
+			await handler(context, input, new ResponseStream<any>(resInterceptor))
 			resInterceptor.end()
 			await interceptorComplete
 		})
