@@ -46,10 +46,10 @@ import { logger } from './logger'
  * Connector customizer to build by attaching handlers for supported commands.
  */
 export class ConnectorCustomizer {
-	private readonly _handlers: Map<string, ConnectorCustomizerHandler>
+	private readonly _handlers: Map<any, ConnectorCustomizerHandler>
 
 	constructor() {
-		this._handlers = new Map<string, ConnectorCustomizerHandler>()
+		this._handlers = new Map<any, ConnectorCustomizerHandler>()
 	}
 
 	/**
@@ -370,8 +370,8 @@ export class ConnectorCustomizer {
 	 * Add a before handler for 'std:source-data:read' command
 	 * @param handler handler
 	 */
-	beforeEndpoint(handler: any, endpointPointName: string): this {
-		this._handlers.set(endpointPointName, handler)
+	beforeEndpoint(handler: any, endpointPointNames: Array<string>): this {
+		this._handlers.set(endpointPointNames, handler)
 		return this
 	}
 
@@ -379,8 +379,8 @@ export class ConnectorCustomizer {
 	 * Add a before handler for 'std:source-data:read' command
 	 * @param handler handler
 	 */
-	afterEndpoint(handler: any, endpointPointName: string): this {
-		this._handlers.set(endpointPointName, handler)
+	afterEndpoint(handler: any, endpointPointNames: Array<string>): this {
+		this._handlers.set(endpointPointNames, handler)
 		return this
 	}
 

@@ -233,19 +233,12 @@ export class Connector {
 	): Promise<void> {
 		let totalTime: number = 0
 		let roCount: number = 0
-		context.handler = customizer?.handlers;
-		//let newContext = { ...context };
 		
 		const handler: CommandHandler | undefined = this._handlers.get(type)
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
 		}
 
-		//newContext.handler = customizer?.handlers;
-
-		//logger.info("Context object in sdk handler : " + JSON.stringify(handler));
-		// context.handler = this._handlers;
-		
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
 			if (!customizer) {
