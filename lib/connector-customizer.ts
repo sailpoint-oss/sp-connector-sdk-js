@@ -321,7 +321,7 @@ export class ConnectorCustomizer {
 	}
 
 	/**
-	 * Add a before handler for Web Service SaaS after endpoint
+	 * Add a after handler for Web Service SaaS after endpoint
 	 * @param handler handler
 	 */
 	afterEndpoint(handler: any, endpointPointNames: Array<string>): this {
