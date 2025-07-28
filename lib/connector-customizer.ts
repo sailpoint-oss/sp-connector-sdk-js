@@ -45,7 +45,7 @@ import {
  * Connector customizer to build by attaching handlers for supported commands.
  */
 export class ConnectorCustomizer {
-	private readonly _handlers: Map<string, ConnectorCustomizerHandler>
+	private readonly _handlers: Map<any, ConnectorCustomizerHandler>
 
 	constructor() {
 		this._handlers = new Map<string, ConnectorCustomizerHandler>()
@@ -308,6 +308,24 @@ export class ConnectorCustomizer {
 	 */
 	afterStdEntitlementList(handler: StdEntitlementListAfterHandler): this {
 		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdEntitlementList), handler)
+		return this
+	}
+
+		/**
+	 * Add a before handler for Web Service SaaS before endpoint
+	 * @param handler handler
+	 */
+	beforeEndpoint(handler: any, endpointPointNames: Array<string>): this {
+		this._handlers.set(endpointPointNames, handler)
+		return this
+	}
+
+	/**
+	 * Add a before handler for Web Service SaaS after endpoint
+	 * @param handler handler
+	 */
+	afterEndpoint(handler: any, endpointPointNames: Array<string>): this {
+		this._handlers.set(endpointPointNames, handler)
 		return this
 	}
 
