@@ -17,7 +17,6 @@ export const readConfig = async (): Promise<any> => {
 		return store.cfg;
 	}
 
-	console.log("fco: calling custom readConfig");
 	if (_config != undefined) {
 		return _config;
 	}
