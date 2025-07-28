@@ -1,5 +1,6 @@
 /* Copyright (c) 2023. SailPoint Technologies, Inc. All rights reserved. */
 
+import { log } from 'console'
 import { StandardCommand } from './commands'
 import { CustomizerType, createConnectorCustomizer } from './connector-customizer'
 import { Context, AssumeAwsRoleRequest, AssumeAwsRoleResponse } from './connector-handler'
@@ -74,6 +75,9 @@ describe('exec handlers', () => {
 				output.attributes.location = 'austin'
 				return output
 			})
+			.beforeEndpoint(async () => {
+				console.log("Before Endpoint method")
+			},['Account Aggregation'])
 
 		let customizedInput = await customizer._exec(customizer.handlerKey(CustomizerType.Before, StandardCommand.StdAccountCreate),
 			MOCK_CONTEXT, {

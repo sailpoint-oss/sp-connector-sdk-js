@@ -24,7 +24,7 @@
 		"prebuild": "npm run clean",
 		"build": "npx tsc",
 		"prettier": "npx prettier --write .",
-		"test": "jest lib/connector.spec.ts --coverage",
+		"test": "jest lib/connector-customizer.spec.ts --coverage",
 		"prepare": "npm run build"
 	},
 	"dependencies": {

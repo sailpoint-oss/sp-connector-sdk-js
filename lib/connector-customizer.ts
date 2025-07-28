@@ -370,7 +370,7 @@ export class ConnectorCustomizer {
 	 * Add a before handler for 'std:source-data:read' command
 	 * @param handler handler
 	 */
-	beforeEndpoint(handler: any, endpointPointNames: string): this {
+	beforeEndpoint(handler: any, endpointPointNames: Array<string>): this {
 		this._handlers.set(endpointPointNames, handler)
 		return this
 	}
@@ -379,7 +379,7 @@ export class ConnectorCustomizer {
 	 * Add a before handler for 'std:source-data:read' command
 	 * @param handler handler
 	 */
-	afterEndpoint(handler: any, endpointPointNames: string): this {
+	afterEndpoint(handler: any, endpointPointNames: Array<string>): this {
 		this._handlers.set(endpointPointNames, handler)
 		return this
 	}
