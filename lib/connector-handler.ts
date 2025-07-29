@@ -17,6 +17,8 @@ import {
 	StdAccountUnlockOutput,
 	StdAccountUpdateInput,
 	StdAccountUpdateOutput,
+	StdAgentListInput,
+	StdAgentListOutput,
 	StdAuthenticateInput,
 	StdAuthenticateOutput,
 	StdConfigOptionsInput,
@@ -223,4 +225,10 @@ export type StdSsfStreamVerifyHandler = (
     context: Context,
     input: StdSsfStreamVerifyInput,
     res: Response<StdSsfStreamVerifyOutput>
+) => Promise<void>
+
+export type StdAgentListHandler = (
+    context: Context,
+    input: StdAgentListInput,
+    res: Response<StdAgentListOutput>
 ) => Promise<void>

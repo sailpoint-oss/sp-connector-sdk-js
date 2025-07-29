@@ -4,7 +4,7 @@ import { Connector, createConnector } from './connector'
 import { readConfig } from './config'
 import { StandardCommand } from './commands'
 import { PassThrough } from 'stream'
-import { ResponseStream } from './response'
+import { ResponseStream, ResponseStreamTransform } from './response'
 import { major } from 'semver'
 
 import packageJson from '../package.json'
@@ -62,9 +62,10 @@ describe('class properties and methods', () => {
 			.stdSsfStreamStatusUpdate(async (context, input, res) => {})
 			.stdSsfStreamVerify(async (context, input, res) => {})
 			.stdSsfStreamUpdate(async (context, input, res) => {})
+			.stdAgentList(async (context, input, res) => {})
 			.command('mock:custom:command', async (context, input, res) => {})
 
-		expect(connector.handlers.size).toBe(25)
+		expect(connector.handlers.size).toBe(26)
 	})
 })
 
@@ -288,6 +289,25 @@ describe('exec handlers', () => {
 			"type": "output",
 			"data": {"specification": spec},
 		})
+	})
+
+	it('should execute stdAgentListHandler', async () => {
+		let datasetIds: string[] = [];
+		const connector = createConnector().stdAgentList(async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input).toBeDefined()
+			expect(res).toBeInstanceOf(ResponseStreamTransform)
+			datasetIds.push(input.datasetId)
+		})
+
+		await connector._exec(
+			"std:agent:list",
+			MOCK_CONTEXT,
+			{ datasetIds: ["dataset1", "dataset2"] },
+			new PassThrough({ objectMode: true })
+		)
+
+		expect(datasetIds).toEqual(["dataset1", "dataset2"])
 	})
 
 	it('should execute custom handler', async () => {
