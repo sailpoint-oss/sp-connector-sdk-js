@@ -12,6 +12,7 @@ import {
 	StdAccountReadHandler,
 	StdAccountUnlockHandler,
 	StdAccountUpdateHandler,
+	StdAgentListHandler,
 	StdAuthenticateHandler,
 	StdEntitlementListHandler,
 	StdEntitlementReadHandler,
@@ -31,8 +32,8 @@ import {
 	StdSsfStreamReplaceHandler
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
-import { StandardCommand } from './commands'
-import { RawResponse, ResponseStream, ResponseType } from './response'
+import { StandardCommand, StdAgentListDatasetsInput, StdAgentListDatasetsOutput, StdAgentListOutput } from './commands'
+import { RawResponse, ResponseStream, ResponseType, Response, ResponseStreamTransform } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
 import { contextState } from './async-context';
 import { ConnectorCustomizer, CustomizerType as CustomizerType } from './connector-customizer'
@@ -274,6 +275,24 @@ export class Connector {
 	 */
 	stdSsfStreamReplace(handler: StdSsfStreamReplaceHandler): this {
 		return this.command(StandardCommand.StdSsfStreamReplace, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:agent:list' command
+	 * @param handler handler
+	 */
+	stdAgentList(handler: StdAgentListHandler): this {
+		return this.command(StandardCommand.StdAgentList, async (context: Context, input: StdAgentListDatasetsInput, res: Response<StdAgentListDatasetsOutput>): Promise<void> => {
+			for (const datasetId of input.datasetIds) {
+				const datasetRes = new ResponseStreamTransform<StdAgentListOutput,StdAgentListDatasetsOutput>(res, (v: StdAgentListOutput): StdAgentListDatasetsOutput => {
+					return {
+						...v,
+						datasetId: datasetId,
+					};
+				})
+				handler(context, { datasetId: datasetId }, datasetRes);
+			}
+		})
 	}
 
 
