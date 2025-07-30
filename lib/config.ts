@@ -28,6 +28,8 @@ export const readConfig = async (): Promise<any> => {
 
 	try {
 		_config = JSON.parse(Buffer.from(config, 'base64').toString())
+		//Remove large config in process.env, which causes spawning new processes to fail 
+		//due to inheriting an environment that is too large
 		delete process.env.CONNECTOR_CONFIG
 		return _config;
 	} catch (ignored) {
