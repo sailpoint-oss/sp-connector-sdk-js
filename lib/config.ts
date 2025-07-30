@@ -26,11 +26,10 @@ export const readConfig = async (): Promise<any> => {
 		throw new Error(`unexpected runtime error: missing connector config`)
 	}
 
-	_config = config;
-	process.env['CONNECTOR_CONFIG'] = undefined;
-
 	try {
-		return JSON.parse(Buffer.from(config, 'base64').toString())
+		_config = JSON.parse(Buffer.from(config, 'base64').toString())
+		delete process.env.CONNECTOR_CONFIG
+		return _config;
 	} catch (ignored) {
 		throw new Error(`unexpected runtime error: failed to parse connector config`)
 	}
