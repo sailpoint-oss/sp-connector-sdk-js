@@ -46,10 +46,12 @@ import { logger } from './logger'
  * Connector customizer to build by attaching handlers for supported commands.
  */
 export class ConnectorCustomizer {
-	private readonly _handlers: Map<any, ConnectorCustomizerHandler>
+	private readonly _handlers: Map<string, ConnectorCustomizerHandler>
+	private readonly _customizedOperationHandlers: Map<string, ConnectorCustomizerHandler>
 
 	constructor() {
-		this._handlers = new Map<any, ConnectorCustomizerHandler>()
+		this._handlers = new Map<string, ConnectorCustomizerHandler>()
+		this._customizedOperationHandlers = new Map<string, ConnectorCustomizerHandler>()
 	}
 
 	/**
@@ -57,6 +59,13 @@ export class ConnectorCustomizer {
 	 */
 	get handlers(): Map<string, ConnectorCustomizerHandler> {
 		return this._handlers
+	}
+
+	/**
+	 * Get the map of command handlers
+	 */
+	get customizerHandlers(): Map<string, ConnectorCustomizerHandler> {
+		return this._customizedOperationHandlers;
 	}
 
 	/**
@@ -367,20 +376,11 @@ export class ConnectorCustomizer {
 	}
 
 	/**
-	 * Add a before handler for 'std:source-data:read' command
+	 * Add customized handler to be consumed by connector
 	 * @param handler handler
 	 */
-	beforeEndpoint(handler: any, endpointPointNames: Array<string>): this {
-		this._handlers.set(endpointPointNames, handler)
-		return this
-	}
-
-	/**
-	 * Add a before handler for 'std:source-data:read' command
-	 * @param handler handler
-	 */
-	afterEndpoint(handler: any, endpointPointNames: Array<string>): this {
-		this._handlers.set(endpointPointNames, handler)
+	customizedOperationHandler(operationIdentifier: any, handler: any): this {
+		this._customizedOperationHandlers.set(operationIdentifier, handler)
 		return this
 	}
 

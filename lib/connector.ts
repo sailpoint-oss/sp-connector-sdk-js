@@ -235,6 +235,7 @@ export class Connector {
 		let roCount: number = 0
 		
 		const handler: CommandHandler | undefined = this._handlers.get(type)
+		const customizedOperationHandler = customizer?.customizerHandlers.get(type);
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
 		}
@@ -243,6 +244,11 @@ export class Connector {
 			// If customizer does not exist, we just run the command handler itself.
 			if (!customizer) {
 				return handler(context, input, new ResponseStream<any>(res))
+			}
+
+			if(customizedOperationHandler){
+				logger.info("Found customized op handler...")
+				return await customizedOperationHandler(context, input);
 			}
 
 			// If before handler exists, run the before handler and updates the command input

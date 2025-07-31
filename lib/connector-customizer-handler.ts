@@ -203,3 +203,8 @@ export type StdApplicationDiscoveryListAfterHandler = (
 	context: Context,
 	output: StdApplicationDiscoveryOutputList
 ) => Promise<StdApplicationDiscoveryOutputList>
+
+export type CustomizedOperationHandler = (
+	context: Context,
+	output: any
+) => Promise<any>

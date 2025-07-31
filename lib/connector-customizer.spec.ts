@@ -18,6 +18,10 @@ class MockContext implements Context {
 		return Promise.resolve(new AssumeAwsRoleResponse('ccessKeyId', 'secretAccessKey', 'sessionToken', '123'))
 	}
 
+	customizedOperation(operationIdentifier: string, input: any) {
+		return ''
+	}
+
 }
 
 const MOCK_CONTEXT = new MockContext()
