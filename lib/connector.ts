@@ -233,18 +233,22 @@ export class Connector {
 	): Promise<void> {
 		let totalTime: number = 0
 		let roCount: number = 0
-		
+		logger.info("Inside exec method");
 		const handler: CommandHandler | undefined = this._handlers.get(type)
-		const customizedOperationHandler = customizer?.customizerHandlers.get(type);
+		const customizedOperationHandler = customizer?.customizerHandlers.get('tc:before');
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
 		}
+		logger.info("242.....  " + JSON.stringify(customizer?.customizerHandlers));
+		logger.info("243.....  " + JSON.stringify(customizedOperationHandler));
 
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
 			if (!customizer) {
 				return handler(context, input, new ResponseStream<any>(res))
 			}
+
+			logger.info("251.....  ");
 
 			if(customizedOperationHandler){
 				logger.info("Found customized op handler...")
