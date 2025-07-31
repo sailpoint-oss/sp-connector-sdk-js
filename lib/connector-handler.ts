@@ -37,6 +37,7 @@ import {
 	StdSourceDataReadOutput,
 	StdTestConnectionInput,
 } from './commands'
+import { CustomizedOperationHandler } from './connector-customizer-handler'
 import { Response } from './response'
 
 /**
@@ -55,7 +56,7 @@ export interface Context {
 
 	reloadConfig(): Promise<any>
 	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse>;
-	customizedOperation(operationIdentifier: string, input: any): any;
+	customizedOperation(operationIdentifier: string, input: CustomizedOperationHandler): any;
 }
 export class AssumeAwsRoleRequest {
 	roleArn: string

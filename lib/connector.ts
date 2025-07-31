@@ -235,12 +235,11 @@ export class Connector {
 		let roCount: number = 0
 		logger.info("Inside exec method");
 		const handler: CommandHandler | undefined = this._handlers.get(type)
-		
+		const customizedOperationHandler: ConnectorCustomizerHandler | undefined = customizer?.customizerHandlers.get('tc:before');
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
 		}
-		
-
+	
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
 			if (!customizer) {
@@ -251,16 +250,7 @@ export class Connector {
 				customizer.handlerKey(CustomizerType.Before, type)
 			)
 
-			const customizedOperationHandler: ConnectorCustomizerHandler | undefined = customizer?.customizerHandlers.get('tc:before');
-			logger.info("242.....  " + JSON.stringify(customizer?.customizerHandlers));
-			logger.info("243.....  " + JSON.stringify(this._handlers));
-			logger.info("244.....  " + JSON.stringify(customizedOperationHandler));
-			logger.info("245.....  " + JSON.stringify(handler));
-			logger.info("Type of handler: " + typeof handler);
-			logger.info("Type of custom handler: " + typeof customizedOperationHandler);
-			logger.info("Type of before handler: " + typeof beforeHandler);
-
-			await customizedOperationHandler!(context,input)
+			//await customizedOperationHandler!(context,input)
 
 			// If before handler exists, run the before handler and updates the command input
 			
