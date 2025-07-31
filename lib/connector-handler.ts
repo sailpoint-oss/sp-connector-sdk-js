@@ -56,7 +56,7 @@ export interface Context {
 
 	reloadConfig(): Promise<any>
 	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse>;
-	customizedOperation(operationIdentifier: string, input: CustomizedOperationHandler): any;
+	customizedOperation(operationIdentifier: string, input: any): any;
 }
 export class AssumeAwsRoleRequest {
 	roleArn: string
