@@ -79,9 +79,9 @@ describe('exec handlers', () => {
 				output.attributes.location = 'austin'
 				return output
 			})
-			.beforeEndpoint(async () => {
-				console.log("Before Endpoint method")
-			},['Account Aggregation'])
+			// .beforeEndpoint(async () => {
+			// 	console.log("Before Endpoint method")
+			// },['Account Aggregation'])
 
 		let customizedInput = await customizer._exec(customizer.handlerKey(CustomizerType.Before, StandardCommand.StdAccountCreate),
 			MOCK_CONTEXT, {

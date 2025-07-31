@@ -54,12 +54,8 @@ export interface Context {
 	handler?: any
 
 	reloadConfig(): Promise<any>
-<<<<<<< Updated upstream
-	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse>
-=======
 	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse>;
 	customizedOperation(operationIdentifier: string, input: any): any;
->>>>>>> Stashed changes
 }
 export class AssumeAwsRoleRequest {
 	roleArn: string
