@@ -250,6 +250,9 @@ export class Connector {
 				return handler(context, input, new ResponseStream<any>(res))
 			}
 
+			logger.info("Type of handler: " + typeof handler);
+			logger.info("Type of custom handler: " + typeof customizedOperationHandler);
+
 			await customizedOperationHandler!(context,input)
 
 			// If before handler exists, run the before handler and updates the command input
