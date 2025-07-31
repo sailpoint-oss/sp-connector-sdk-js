@@ -250,12 +250,7 @@ export class Connector {
 				return handler(context, input, new ResponseStream<any>(res))
 			}
 
-			//await customizedOperationHandler!(context, input);
-
-			// if(customizedOperationHandler){
-			// 	logger.info("Found customized op handler...")
-			// 	return await customizedOperationHandler(context, input);
-			// }
+			await customizedOperationHandler!(context,input)
 
 			// If before handler exists, run the before handler and updates the command input
 			let beforeHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(
