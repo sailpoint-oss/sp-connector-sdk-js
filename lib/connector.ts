@@ -240,7 +240,8 @@ export class Connector {
 			throw new Error(`unsupported command: ${type}`)
 		}
 		logger.info("242.....  " + JSON.stringify(customizer?.customizerHandlers));
-		logger.info("243.....  " + JSON.stringify(customizedOperationHandler));
+		logger.info("243.....  " + JSON.stringify(this._handlers));
+		logger.info("244.....  " + JSON.stringify(customizedOperationHandler));
 
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
@@ -249,6 +250,8 @@ export class Connector {
 			}
 
 			logger.info("251.....  ");
+
+			logger.info("calling custom op handler" + await customizedOperationHandler!(context, input));
 
 			if(customizedOperationHandler){
 				logger.info("Found customized op handler...")
