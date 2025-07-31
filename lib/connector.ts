@@ -240,7 +240,7 @@ export class Connector {
 			throw new Error(`unsupported command: ${type}`)
 		}
 
-		context.customizedOperation = customizer?.customizedOperationHandler!;
+		//context.customizedOperation = customizer?.customizedOperationHandler!;
 	
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
