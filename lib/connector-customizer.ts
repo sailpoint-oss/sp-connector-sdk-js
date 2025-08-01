@@ -380,7 +380,7 @@ export class ConnectorCustomizer {
 	 * @param handler handler
 	 */
 	customizedOperationHandler(operationIdentifier: any, handler: ConnectorCustomizerHandler): this {
-		this._customizedOperationHandlers.set(operationIdentifier, handler)
+		this._handlers.set(operationIdentifier, handler)
 		return this
 	}
 
