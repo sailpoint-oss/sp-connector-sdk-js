@@ -287,10 +287,10 @@ export class Connector {
 				const datasetRes = new ResponseStreamTransform<StdAgentListOutput,StdAgentListDatasetsOutput>(res, (v: StdAgentListOutput): StdAgentListDatasetsOutput => {
 					return {
 						...v,
-						datasetId: datasetId,
+						datasetId,
 					};
 				})
-				handler(context, { datasetId: datasetId }, datasetRes);
+				await handler(context, { datasetId }, datasetRes);
 			}
 		})
 	}
