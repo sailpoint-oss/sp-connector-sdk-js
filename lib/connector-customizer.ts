@@ -38,7 +38,8 @@ import {
 	StdConfigOptionsBeforeHandler,
 	StdApplicationDiscoveryListBeforeHandler,
 	StdApplicationDiscoveryListAfterHandler,
-	StdAccountListAfterHandler
+	StdAccountListAfterHandler,
+	CustomizedOperationHandler
 } from './connector-customizer-handler'
 
 /**
@@ -46,9 +47,11 @@ import {
  */
 export class ConnectorCustomizer {
 	private readonly _handlers: Map<string, ConnectorCustomizerHandler>
+	private readonly _customizedOperationHandlers: Map<string, CustomizedOperationHandler>
 
 	constructor() {
 		this._handlers = new Map<string, ConnectorCustomizerHandler>()
+		this._customizedOperationHandlers = new Map<string, CustomizedOperationHandler>()
 	}
 
 	/**
@@ -56,6 +59,13 @@ export class ConnectorCustomizer {
 	 */
 	get handlers(): Map<string, ConnectorCustomizerHandler> {
 		return this._handlers
+	}
+
+	/**
+	 * Get the map of custom operation handlers
+	 */
+	get customizedOperationHandlers(): Map<string, ConnectorCustomizerHandler> {
+		return this._customizedOperationHandlers;
 	}
 
 	/**
@@ -363,6 +373,15 @@ export class ConnectorCustomizer {
 	 */
 	afterStdSourceDataRead(handler: StdSourceDataReadAfterHandler): this {
 		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdSourceDataRead), handler)
+		return this
+	}
+
+	/**
+	 * Add customized handler to be consumed by connector
+	 * @param handler handler
+	 */
+	customizedOperation(operationIdentifier: string, handler: CustomizedOperationHandler): this {
+		this._customizedOperationHandlers.set(operationIdentifier, handler)
 		return this
 	}
 

@@ -191,6 +191,8 @@ export type StdSourceDataReadAfterHandler = (
 
 export type ConnectorCustomizerHandler = (context: Context, input: any) => Promise<any>
 
+export type CustomizedOperationHandler = (context: Context, input: any) => Promise<any>
+
 export type StdConfigOptionsBeforeHandler = (
 	context: Context,
 	input: StdConfigOptionsInput
