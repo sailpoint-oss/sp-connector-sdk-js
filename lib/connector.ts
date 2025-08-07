@@ -304,13 +304,13 @@ export class Connector {
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
 		}
-
+		
 		await contextState.run(context, async () => {
 			// If customizer does not exist, we just run the command handler itself.
 			if (!customizer) {
 				return handler(context, input, new ResponseStream<any>(res))
 			}
-
+			
 			// If before handler exists, run the before handler and updates the command input
 			let beforeHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(CustomizerType.Before, type))
 			if (beforeHandler) {

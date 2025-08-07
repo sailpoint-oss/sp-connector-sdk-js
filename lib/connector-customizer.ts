@@ -45,10 +45,12 @@ import {
  * Connector customizer to build by attaching handlers for supported commands.
  */
 export class ConnectorCustomizer {
-	private readonly _handlers: Map<any, ConnectorCustomizerHandler>
+	private readonly _handlers: Map<string, ConnectorCustomizerHandler>
+	private readonly _customizedOperationHandlers: Map<string, ConnectorCustomizerHandler>
 
 	constructor() {
 		this._handlers = new Map<string, ConnectorCustomizerHandler>()
+		this._customizedOperationHandlers = new Map<string, ConnectorCustomizerHandler>()
 	}
 
 	/**
@@ -381,6 +383,15 @@ export class ConnectorCustomizer {
 	 */
 	afterStdSourceDataRead(handler: StdSourceDataReadAfterHandler): this {
 		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdSourceDataRead), handler)
+		return this
+	}
+
+	/**
+	 * Add customized handler to be consumed by connector
+	 * @param handler handler
+	 */
+	customizedOperationHandler(operationIdentifier: string, handler: ConnectorCustomizerHandler): this {
+		this._customizedOperationHandlers.set(operationIdentifier, handler)
 		return this
 	}
 
