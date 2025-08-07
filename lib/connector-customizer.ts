@@ -46,9 +46,11 @@ import {
  */
 export class ConnectorCustomizer {
 	private readonly _handlers: Map<string, ConnectorCustomizerHandler>
+	private readonly _customizedOperationHandlers: Map<string, ConnectorCustomizerHandler>
 
 	constructor() {
 		this._handlers = new Map<string, ConnectorCustomizerHandler>()
+		this._customizedOperationHandlers = new Map<string, ConnectorCustomizerHandler>()
 	}
 
 	/**
@@ -311,6 +313,24 @@ export class ConnectorCustomizer {
 		return this
 	}
 
+		/**
+	 * Add a before handler for Web Service SaaS before endpoint
+	 * @param handler handler
+	 */
+	beforeEndpoint(handler: any, endpointPointNames: Array<string>): this {
+		this._handlers.set(endpointPointNames, handler)
+		return this
+	}
+
+	/**
+	 * Add a after handler for Web Service SaaS after endpoint
+	 * @param handler handler
+	 */
+	afterEndpoint(handler: any, endpointPointNames: Array<string>): this {
+		this._handlers.set(endpointPointNames, handler)
+		return this
+	}
+
 
 	/**
 	 * Add a before handler for 'std:change-password' command
@@ -363,6 +383,15 @@ export class ConnectorCustomizer {
 	 */
 	afterStdSourceDataRead(handler: StdSourceDataReadAfterHandler): this {
 		this._handlers.set(this.handlerKey(CustomizerType.After, StandardCommand.StdSourceDataRead), handler)
+		return this
+	}
+
+	/**
+	 * Add customized handler to be consumed by connector
+	 * @param handler handler
+	 */
+	customizedOperationHandler(operationIdentifier: string, handler: ConnectorCustomizerHandler): this {
+		this._customizedOperationHandlers.set(operationIdentifier, handler)
 		return this
 	}
 
