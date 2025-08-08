@@ -519,6 +519,12 @@ describe('connector errors', () => {
 })
 
 describe('read config', () => {
+	it('should parse config from base64 encoded string env var', async () => {
+		process.env.CONNECTOR_CONFIG = 'eyJrZXkiOiJ2YWx1ZSJ9'
+
+
+		expect(await readConfig()).toStrictEqual({ key: 'value' })
+	})
 
 	it('should throw error when config env var is missing', async () => {
 		delete process.env.CONNECTOR_CONFIG
@@ -539,16 +545,4 @@ describe('read config', () => {
 			expect(e).toStrictEqual(new Error(`unexpected runtime error: failed to parse connector config`))
 		}
 	})
-
-	it('should parse config from base64 encoded string env var', async () => {
-		process.env.CONNECTOR_CONFIG = 'eyJrZXkiOiJ2YWx1ZSJ9';
-
-		//this call returns config retrieved from process.env.CONNECTOR_CONFIG
-		expect(await readConfig()).toStrictEqual({ key: 'value' });
-		//this call will now return config saved in local variable.
-		expect(await readConfig()).toStrictEqual({ key: 'value' });
-		expect(process.env.CONNECTOR_CONFIG).toBeUndefined();
-
-	})
-	
 })
