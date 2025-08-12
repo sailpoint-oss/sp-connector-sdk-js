@@ -17,6 +17,8 @@ import {
 	StdAccountUnlockOutput,
 	StdAccountUpdateInput,
 	StdAccountUpdateOutput,
+	StdAgentListInput,
+	StdAgentListOutput,
 	StdAuthenticateInput,
 	StdAuthenticateOutput,
 	StdConfigOptionsInput,
@@ -36,6 +38,22 @@ import {
 	StdSourceDataReadInput,
 	StdSourceDataReadOutput,
 	StdTestConnectionInput,
+	StdSsfStreamCreateInput,
+    StdSsfStreamCreateOutput,
+    StdSsfStreamDeleteInput,
+    StdSsfStreamDeleteOutput,
+    StdSsfStreamDiscoverInput,
+    StdSsfStreamDiscoverOutput,
+    StdSsfStreamReadInput,
+    StdSsfStreamReadOutput,
+    StdSsfStreamReplaceInput,
+    StdSsfStreamReplaceOutput,
+    StdSsfStreamStatusUpdateInput,
+    StdSsfStreamStatusUpdateOutput,
+    StdSsfStreamUpdateInput,
+    StdSsfStreamUpdateOutput,
+    StdSsfStreamVerifyInput,
+    StdSsfStreamVerifyOutput,
 } from './commands'
 import { CustomizedOperationHandler } from './connector-customizer-handler'
 import { Response } from './response'
@@ -169,4 +187,50 @@ export type StdApplicationDiscoveryListHandler = (
 	context: Context,
 	input: StdApplicationDiscoveryInputList,
 	res: Response<StdApplicationDiscoveryOutputList>
+) => Promise<void>
+export type StdSsfStreamCreateHandler = (
+    context: Context,
+    input: StdSsfStreamCreateInput,
+    res: Response<StdSsfStreamCreateOutput>
+) => Promise<void>
+export type StdSsfStreamDeleteHandler = (
+    context: Context,
+    input: StdSsfStreamDeleteInput,
+    res: Response<StdSsfStreamDeleteOutput>
+) => Promise<void>
+export type StdSsfStreamDiscoverHandler = (
+    context: Context,
+    input: StdSsfStreamDiscoverInput,
+    res: Response<StdSsfStreamDiscoverOutput>
+) => Promise<void>
+export type StdSsfStreamReadHandler = (
+    context: Context,
+    input: StdSsfStreamReadInput,
+    res: Response<StdSsfStreamReadOutput>
+) => Promise<void>
+export type StdSsfStreamReplaceHandler = (
+    context: Context,
+    input: StdSsfStreamReplaceInput,
+    res: Response<StdSsfStreamReplaceOutput>
+) => Promise<void>
+export type StdSsfStreamStatusUpdateHandler = (
+    context: Context,
+    input: StdSsfStreamStatusUpdateInput,
+    res: Response<StdSsfStreamStatusUpdateOutput>
+) => Promise<void>
+export type StdSsfStreamUpdateHandler = (
+    context: Context,
+    input: StdSsfStreamUpdateInput,
+    res: Response<StdSsfStreamUpdateOutput>
+) => Promise<void>
+export type StdSsfStreamVerifyHandler = (
+    context: Context,
+    input: StdSsfStreamVerifyInput,
+    res: Response<StdSsfStreamVerifyOutput>
+) => Promise<void>
+
+export type StdAgentListHandler = (
+    context: Context,
+    input: StdAgentListInput,
+    res: Response<StdAgentListOutput>
 ) => Promise<void>

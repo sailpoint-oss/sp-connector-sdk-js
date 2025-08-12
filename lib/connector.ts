@@ -12,6 +12,7 @@ import {
 	StdAccountReadHandler,
 	StdAccountUnlockHandler,
 	StdAccountUpdateHandler,
+	StdAgentListHandler,
 	StdAuthenticateHandler,
 	StdEntitlementListHandler,
 	StdEntitlementReadHandler,
@@ -21,10 +22,18 @@ import {
 	StdSourceDataReadHandler,
 	StdConfigOptionsHandler,
 	StdApplicationDiscoveryListHandler,
+	StdSsfStreamCreateHandler,
+	StdSsfStreamDiscoverHandler,
+	StdSsfStreamReadHandler,
+	StdSsfStreamUpdateHandler,
+	StdSsfStreamStatusUpdateHandler,
+	StdSsfStreamDeleteHandler,
+	StdSsfStreamVerifyHandler,
+	StdSsfStreamReplaceHandler
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
-import { StandardCommand } from './commands'
-import { RawResponse, ResponseStream, ResponseType } from './response'
+import { StandardCommand, StdAgentListDatasetsInput, StdAgentListDatasetsOutput, StdAgentListOutput } from './commands'
+import { RawResponse, ResponseStream, ResponseType, Response, ResponseStreamTransform } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
 import { contextState } from './async-context'
 import { ConnectorCustomizer, CustomizerType as CustomizerType } from './connector-customizer'
@@ -204,6 +213,87 @@ export class Connector {
 		return this.command(StandardCommand.StdSourceDataRead, handler)
 	}
 
+	 * Add a handler for 'std:ssf-stream:discover' command
+	 * @param handler handler
+	 */
+	stdSsfStreamDiscover(handler: StdSsfStreamDiscoverHandler): this {
+		return this.command(StandardCommand.StdSsfStreamDiscover, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:read' command
+	 * @param handler handler
+	 */
+	stdSsfStreamRead(handler: StdSsfStreamReadHandler): this {
+		return this.command(StandardCommand.StdSsfStreamRead, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:create' command
+	 * @param handler handler
+	 */
+	stdSsfStreamCreate(handler: StdSsfStreamCreateHandler): this {
+		return this.command(StandardCommand.StdSsfStreamCreate, handler)
+	}
+
+
+	/**
+	 * Add a handler for 'std:ssf-stream:update' command
+	 * @param handler handler
+	 */
+	stdSsfStreamUpdate(handler: StdSsfStreamUpdateHandler): this {
+		return this.command(StandardCommand.StdSsfStreamUpdate, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:status-update' command
+	 * @param handler handler
+	 */
+	stdSsfStreamStatusUpdate(handler: StdSsfStreamStatusUpdateHandler): this {
+		return this.command(StandardCommand.StdSsfStreamStatusUpdate, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:delete' command
+	 * @param handler handler
+	 */
+	stdSsfStreamDelete(handler: StdSsfStreamDeleteHandler): this {
+		return this.command(StandardCommand.StdSsfStreamDelete, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:verify' command
+	 * @param handler handler
+	 */
+	stdSsfStreamVerify(handler: StdSsfStreamVerifyHandler): this {
+		return this.command(StandardCommand.StdSsfStreamVerify, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:replace' command
+	 * @param handler handler
+	 */
+	stdSsfStreamReplace(handler: StdSsfStreamReplaceHandler): this {
+		return this.command(StandardCommand.StdSsfStreamReplace, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:agent:list' command
+	 * @param handler handler
+	 */
+	stdAgentList(handler: StdAgentListHandler): this {
+		return this.command(StandardCommand.StdAgentList, async (context: Context, input: StdAgentListDatasetsInput, res: Response<StdAgentListDatasetsOutput>): Promise<void> => {
+			for (const datasetId of input.datasetIds) {
+				const datasetRes = new ResponseStreamTransform<StdAgentListOutput,StdAgentListDatasetsOutput>(res, (v: StdAgentListOutput): StdAgentListDatasetsOutput => {
+					return {
+						...v,
+						datasetId,
+					};
+				})
+				await handler(context, { datasetId }, datasetRes);
+			}
+		})
+	}
 	/**
 	 * Add a handler for a command of specified type
 	 * @param type command type

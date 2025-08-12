@@ -118,6 +118,63 @@ export class Filter {
 		}
 		return false
 	}
+    // check if the object in the filter matches the object's name in the input data
+    if (this.data.hasOwnProperty(`${object.name}`)) {
+      const value = this.data[`${object.name}`] // get the value of the object (e.g., email)
+      switch (`${property.name}`) {
+        case 'isNull':  // check if the method is `isNull` and apply it to the value
+          return this.isNullorEmpty(value)  // apply the isNull method
+        case 'notNull': // check if the method is `notNull` and apply it to the value
+          return !this.isNullorEmpty(value) // apply the notNull method
+        case 'isEmpty':  // check if the method is `isEmpty` and apply it to the value
+          return this.isNullorEmpty(value)  // apply the isEmpty method
+        case 'notEmpty': // check if the method is `notEmpty` and apply it to the value
+          return !this.isNullorEmpty(value) // apply the notEmpty method
+        case 'startsWith':  // check if the method is `startsWith` and apply it to the value
+          return value.startsWith(args[0].value) // apply the startsWith method
+        case 'endsWith': // check if the method is `endsWith` and apply it to the value
+          return value.endsWith(args[0].value)  // apply the endsWith method
+        case 'startsWithIgnoreCase':  // check if the method is `startsWithIgnoreCase` and apply it to the value
+          return value.toLowerCase().startsWith(args[0].value?.toString().toLowerCase())  // apply the startsWithIgnoreCase method
+        case 'endsWithIgnoreCase': // check if the method is `endsWithIgnoreCase` and apply it to the value
+          return value.toLowerCase().endsWith(args[0].value?.toString().toLowerCase())  // apply the endsWithIgnoreCase method
+        case 'contains':  // check if the method is `contains` and apply it to the value
+          return value.includes(args[0].value) // apply the contains method
+        case 'containsIgnoreCase':  // check if the method is `containsIgnoreCase` and apply it to the value
+          const searchValue = (args[0].value?.toString() || '').toLowerCase();  
+          if (Array.isArray(value)) {
+            return value.some(val =>
+              typeof val === 'string' &&
+              val.toLowerCase().includes(searchValue)
+            );
+          } else if (typeof value === 'string') {
+            return value.toLowerCase().includes(searchValue);
+          } else {
+            console.warn(`Unexpected type for 'containsIgnoreCase':`, value);
+            return false;
+          } // apply the containsIgnoreCase method
+        case 'containsAll':// Check if the method is `containsAll` and apply it to the value
+          // ensure all values are present in the property
+          return args.every((arg => value.includes(arg.value))) // apply the containsAll method
+        case 'containsAllIgnoreCase':// Check if the method is `containsAllIgnoreCase` and apply it to the value
+          // ensure all values are present in the property
+            if (!Array.isArray(value)) {
+              console.warn(`Expected an array for 'containsAllIgnoreCase', but got:`, value);
+              return false;
+            }
+            return args.every(arg => {
+              const searchValue = (arg.value?.toString() || '').toLowerCase();
+              return value.some(val =>
+                typeof val === 'string' &&
+                val.toLowerCase() === searchValue
+              );
+            });// apply the containsAllIgnoreCase method
+        default:
+          return false
+      }
+    }
+    return false
+  }
 
 	// // filterString Example 1: ( type == "Employee" && location == "Austin" )
 	// filterString Example 2: (((login == \"integrations-shtarko\" && name.isNull()) && company == \"sailpoint\") || city == \"pune\")

@@ -4,7 +4,7 @@ import { Connector, createConnector } from './connector'
 import { readConfig } from './config'
 import { StandardCommand } from './commands'
 import { PassThrough } from 'stream'
-import { ResponseStream } from './response'
+import { ResponseStream, ResponseStreamTransform } from './response'
 import { major } from 'semver'
 
 import packageJson from '../package.json'
@@ -58,17 +58,18 @@ describe('class properties and methods', () => {
 			.stdEntitlementList(async (context, input, res) => {})
 			.stdEntitlementRead(async (context, input, res) => {})
 			.stdTestConnection(async (context, input, res) => {})
-			//.stdSsfStreamCreate(async (context, input, res) => {})
-			// .stdSsfStreamDelete(async (context, input, res) => {})
-			// .stdSsfStreamDiscover(async (context, input, res) => {})
-			// .stdSsfStreamRead(async (context, input, res) => {})
-			// .stdSsfStreamReplace(async (context, input, res) => {})
-			// .stdSsfStreamStatusUpdate(async (context, input, res) => {})
-			// .stdSsfStreamVerify(async (context, input, res) => {})
-			// .stdSsfStreamUpdate(async (context, input, res) => {})
+			.stdSsfStreamCreate(async (context, input, res) => {})
+			.stdSsfStreamDelete(async (context, input, res) => {})
+			.stdSsfStreamDiscover(async (context, input, res) => {})
+			.stdSsfStreamRead(async (context, input, res) => {})
+			.stdSsfStreamReplace(async (context, input, res) => {})
+			.stdSsfStreamStatusUpdate(async (context, input, res) => {})
+			.stdSsfStreamVerify(async (context, input, res) => {})
+			.stdSsfStreamUpdate(async (context, input, res) => {})
+			.stdAgentList(async (context, input, res) => {})
 			.command('mock:custom:command', async (context, input, res) => {})
 
-		expect(connector.handlers.size).toBe(17)
+		expect(connector.handlers.size).toBe(26)
 	})
 })
 
@@ -292,6 +293,25 @@ describe('exec handlers', () => {
 			"type": "output",
 			"data": {"specification": spec},
 		})
+	})
+
+	it('should execute stdAgentListHandler', async () => {
+		let datasetIds: string[] = [];
+		const connector = createConnector().stdAgentList(async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input).toBeDefined()
+			expect(res).toBeInstanceOf(ResponseStreamTransform)
+			datasetIds.push(input.datasetId)
+		})
+
+		await connector._exec(
+			"std:agent:list",
+			MOCK_CONTEXT,
+			{ datasetIds: ["dataset1", "dataset2"] },
+			new PassThrough({ objectMode: true })
+		)
+
+		expect(datasetIds).toEqual(["dataset1", "dataset2"])
 	})
 
 	it('should execute custom handler', async () => {
