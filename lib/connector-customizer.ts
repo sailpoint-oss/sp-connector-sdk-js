@@ -61,10 +61,17 @@ export class ConnectorCustomizer {
 		return this._handlers
 	}
 
+	// /**
+	//  * Get the map of command handlers
+	//  */
+	// get customizerHandlers(): Map<string, ConnectorCustomizerHandler> {
+	// 	return this._customizedOperationHandlers;
+	// }
+
 	/**
-	 * Get the map of command handlers
+	 * Get the map of custom operation handlers
 	 */
-	get customizerHandlers(): Map<string, ConnectorCustomizerHandler> {
+	get customizedOperationHandlers(): Map<string, ConnectorCustomizerHandler> {
 		return this._customizedOperationHandlers;
 	}
 
@@ -375,11 +382,16 @@ export class ConnectorCustomizer {
 		return this
 	}
 
-	/**
-	 * Add customized handler to be consumed by connector
-	 * @param handler handler
-	 */
-	customizedOperationHandler(operationIdentifier: any, handler: ConnectorCustomizerHandler): this {
+	// /**
+	//  * Add customized handler to be consumed by connector
+	//  * @param handler handler
+	//  */
+	// customizedOperationHandler(operationIdentifier: any, handler: ConnectorCustomizerHandler): this {
+	// 	this._customizedOperationHandlers.set(operationIdentifier, handler)
+	// 	return this
+	// }
+
+	customizedOperation(operationIdentifier: string, handler: ConnectorCustomizerHandler): this {
 		this._customizedOperationHandlers.set(operationIdentifier, handler)
 		return this
 	}

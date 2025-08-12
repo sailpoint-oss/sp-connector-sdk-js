@@ -79,10 +79,10 @@ describe('exec handlers', () => {
 				output.attributes.location = 'austin'
 				return output
 			})
-			.customizedOperationHandler('tc:before',async (context, output) => {
-				output.attributes.location = 'austin'
-				return output
-			})
+			// .customizedOperationHandler('tc:before',async (context, output) => {
+			// 	output.attributes.location = 'austin'
+			// 	return output
+			// })
 			// .beforeEndpoint(async () => {
 			// 	console.log("Before Endpoint method")
 			// },['Account Aggregation'])
