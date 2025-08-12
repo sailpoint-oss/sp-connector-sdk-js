@@ -39,6 +39,7 @@ import {
 	StdApplicationDiscoveryListBeforeHandler,
 	StdApplicationDiscoveryListAfterHandler,
 	StdAccountListAfterHandler,
+	CustomizedOperationHandler,
 } from './connector-customizer-handler'
 import { logger } from './logger'
 
@@ -47,11 +48,11 @@ import { logger } from './logger'
  */
 export class ConnectorCustomizer {
 	private readonly _handlers: Map<string, ConnectorCustomizerHandler>
-	private readonly _customizedOperationHandlers: Map<string, ConnectorCustomizerHandler>
+	private readonly _customizedOperationHandlers: Map<string, CustomizedOperationHandler>
 
 	constructor() {
 		this._handlers = new Map<string, ConnectorCustomizerHandler>()
-		this._customizedOperationHandlers = new Map<string, ConnectorCustomizerHandler>()
+		this._customizedOperationHandlers = new Map<string, CustomizedOperationHandler>()
 	}
 
 	/**
@@ -71,7 +72,7 @@ export class ConnectorCustomizer {
 	/**
 	 * Get the map of custom operation handlers
 	 */
-	get customizedOperationHandlers(): Map<string, ConnectorCustomizerHandler> {
+	get customizedOperationHandlers(): Map<string, CustomizedOperationHandler> {
 		return this._customizedOperationHandlers;
 	}
 
@@ -391,7 +392,7 @@ export class ConnectorCustomizer {
 	// 	return this
 	// }
 
-	customizedOperation(operationIdentifier: string, handler: ConnectorCustomizerHandler): this {
+	customizedOperation(operationIdentifier: string, handler: CustomizedOperationHandler): this {
 		this._customizedOperationHandlers.set(operationIdentifier, handler)
 		return this
 	}
