@@ -6,6 +6,7 @@ interface configState {
 }
 
 const _configState = new AsyncLocalStorage<configState>();
+let _config: any = undefined;
 
 /**
  * Reads in connector config
@@ -16,13 +17,21 @@ export const readConfig = async (): Promise<any> => {
 		return store.cfg;
 	}
 
+	if (_config != undefined) {
+		return _config;
+	}
+
 	const config = process.env['CONNECTOR_CONFIG']
 	if (!config) {
 		throw new Error(`unexpected runtime error: missing connector config`)
 	}
 
 	try {
-		return JSON.parse(Buffer.from(config, 'base64').toString())
+		_config = JSON.parse(Buffer.from(config, 'base64').toString())
+		//Remove large config in process.env, which causes spawning new processes to fail 
+		//due to inheriting an environment that is too large
+		delete process.env.CONNECTOR_CONFIG
+		return _config;
 	} catch (ignored) {
 		throw new Error(`unexpected runtime error: failed to parse connector config`)
 	}
