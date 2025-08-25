@@ -29,7 +29,7 @@
 	},
 	"dependencies": {
 		"archiver": "^7.0.1",
-		"debug": "^4.3.7",
+		"debug": "^4.4.1",
 		"express": "^5.0.1",
 		"jsep": "^1.4.0",
 		"pino": "^8.5.0"
@@ -52,7 +52,7 @@
 	},
 	"overrides": {
 		"minimist": "^1.2.6",
-		"debug": "^4.3.7"
+		"debug": "^4.4.1"
 	},
 	"jest": {
 		"preset": "ts-jest",
