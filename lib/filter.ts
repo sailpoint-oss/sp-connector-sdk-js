@@ -6,13 +6,20 @@ type data = {
 export class Filter {
   private data: data
 
-  constructor(data: data) {
-    this.data = data
+  constructor(rawData: data) {
+	  // Normalize keys: remove whitespace from keys
+	  this.data = {};
+	  for (const key in rawData) {
+		  const normalizedKey = key.replace(/\s+/g, '');
+		  this.data[normalizedKey] = rawData[key];
+	  }
   }
 
   // matcher decides which operation to be performed based on resource object based on the provided filter object
   public matcher(filterString: string): boolean {
-    return this.applyFilter(jsep(filterString))
+	  // Normalize identifiers in filter string (remove whitespace from variable names)
+	  const normalized = filterString.replace(/\b[\w\s]+\b/g, m => m.replace(/\s+/g, ''));
+	  return this.applyFilter(jsep(normalized));
   }
 
   // filterString Example: (age > 20)
@@ -101,7 +108,7 @@ export class Filter {
         case 'contains':  // check if the method is `contains` and apply it to the value
           return value.includes(args[0].value) // apply the contains method
         case 'containsIgnoreCase':  // check if the method is `containsIgnoreCase` and apply it to the value
-          const searchValue = (args[0].value?.toString() || '').toLowerCase();  
+          const searchValue = (args[0].value?.toString() || '').toLowerCase();
           if (Array.isArray(value)) {
             return value.some(val =>
               typeof val === 'string' &&
