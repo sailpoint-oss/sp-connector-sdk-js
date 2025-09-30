@@ -53,7 +53,9 @@ import {
 	StdSsfStreamUpdateInput,
 	StdSsfStreamUpdateOutput,
 	StdSsfStreamVerifyInput,
-	StdSsfStreamVerifyOutput, StdApplicationDiscoveryListInput, StdApplicationDiscoveryListOutput,
+	StdSsfStreamVerifyOutput,
+	StdApplicationDiscoveryListInput,
+	StdApplicationDiscoveryListOutput,
 } from './commands'
 import { Response } from './response'
 
