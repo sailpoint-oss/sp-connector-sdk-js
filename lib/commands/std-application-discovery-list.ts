@@ -14,7 +14,28 @@ export type StdApplicationDiscoveryOutputList = {
 	secondaryAppName?: string
 	description: string,
 	status?: string,
-	[properties: string]: string | string[] | undefined | Record<string, string>[]
+	connectorCategory?: string
+	licenseCount?: number
+	isSanctioned?: boolean
+	logo?: string
+	appUrl?: string
+	groups?: Record<string, any>[]
+	createdAt?: string
+	updatedAt?: string
+	usersCount?: string
+	applicationOwner?: string[]
+	itApplicationOwner?: string[]
+	businessCriticality?: string
+	dataClassification?: string
+	businessUnit?: string
+	installType?: string
+	environment?: string
+	riskScore?: string
+	isPrivileged?: boolean
+	warrantyExpiration?: string
+	attributes?: Record<string, any>
+	[properties: string]: string | string[] | undefined | Record<string, string>[] | number | boolean | Record<string, any>
+
 }
 
 /**
@@ -28,7 +49,31 @@ export type StdApplicationDiscoveryListInput = {
  * Output object of `std:application-discovery:list` command for a specific dataset
  */
 export type StdApplicationDiscoveryListOutput = {
-	attributes: Record<string, any>
+	id: string
+	primaryAppName: string
+	description: string
+	secondaryAppName?: string
+	connectorCategory?: string;
+	status?: string
+	licenseCount?: number
+	isSanctioned?: boolean
+	logo?: string
+	appUrl?: string
+	groups?: Record<string, any>[]
+	createdAt?: string
+	updatedAt?: string
+	usersCount?: string
+	applicationOwner?: string[]
+	itApplicationOwner?: string[]
+	businessCriticality?: string
+	dataClassification?: string
+	businessUnit?: string
+	installType?: string
+	environment?: string
+	riskScore?: string
+	isPrivileged?: boolean
+	warrantyExpiration?: string
+	attributes?: Record<string, any>
 }
 
 /**
@@ -38,10 +83,6 @@ export type StdApplicationDiscoveryListDatasetsInput = {
 	datasetIds: string[]
 }
 
-/**
- * Output object of `std:application-discovery:list` command for multiple datasets
- */
-export type StdApplicationDiscoveryListDatasetsOutput = {
+export type StdApplicationDiscoveryListDatasetsOutput = StdApplicationDiscoveryListOutput & {
 	datasetId: string
-	attributes: Record<string, any>
 }
