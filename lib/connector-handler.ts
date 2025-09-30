@@ -39,21 +39,21 @@ import {
 	StdSourceDataReadOutput,
 	StdTestConnectionInput,
 	StdSsfStreamCreateInput,
-    StdSsfStreamCreateOutput,
-    StdSsfStreamDeleteInput,
-    StdSsfStreamDeleteOutput,
-    StdSsfStreamDiscoverInput,
-    StdSsfStreamDiscoverOutput,
-    StdSsfStreamReadInput,
-    StdSsfStreamReadOutput,
-    StdSsfStreamReplaceInput,
-    StdSsfStreamReplaceOutput,
-    StdSsfStreamStatusUpdateInput,
-    StdSsfStreamStatusUpdateOutput,
-    StdSsfStreamUpdateInput,
-    StdSsfStreamUpdateOutput,
-    StdSsfStreamVerifyInput,
-    StdSsfStreamVerifyOutput,
+	StdSsfStreamCreateOutput,
+	StdSsfStreamDeleteInput,
+	StdSsfStreamDeleteOutput,
+	StdSsfStreamDiscoverInput,
+	StdSsfStreamDiscoverOutput,
+	StdSsfStreamReadInput,
+	StdSsfStreamReadOutput,
+	StdSsfStreamReplaceInput,
+	StdSsfStreamReplaceOutput,
+	StdSsfStreamStatusUpdateInput,
+	StdSsfStreamStatusUpdateOutput,
+	StdSsfStreamUpdateInput,
+	StdSsfStreamUpdateOutput,
+	StdSsfStreamVerifyInput,
+	StdSsfStreamVerifyOutput, StdApplicationDiscoveryListInput, StdApplicationDiscoveryListOutput,
 } from './commands'
 import { Response } from './response'
 
@@ -185,6 +185,11 @@ export type StdApplicationDiscoveryListHandler = (
 	context: Context,
 	input: StdApplicationDiscoveryInputList,
 	res: Response<StdApplicationDiscoveryOutputList>
+) => Promise<void>
+export type StdApplicationDiscoveryDatasetListHandler = (
+	context: Context,
+	input: StdApplicationDiscoveryListInput,
+	res: Response<StdApplicationDiscoveryListOutput>
 ) => Promise<void>
 export type StdSsfStreamCreateHandler = (
     context: Context,

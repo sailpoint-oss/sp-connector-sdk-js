@@ -22,6 +22,7 @@ import {
 	StdSourceDataReadHandler,
 	StdConfigOptionsHandler,
 	StdApplicationDiscoveryListHandler,
+	StdApplicationDiscoveryDatasetListHandler,
 	StdSsfStreamCreateHandler,
 	StdSsfStreamDiscoverHandler,
 	StdSsfStreamReadHandler,
@@ -32,7 +33,15 @@ import {
 	StdSsfStreamReplaceHandler
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
-import { StandardCommand, StdAgentListDatasetsInput, StdAgentListDatasetsOutput, StdAgentListOutput } from './commands'
+import {
+	StandardCommand,
+	StdAgentListDatasetsInput,
+	StdAgentListDatasetsOutput,
+	StdAgentListOutput, StdApplicationDiscoveryListDatasetsInput,
+	StdApplicationDiscoveryListDatasetsOutput,
+	StdApplicationDiscoveryListInput,
+	StdApplicationDiscoveryListOutput,
+} from './commands'
 import { RawResponse, ResponseStream, ResponseType, Response, ResponseStreamTransform } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
 import { contextState } from './async-context';
@@ -162,6 +171,29 @@ export class Connector {
 	 */
 	stdApplicationDiscoveryList(handler: StdApplicationDiscoveryListHandler): this {
 		return this.command(StandardCommand.StdApplicationDiscoveryList, handler)
+	}
+
+	/**
+	 * Register the dataset-aware handler
+	 */
+	stdApplicationDiscoveryListWithDataset(handler: StdApplicationDiscoveryDatasetListHandler): this {
+		return this.command(
+			StandardCommand.StdApplicationDiscoveryList,
+			async (
+				context: Context,
+				input: StdApplicationDiscoveryListDatasetsInput,
+				res: Response<StdApplicationDiscoveryListDatasetsOutput>,
+			): Promise<void> => {
+				for (const datasetId of input.datasetIds) {
+					const datasetRes = new ResponseStreamTransform<StdApplicationDiscoveryListOutput, StdApplicationDiscoveryListDatasetsOutput>(res, (v: StdApplicationDiscoveryListOutput): StdApplicationDiscoveryListDatasetsOutput => {
+						return {
+							...v,
+							datasetId,
+						}
+					})
+					await handler(context, { datasetId }, datasetRes)
+				}
+			})
 	}
 
 	/**
@@ -354,7 +386,7 @@ export class Connector {
 							rawResponse.data = await afterHandler!(context, rawResponse.data)
 							const end = performance.now();
 							res.write(rawResponse)
-							
+
 							// Accumulate the total time
 							totalTime += end - start;
 							roCount++;
@@ -374,7 +406,7 @@ export class Connector {
 			// stream that get passed into this _exec method to end as well, and then receive another write call, causing that stream to fail.
 			let interceptorComplete = new Promise<void>((resolve, reject) => {
 				resInterceptor.on('finish', function(){
-					// Calculate the average time once all chunks are processed. Here roCount should never be 0 
+					// Calculate the average time once all chunks are processed. Here roCount should never be 0
     				const averageTime = totalTime / roCount;
 					console.log(`After customizer time total execution time: ${totalTime} ms`);
 					console.log(`Average time per output: ${averageTime.toFixed(2)} ms`);

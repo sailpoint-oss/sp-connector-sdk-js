@@ -216,6 +216,25 @@ describe('exec handlers', () => {
 		)
 	})
 
+	it('should execute stdApplicationDiscoveryListWithDataset', async () => {
+		let datasetIds: string[] = [];
+		const connector = createConnector().stdApplicationDiscoveryListWithDataset(async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input).toBeDefined()
+			expect(res).toBeInstanceOf(ResponseStreamTransform)
+			datasetIds.push(input.datasetId)
+		})
+
+		await connector._exec(
+			StandardCommand.StdApplicationDiscoveryList,
+			MOCK_CONTEXT,
+			{ datasetIds: ["dataset1", "dataset2"] },
+			new PassThrough({ objectMode: true })
+		)
+
+		expect(datasetIds).toEqual(["dataset1", "dataset2"])
+	})
+
 	it('should execute stdEntitlementListHandler', async () => {
 		const connector = createConnector().stdEntitlementList(async (context, input, res) => {
 			expect(context).toBeDefined()
