@@ -34,6 +34,7 @@ export type StdApplicationDiscoveryOutputList = {
 	isPrivileged?: boolean
 	warrantyExpiration?: string
 	attributes?: Record<string, any>
+	operationalStatus?: string
 	[properties: string]: string | string[] | undefined | Record<string, string>[] | number | boolean | Record<string, any>
 
 }
@@ -74,6 +75,7 @@ export type StdApplicationDiscoveryListOutput = {
 	isPrivileged?: boolean
 	warrantyExpiration?: string
 	attributes?: Record<string, any>
+	operationalStatus?: string
 }
 
 /**
