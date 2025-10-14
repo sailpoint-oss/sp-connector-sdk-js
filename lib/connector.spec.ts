@@ -51,9 +51,6 @@ describe('class properties and methods', () => {
 			.stdAuthenticate(async (context, input, res) => {})
 			.stdConfigOptions(async (context, input, res) => {})
 			.stdApplicationDiscoveryList(async (context, input, res) => {})
-			.stdApplicationDiscoveryListWithDataset(
-				async (context, input, res) => {},
-				async (context, input, res) => {})
 			.stdEntitlementList(async (context, input, res) => {})
 			.stdEntitlementRead(async (context, input, res) => {})
 			.stdTestConnection(async (context, input, res) => {})
@@ -219,35 +216,23 @@ describe('exec handlers', () => {
 		)
 	})
 
-	it('should call the correct handler in stdApplicationDiscoveryListWithDataset based on datasetIds', async () => {
-		const connector = new Connector()
-		const standardHandler = jest.fn(async (_ctx, _input, res) => {
-			res.send({ result: 'standard' })
+	it('should execute stdApplicationDiscoveryListWithDataset', async () => {
+		let datasetIds: string[] = [];
+		const connector = createConnector().stdApplicationDiscoveryListWithDataset(async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input).toBeDefined()
+			expect(res).toBeInstanceOf(ResponseStreamTransform)
+			datasetIds.push(input.datasetId)
 		})
-		const datasetHandler = jest.fn(async (_ctx, input, res) => {
-			res.send({ result: 'dataset', datasetId: input.datasetId })
-		})
 
-		connector.stdApplicationDiscoveryListWithDataset(standardHandler, datasetHandler)
+		await connector._exec(
+			StandardCommand.StdApplicationDiscoveryList,
+			MOCK_CONTEXT,
+			{ datasetIds: ["dataset1", "dataset2"] },
+			new PassThrough({ objectMode: true })
+		)
 
-		const context = {} as Context
-		const res = {
-			send: jest.fn(),
-			write: jest.fn(),
-			end: jest.fn(),
-		} as any
-
-		const handler = connector.handlers.get('std:application-discovery:list')
-		if (!handler) throw new Error('Handler not found')
-
-		// Test with datasetIds
-		await handler(context, { datasetIds: ['ds1', 'ds2'] }, res)
-		expect(datasetHandler).toHaveBeenCalledTimes(2)
-		expect(standardHandler).not.toHaveBeenCalled()
-
-		// Test without datasetIds
-		await handler(context, {}, res)
-		expect(standardHandler).toHaveBeenCalledTimes(1)
+		expect(datasetIds).toEqual(["dataset1", "dataset2"])
 	})
 
 	it('should execute stdEntitlementListHandler', async () => {

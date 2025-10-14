@@ -175,48 +175,31 @@ export class Connector {
 	 * If datasetIds is provided in the input, the datasetHandler will be called for each datasetId
 	 * If datasetIds is not provided, the standardHandler will be called
 	 */
-	stdApplicationDiscoveryListWithDataset(
-		standardHandler: StdApplicationDiscoveryListHandler,
-		datasetHandler: StdApplicationDiscoveryDatasetListHandler
-	): this {
+	stdApplicationDiscoveryListWithDataset(handler: StdApplicationDiscoveryDatasetListHandler): this {
 		return this.command(
 			StandardCommand.StdApplicationDiscoveryList,
 			async (
 				context: Context,
-				input: StdApplicationDiscoveryListDatasetsInput,
-				res: Response<StdApplicationDiscoveryListDatasetsOutput>
-			): Promise<any> => {
-				console.log('discovery input', JSON.stringify(input))
-				if (input && input?.datasetIds && Array.isArray(input?.datasetIds)) {
-					if (input.datasetIds.length === 0) {
-						console.warn('No datasetIds provided for dataset-aware discovery list')
-						return
-					}
-
-					console.log(`Calling dataset-aware discovery list for datasetIds: ${input.datasetIds}`)
-					for (const datasetId of input.datasetIds) {
-						const datasetRes = new ResponseStreamTransform<
-							StdApplicationDiscoveryListOutput,
-							StdApplicationDiscoveryListDatasetsOutput
-						>(res, (v: StdApplicationDiscoveryListOutput): StdApplicationDiscoveryListDatasetsOutput => {
-							return {
-								...v,
-								datasetId,
-							}
-						})
-						await datasetHandler(context, { datasetId }, datasetRes)
-					}
-				} else {
-					console.log('No datasetIds provided, calling standard handler')
-					await standardHandler(
-						context,
-						{} as any,
-						res as unknown as Response<StdApplicationDiscoveryListOutput>
-					)
+				input: StdApplicationDiscoveryListDatasetsInput | any,
+				res: Response<StdApplicationDiscoveryListDatasetsOutput>,
+			): Promise<void> => {
+				// Fallback (to be deprecated after migration)
+				if (!input || !Array.isArray(input.datasetIds) || input.datasetIds.length === 0) {
+					console.log("Inside stdApplicationDiscoveryListWithDataset handling without dataset context - fallback mode: " + JSON.stringify(input));
+					await handler(context, input, res);
 					return
 				}
-			}
-		)
+				// Dataset-aware handling
+				for (const datasetId of input.datasetIds) {
+					const datasetRes = new ResponseStreamTransform<StdApplicationDiscoveryListOutput, StdApplicationDiscoveryListDatasetsOutput>(res, (v: StdApplicationDiscoveryListOutput): StdApplicationDiscoveryListDatasetsOutput => {
+						return {
+							...v,
+							datasetId,
+						}
+					})
+					await handler(context, { datasetId }, datasetRes)
+				}
+			})
 	}
 
 	/**
