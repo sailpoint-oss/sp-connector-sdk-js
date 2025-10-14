@@ -162,33 +162,53 @@ export class Connector {
 
 	/**
 	 * Add a handler for 'std:application-discovery:list' command
-	 * @param handler handler
+	 * @param standardHandler Standard handler for non-dataset-aware discovery list
+	 * @param datasetHandler Dataset-aware handler for discovery list
+	 * If datasetIds is provided in the input, the datasetHandler will be called for each datasetId
+	 * If datasetIds is not provided, the standardHandler will be called
 	 */
-	stdApplicationDiscoveryList(handler: StdApplicationDiscoveryListHandler): this {
-		return this.command(StandardCommand.StdApplicationDiscoveryList, handler)
-	}
-
-	/**
-	 * Register the dataset-aware handler
-	 */
-	stdApplicationDiscoveryListWithDataset(handler: StdApplicationDiscoveryDatasetListHandler): this {
+	stdApplicationDiscoveryList(
+		standardHandler: StdApplicationDiscoveryListHandler,
+		datasetHandler: StdApplicationDiscoveryDatasetListHandler
+	): this {
 		return this.command(
 			StandardCommand.StdApplicationDiscoveryList,
 			async (
 				context: Context,
 				input: StdApplicationDiscoveryListDatasetsInput,
-				res: Response<StdApplicationDiscoveryListDatasetsOutput>,
-			): Promise<void> => {
-				for (const datasetId of input.datasetIds) {
-					const datasetRes = new ResponseStreamTransform<StdApplicationDiscoveryListOutput, StdApplicationDiscoveryListDatasetsOutput>(res, (v: StdApplicationDiscoveryListOutput): StdApplicationDiscoveryListDatasetsOutput => {
-						return {
-							...v,
-							datasetId,
-						}
-					})
-					await handler(context, { datasetId }, datasetRes)
+				res: Response<StdApplicationDiscoveryListDatasetsOutput>
+			): Promise<any> => {
+				console.log('discovery input', JSON.stringify(input))
+				if (input && input?.datasetIds && Array.isArray(input?.datasetIds)) {
+					if (input.datasetIds.length === 0) {
+						console.warn('No datasetIds provided for dataset-aware discovery list')
+						return
+					}
+
+					console.log(`Calling dataset-aware discovery list for datasetIds: ${input.datasetIds}`)
+					for (const datasetId of input.datasetIds) {
+						const datasetRes = new ResponseStreamTransform<
+							StdApplicationDiscoveryListOutput,
+							StdApplicationDiscoveryListDatasetsOutput
+						>(res, (v: StdApplicationDiscoveryListOutput): StdApplicationDiscoveryListDatasetsOutput => {
+							return {
+								...v,
+								datasetId,
+							}
+						})
+						await datasetHandler(context, { datasetId }, datasetRes)
+					}
+				} else {
+					console.log('No datasetIds provided, calling standard handler')
+					await standardHandler(
+						context,
+						{} as any,
+						res as unknown as Response<StdApplicationDiscoveryListOutput>
+					)
+					return
 				}
-			})
+			}
+		)
 	}
 
 	/**
