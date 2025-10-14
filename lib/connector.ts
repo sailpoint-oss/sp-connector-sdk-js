@@ -162,12 +162,20 @@ export class Connector {
 
 	/**
 	 * Add a handler for 'std:application-discovery:list' command
+	 * @param handler handler
+	 */
+	stdApplicationDiscoveryList(handler: StdApplicationDiscoveryListHandler): this {
+		return this.command(StandardCommand.StdApplicationDiscoveryList, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:application-discovery:list' command
 	 * @param standardHandler Standard handler for non-dataset-aware discovery list
 	 * @param datasetHandler Dataset-aware handler for discovery list
 	 * If datasetIds is provided in the input, the datasetHandler will be called for each datasetId
 	 * If datasetIds is not provided, the standardHandler will be called
 	 */
-	stdApplicationDiscoveryList(
+	stdApplicationDiscoveryListWithDataset(
 		standardHandler: StdApplicationDiscoveryListHandler,
 		datasetHandler: StdApplicationDiscoveryDatasetListHandler
 	): this {

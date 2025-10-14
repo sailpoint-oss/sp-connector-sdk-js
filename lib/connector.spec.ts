@@ -50,7 +50,8 @@ describe('class properties and methods', () => {
 			.stdAccountUpdate(async (context, input, res) => {})
 			.stdAuthenticate(async (context, input, res) => {})
 			.stdConfigOptions(async (context, input, res) => {})
-			.stdApplicationDiscoveryList(
+			.stdApplicationDiscoveryList(async (context, input, res) => {})
+			.stdApplicationDiscoveryListWithDataset(
 				async (context, input, res) => {},
 				async (context, input, res) => {})
 			.stdEntitlementList(async (context, input, res) => {})
@@ -203,7 +204,22 @@ describe('exec handlers', () => {
 		)
 	})
 
-	it('should call the correct handler in stdApplicationDiscoveryList based on datasetIds', async () => {
+	it('should execute stdApplicationDiscoveryListHandler', async () => {
+		const connector = createConnector().stdApplicationDiscoveryList(async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input).toBeUndefined()
+			expect(res).toBeInstanceOf(ResponseStream)
+		})
+
+		await connector._exec(
+			StandardCommand.StdApplicationDiscoveryList,
+			MOCK_CONTEXT,
+			undefined,
+			new PassThrough({ objectMode: true })
+		)
+	})
+
+	it('should call the correct handler in stdApplicationDiscoveryListWithDataset based on datasetIds', async () => {
 		const connector = new Connector()
 		const standardHandler = jest.fn(async (_ctx, _input, res) => {
 			res.send({ result: 'standard' })
@@ -212,7 +228,7 @@ describe('exec handlers', () => {
 			res.send({ result: 'dataset', datasetId: input.datasetId })
 		})
 
-		connector.stdApplicationDiscoveryList(standardHandler, datasetHandler)
+		connector.stdApplicationDiscoveryListWithDataset(standardHandler, datasetHandler)
 
 		const context = {} as Context
 		const res = {
