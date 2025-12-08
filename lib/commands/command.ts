@@ -68,6 +68,14 @@ export type SchemaAttribute = {
 	entitlement?: boolean
 }
 
+/**
+ * Configuration defines datasetType and datasetId for schema
+ */
+export type Configuration = {
+	datasetType: string
+	datasetId: string
+}
+
 /*
  * SimpleKey for accounts or entitlements which only have a single identifier.
  */
@@ -177,6 +185,14 @@ export type AccountSchema = Schema & {
 export type EntitlementSchema = Schema & {
 	type: string,
 	includePermissions?: boolean
+}
+
+/**
+ * Dataset schema
+ */
+export type DatasetSchema = Schema & {
+	name: string,
+	configuration: Configuration
 }
 
 /**

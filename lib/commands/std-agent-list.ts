@@ -1,10 +1,13 @@
 /* Copyright (c) 2025. SailPoint Technologies, Inc. All rights reserved. */
 
+import { DatasetSchema } from './command'
+
 /**
  * Input object of `std:agent:list` command
  */
 export type StdAgentListInput = {
 	datasetId: string
+	schema?: DatasetSchema
 }
 
 /**
