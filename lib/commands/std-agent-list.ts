@@ -20,9 +20,11 @@ export type StdAgentListOutput = {
 
 /**
  * Input object of `std:agent:list` command
+ * Schemas is a record mapping datasetId to datasetSchema
  */
 export type StdAgentListDatasetsInput = {
 	datasetIds: string[]
+	schemas?: Record<string, DatasetSchema>
 }
 
 /**

@@ -34,8 +34,14 @@ import {
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import {
-	StandardCommand, StdAgentListDatasetsInput, StdAgentListDatasetsOutput, StdAgentListOutput,
-	StdApplicationDiscoveryListDatasetsInput, StdApplicationDiscoveryListDatasetsOutput, StdApplicationDiscoveryListOutput,
+	StandardCommand,
+	StdAgentListDatasetsInput,
+	StdAgentListDatasetsOutput,
+	StdAgentListInput,
+	StdAgentListOutput,
+	StdApplicationDiscoveryListDatasetsInput,
+	StdApplicationDiscoveryListDatasetsOutput,
+	StdApplicationDiscoveryListOutput,
 } from './commands'
 import { RawResponse, ResponseStream, ResponseType, Response, ResponseStreamTransform } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
@@ -327,7 +333,14 @@ export class Connector {
 						datasetId,
 					};
 				})
-				await handler(context, { datasetId }, datasetRes);
+
+				const datasetSchema = input.schemas?.[datasetId];
+
+				const handlerInput: StdAgentListInput = datasetSchema
+					? { datasetId, schema: datasetSchema }
+					: { datasetId };
+
+				await handler(context, handlerInput, datasetRes);
 			}
 		})
 	}
