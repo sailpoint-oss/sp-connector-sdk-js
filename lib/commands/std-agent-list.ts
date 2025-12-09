@@ -7,7 +7,7 @@ import { DatasetSchema } from './command'
  */
 export type StdAgentListInput = {
 	datasetId: string
-	schema?: DatasetSchema
+	datasetSchema?: DatasetSchema
 }
 
 /**

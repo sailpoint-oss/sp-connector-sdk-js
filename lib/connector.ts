@@ -337,7 +337,7 @@ export class Connector {
 				const datasetSchema = input.datasetSchemas?.[datasetId];
 
 				const handlerInput: StdAgentListInput = datasetSchema
-					? { datasetId, schema: datasetSchema }
+					? { datasetId, datasetSchema }
 					: { datasetId };
 
 				await handler(context, handlerInput, datasetRes);
