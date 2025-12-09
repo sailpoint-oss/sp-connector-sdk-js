@@ -329,7 +329,7 @@ describe('exec handlers', () => {
 		expect(datasetIds).toEqual(["dataset1", "dataset2"])
 	})
 
-	it('should execute stdAgentListHandler with schemas', async () => {
+	it('should execute stdAgentListHandler with datasetSchemas', async () => {
 		const datasetIds: string[] = [];
 		const receivedSchemas: (DatasetSchema | undefined)[] = [];
 
@@ -337,25 +337,33 @@ describe('exec handlers', () => {
 		const mockSchemas: Record<string, DatasetSchema> = {
 			dataset1: {
 				name: 'Dataset 1',
-				configuration: {} as any,
+				config: {
+					datasetId: 'datasetId1',
+					datasetType: 'std:agent'
+				},
 				displayAttribute: 'name',
 				identityAttribute: 'id',
+				groupAttribute: 'group',
 				attributes: [
 					{ name: 'foo', description: '', type: 'string' },
-					{ name: 'timestamp', description: '', type: 'number' }
-				]
+					{ name: 'timestamp', description: '', type: 'number' },
+				],
 			},
 			dataset2: {
 				name: 'Dataset 2',
-				configuration: {} as any,
+				config: {
+					datasetId: 'datasetId2',
+					datasetType: 'std:agent'
+				},
 				displayAttribute: 'displayName',
 				identityAttribute: 'identifier',
+				groupAttribute: 'group',
 				attributes: [
 					{ name: 'firstname', description: '', type: 'string' },
-					{ name: 'lastname', description: '', type: 'string' }
-				]
-			}
-		};
+					{ name: 'lastname', description: '', type: 'string' },
+				],
+			},
+		}
 
 		const connector = createConnector().stdAgentList(
 			async (context, input, res) => {
@@ -364,7 +372,7 @@ describe('exec handlers', () => {
 				expect(res).toBeInstanceOf(ResponseStreamTransform);
 
 				datasetIds.push(input.datasetId);
-				receivedSchemas.push(input.schema);   // ← Check schemas received
+				receivedSchemas.push(input.datasetSchema);   // ← Check schemas received
 			}
 		);
 
@@ -373,7 +381,7 @@ describe('exec handlers', () => {
 			MOCK_CONTEXT,
 			{
 				datasetIds: ["dataset1", "dataset2"],
-				schemas: mockSchemas                 // ← Inject schemas
+				datasetSchemas: mockSchemas                 // ← Inject schemas
 			},
 			new PassThrough({ objectMode: true })
 		);
