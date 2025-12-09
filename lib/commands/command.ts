@@ -71,7 +71,7 @@ export type SchemaAttribute = {
 /**
  * Configuration defines datasetType and datasetId for schema
  */
-export type Configuration = {
+export type Config = {
 	datasetType: string
 	datasetId: string
 }
@@ -193,7 +193,7 @@ export type EntitlementSchema = Schema & {
 export type DatasetSchema = Schema & {
 	name: string,
 	groupAttribute?: string,
-	config: Configuration
+	config: Config
 }
 
 /**
