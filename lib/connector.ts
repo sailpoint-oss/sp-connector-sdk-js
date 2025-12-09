@@ -334,7 +334,7 @@ export class Connector {
 					};
 				})
 
-				const datasetSchema = input.schemas?.[datasetId];
+				const datasetSchema = input.datasetSchemas?.[datasetId];
 
 				const handlerInput: StdAgentListInput = datasetSchema
 					? { datasetId, schema: datasetSchema }
