@@ -24,7 +24,7 @@ export type StdAgentListOutput = {
  */
 export type StdAgentListDatasetsInput = {
 	datasetIds: string[]
-	schemas?: Record<string, DatasetSchema>
+	datasetSchemas?: Record<string, DatasetSchema>
 }
 
 /**
