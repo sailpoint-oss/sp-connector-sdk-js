@@ -372,7 +372,7 @@ describe('exec handlers', () => {
 				expect(res).toBeInstanceOf(ResponseStreamTransform);
 
 				datasetIds.push(input.datasetId);
-				receivedSchemas.push(input.datasetSchema);   // ← Check schemas received
+				receivedSchemas.push(input.datasetSchema);
 			}
 		);
 
@@ -381,7 +381,7 @@ describe('exec handlers', () => {
 			MOCK_CONTEXT,
 			{
 				datasetIds: ["dataset1", "dataset2"],
-				datasetSchemas: mockSchemas                 // ← Inject schemas
+				datasetSchemas: mockSchemas
 			},
 			new PassThrough({ objectMode: true })
 		);
