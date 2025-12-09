@@ -2,7 +2,7 @@
 
 import { Connector, createConnector } from './connector'
 import { readConfig } from './config'
-import { StandardCommand } from './commands'
+import { DatasetSchema, StandardCommand } from './commands'
 import { PassThrough } from 'stream'
 import { ResponseStream, ResponseStreamTransform } from './response'
 import { major } from 'semver'
@@ -328,6 +328,74 @@ describe('exec handlers', () => {
 
 		expect(datasetIds).toEqual(["dataset1", "dataset2"])
 	})
+
+	it('should execute stdAgentListHandler with datasetSchemas', async () => {
+		const datasetIds: string[] = [];
+		const receivedSchemas: (DatasetSchema | undefined)[] = [];
+
+		// Mock dataset schemas for test
+		const mockSchemas: Record<string, DatasetSchema> = {
+			dataset1: {
+				name: 'Dataset 1',
+				config: {
+					datasetId: 'datasetId1',
+					datasetType: 'std:agent'
+				},
+				displayAttribute: 'name',
+				identityAttribute: 'id',
+				groupAttribute: 'group',
+				attributes: [
+					{ name: 'foo', description: '', type: 'string' },
+					{ name: 'timestamp', description: '', type: 'number' },
+				],
+			},
+			dataset2: {
+				name: 'Dataset 2',
+				config: {
+					datasetId: 'datasetId2',
+					datasetType: 'std:agent'
+				},
+				displayAttribute: 'displayName',
+				identityAttribute: 'identifier',
+				groupAttribute: 'group',
+				attributes: [
+					{ name: 'firstname', description: '', type: 'string' },
+					{ name: 'lastname', description: '', type: 'string' },
+				],
+			},
+		}
+
+		const connector = createConnector().stdAgentList(
+			async (context, input, res) => {
+				expect(context).toBeDefined();
+				expect(input).toBeDefined();
+				expect(res).toBeInstanceOf(ResponseStreamTransform);
+
+				datasetIds.push(input.datasetId);
+				receivedSchemas.push(input.datasetSchema);
+			}
+		);
+
+		await connector._exec(
+			"std:agent:list",
+			MOCK_CONTEXT,
+			{
+				datasetIds: ["dataset1", "dataset2"],
+				datasetSchemas: mockSchemas
+			},
+			new PassThrough({ objectMode: true })
+		);
+
+		// Ensure datasetIds are handled in order
+		expect(datasetIds).toEqual(["dataset1", "dataset2"]);
+
+		// Ensure schema values match
+		expect(receivedSchemas).toEqual([
+			mockSchemas["dataset1"],
+			mockSchemas["dataset2"]
+		]);
+	});
+
 
 	it('should execute custom handler', async () => {
 		const customCommandType = 'mock:custom:command'

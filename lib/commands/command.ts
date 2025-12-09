@@ -68,6 +68,14 @@ export type SchemaAttribute = {
 	entitlement?: boolean
 }
 
+/**
+ * Configuration defines datasetType and datasetId for schema
+ */
+export type DatasetConfig = {
+	datasetType: string
+	datasetId: string
+}
+
 /*
  * SimpleKey for accounts or entitlements which only have a single identifier.
  */
@@ -180,7 +188,19 @@ export type EntitlementSchema = Schema & {
 }
 
 /**
- * Granular result for an attribute to indicate partial attribule level success & warning & failure
+ * Dataset schema
+ * name is the name of the dataset being set by connector author from connector_spec.json, different from datasetId and datasetType
+ * groupAttribute is the name of the attribute for grouping the dataset
+ * config is the object contains datasetType and datasetId to identify the current dataset
+ */
+export type DatasetSchema = Schema & {
+	name: string,
+	groupAttribute?: string,
+	config: DatasetConfig
+}
+
+/**
+ * Granular result for an attribute to indicate partial attribute level success & warning & failure
  */
 export type Result = {
 	attribute: string,
