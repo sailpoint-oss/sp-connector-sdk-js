@@ -192,7 +192,7 @@ export type EntitlementSchema = Schema & {
  */
 export type DatasetSchema = Schema & {
 	name: string,
-	groupAttribute: string,
+	groupAttribute?: string,
 	config: Configuration
 }
 
