@@ -201,8 +201,9 @@ export class Connector {
 							...v,
 							datasetId,
 						}
-					})
-					await handler(context, { datasetId }, datasetRes)
+					});
+					// Cast to any to avoid type errors and ensure both keys are passed
+					await handler(context, { datasetId, savvy_url: input.savvy_url } as any, datasetRes);
 				}
 			})
 	}
