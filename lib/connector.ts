@@ -203,6 +203,7 @@ export class Connector {
 						}
 					});
 					// Cast to any to avoid type errors and ensure both keys are passed
+					console.log("New jar 1.0" + input?.savvy_url);
 					await handler(context, { datasetId, savvy_url: input.savvy_url } as any, datasetRes);
 				}
 			})
