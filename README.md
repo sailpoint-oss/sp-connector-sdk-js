@@ -79,6 +79,10 @@ import {logger} from '@sailpoint/connector-sdk'
 
 See complete examples in the [examples](examples) directory.
 
+### Integration guides
+
+- [SAP Analytics Cloud — Get User & Update User (SCIM)](docs/sap-analytics-cloud-users.md)
+
 <br/>
 
 ## Connector Local Development with `spcx`
