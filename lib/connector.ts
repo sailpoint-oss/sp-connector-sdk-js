@@ -190,8 +190,16 @@ export class Connector {
 			): Promise<void> => {
 				// Fallback (to be deprecated after migration)
 				if (!input || !Array.isArray(input.datasetIds) || input.datasetIds.length === 0) {
-					console.log("Inside stdApplicationDiscoveryListWithDataset handling without dataset context - fallback mode: " + JSON.stringify(input));
-					await handler(context, input, res);
+					const datasetId = input?.datasetId || '';
+					const savvyParams = input?.savvy_parameters || {};
+					console.log(`Received input - datasetId: ${datasetId}, savvy_parameters: ${JSON.stringify(savvyParams)}`);
+					
+					// Build handler input with savvy_parameters if present
+					const handlerInput: any = { datasetId };
+					if (input?.savvy_parameters) {
+						handlerInput.savvy_parameters = input.savvy_parameters;
+					}
+					await handler(context, handlerInput, res);
 					return
 				}
 				// Dataset-aware handling
@@ -202,9 +210,15 @@ export class Connector {
 							datasetId,
 						}
 					});
-					// Cast to any to avoid type errors and ensure both keys are passed
-					console.log("New jar 1.0" + input?.savvy_url);
-					await handler(context, { datasetId, savvy_url: input.savvy_url } as any, datasetRes);
+					
+					// Build handler input with savvy_parameters if present
+					const handlerInput: any = { datasetId };
+					if (input?.savvy_parameters) {
+						handlerInput.savvy_parameters = input.savvy_parameters;
+					}
+					
+					console.log(`Processing dataset ${datasetId} with savvy_parameters: ${JSON.stringify(input?.savvy_parameters || {})}`);
+					await handler(context, handlerInput, datasetRes);
 				}
 			})
 	}

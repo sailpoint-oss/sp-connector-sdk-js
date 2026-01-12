@@ -44,7 +44,7 @@ export type StdApplicationDiscoveryOutputList = {
  */
 export type StdApplicationDiscoveryListInput = {
 	datasetId: string
-	savvy_url: string
+	savvy_parameters?: Record<string, any>
 }
 
 /**
@@ -84,7 +84,7 @@ export type StdApplicationDiscoveryListOutput = {
  */
 export type StdApplicationDiscoveryListDatasetsInput = {
 	datasetIds: string[]
-	savvy_url: string
+	savvy_parameters?: Record<string, any>
 }
 
 export type StdApplicationDiscoveryListDatasetsOutput = StdApplicationDiscoveryListOutput & {
