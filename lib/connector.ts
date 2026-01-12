@@ -188,18 +188,21 @@ export class Connector {
 				input: StdApplicationDiscoveryListDatasetsInput | any,
 				res: Response<StdApplicationDiscoveryListDatasetsOutput>,
 			): Promise<void> => {
+				// Helper function to build handler input
+				const buildHandlerInput = (datasetId: string, savvyParams?: Record<string, any>): any => {
+					const handlerInput: any = { datasetId };
+					if (savvyParams) {
+						handlerInput.savvy_parameters = savvyParams;
+					}
+					return handlerInput;
+				};
+
 				// Fallback (to be deprecated after migration)
 				if (!input || !Array.isArray(input.datasetIds) || input.datasetIds.length === 0) {
 					const datasetId = input?.datasetId || '';
-					const savvyParams = input?.savvy_parameters || {};
-					console.log(`Received input - datasetId: ${datasetId}, savvy_parameters: ${JSON.stringify(savvyParams)}`);
-					
-					// Build handler input with savvy_parameters if present
-					const handlerInput: any = { datasetId };
-					if (input?.savvy_parameters) {
-						handlerInput.savvy_parameters = input.savvy_parameters;
-					}
-					await handler(context, handlerInput, res);
+					const savvyParams = input?.savvy_parameters;
+					console.log(`Received input - datasetId: ${datasetId}, savvy_parameters: ${JSON.stringify(savvyParams || {})}`);
+					await handler(context, buildHandlerInput(datasetId, savvyParams), res);
 					return
 				}
 				// Dataset-aware handling
@@ -211,17 +214,12 @@ export class Connector {
 						}
 					});
 					
-					// Build handler input with savvy_parameters if present
-					const handlerInput: any = { datasetId };
-					if (input?.savvy_parameters) {
-						handlerInput.savvy_parameters = input.savvy_parameters;
-					}
-					
-					console.log(`Processing dataset ${datasetId} with savvy_parameters: ${JSON.stringify(input?.savvy_parameters || {})}`);
-					await handler(context, handlerInput, datasetRes);
+					const savvyParams = input?.savvy_parameters;
+					console.log(`Processing dataset ${datasetId} with savvy_parameters: ${JSON.stringify(savvyParams || {})}`);
+					await handler(context, buildHandlerInput(datasetId, savvyParams), datasetRes);
 				}
 			})
-	}
+		}
 
 	/**
 	 * Add a handler for 'std:entitlement:list' command
