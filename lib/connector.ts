@@ -189,10 +189,10 @@ export class Connector {
 				res: Response<StdApplicationDiscoveryListDatasetsOutput>,
 			): Promise<void> => {
 				// Helper function to build handler input
-				const buildHandlerInput = (datasetId: string, savvyParams?: Record<string, any>): any => {
+				const buildHandlerInput = (datasetId: string, additionalParams?: Record<string, any>): any => {
 					const handlerInput: any = { datasetId };
-					if (savvyParams) {
-						handlerInput.savvy_parameters = savvyParams;
+					if (additionalParams) {
+						handlerInput.additionalParameters = additionalParams;
 					}
 					return handlerInput;
 				};
@@ -200,9 +200,9 @@ export class Connector {
 				// Fallback (to be deprecated after migration)
 				if (!input || !Array.isArray(input.datasetIds) || input.datasetIds.length === 0) {
 					const datasetId = input?.datasetId || '';
-					const savvyParams = input?.savvy_parameters;
-					console.log(`Received input - datasetId: ${datasetId}, savvy_parameters: ${JSON.stringify(savvyParams || {})}`);
-					await handler(context, buildHandlerInput(datasetId, savvyParams), res);
+					const additionalParams = input?.additionalParameters;
+					console.log(`Received input - datasetId: ${datasetId}, additionalParameters: ${JSON.stringify(additionalParams || {})}`);
+					await handler(context, buildHandlerInput(datasetId, additionalParams), res);
 					return
 				}
 				// Dataset-aware handling
@@ -214,9 +214,9 @@ export class Connector {
 						}
 					});
 					
-					const savvyParams = input?.savvy_parameters;
-					console.log(`Processing dataset ${datasetId} with savvy_parameters: ${JSON.stringify(savvyParams || {})}`);
-					await handler(context, buildHandlerInput(datasetId, savvyParams), datasetRes);
+					const additionalParams = input?.additionalParameters;
+					console.log(`Processing dataset ${datasetId} with additionalParameters: ${JSON.stringify(additionalParams || {})}`);
+					await handler(context, buildHandlerInput(datasetId, additionalParams), datasetRes);
 				}
 			})
 		}
