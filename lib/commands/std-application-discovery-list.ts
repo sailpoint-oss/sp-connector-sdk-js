@@ -30,7 +30,10 @@ export type StdApplicationDiscoveryOutputList = {
 	businessUnit?: string
 	installType?: string
 	environment?: string
-	riskScore?: string
+	riskScore?: number
+	riskLevel?: string
+	isBusiness?: boolean
+	totalSigninsCount?: number
 	isPrivileged?: boolean
 	warrantyExpiration?: string
 	attributes?: Record<string, any>
@@ -72,7 +75,10 @@ export type StdApplicationDiscoveryListOutput = {
 	businessUnit?: string
 	installType?: string
 	environment?: string
-	riskScore?: string
+	riskScore?: number
+	riskLevel?: string
+	isBusiness?: boolean
+	totalSigninsCount?: number
 	isPrivileged?: boolean
 	warrantyExpiration?: string
 	attributes?: Record<string, any>
