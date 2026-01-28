@@ -1,6 +1,12 @@
 /* Copyright (c) 2024. SailPoint Technologies, Inc. All rights reserved. */
 
 /**
+ * Risk level values allowed in application discovery output.
+ * Only "High", "Medium", or "Low" are valid values.
+ */
+export type RiskLevel = 'High' | 'Medium' | 'Low';
+
+/**
  * Input object of `std:application-discovery:list` command
  */
 export type StdApplicationDiscoveryInputList = {}
@@ -31,7 +37,7 @@ export type StdApplicationDiscoveryOutputList = {
 	installType?: string
 	environment?: string
 	riskScore?: number
-	riskLevel?: string
+	riskLevel?: RiskLevel
 	isBusiness?: boolean
 	totalSigninsCount?: number
 	isPrivileged?: boolean
@@ -76,7 +82,7 @@ export type StdApplicationDiscoveryListOutput = {
 	installType?: string
 	environment?: string
 	riskScore?: number
-	riskLevel?: string
+	riskLevel?: RiskLevel
 	isBusiness?: boolean
 	totalSigninsCount?: number
 	isPrivileged?: boolean
