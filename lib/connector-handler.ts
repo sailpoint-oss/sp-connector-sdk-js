@@ -58,6 +58,7 @@ import {
 	StdApplicationDiscoveryListOutput,
 } from './commands'
 import { Response } from './response'
+import { StdMachineIdentityListInput, StdMachineIdentityListOutput } from './commands/std-machine-identity-list'
 
 /**
  * Connector context object
@@ -233,9 +234,13 @@ export type StdSsfStreamVerifyHandler = (
     input: StdSsfStreamVerifyInput,
     res: Response<StdSsfStreamVerifyOutput>
 ) => Promise<void>
-
 export type StdAgentListHandler = (
     context: Context,
     input: StdAgentListInput,
     res: Response<StdAgentListOutput>
+) => Promise<void>
+export type StdMachineIdentityListHandler = (
+	context: Context,
+	input: StdMachineIdentityListInput,
+	res: Response<StdMachineIdentityListOutput>
 ) => Promise<void>

@@ -30,7 +30,8 @@ import {
 	StdSsfStreamStatusUpdateHandler,
 	StdSsfStreamDeleteHandler,
 	StdSsfStreamVerifyHandler,
-	StdSsfStreamReplaceHandler
+	StdSsfStreamReplaceHandler,
+	StdMachineIdentityListHandler,
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import {
@@ -42,6 +43,10 @@ import {
 	StdApplicationDiscoveryListDatasetsInput,
 	StdApplicationDiscoveryListDatasetsOutput,
 	StdApplicationDiscoveryListOutput,
+	StdMachineIdentityListDatasetsInput,
+	StdMachineIdentityListDatasetsOutput,
+	StdMachineIdentityListInput,
+	StdMachineIdentityListOutput,
 } from './commands'
 import { RawResponse, ResponseStream, ResponseType, Response, ResponseStreamTransform } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
@@ -106,7 +111,7 @@ export class Connector {
 	 * Add a handler for 'std:account:discover-schema' command
 	 * @param handler handler
 	 */
-	 stdAccountDiscoverSchema(handler: StdAccountDiscoverSchemaHandler): this {
+	stdAccountDiscoverSchema(handler: StdAccountDiscoverSchemaHandler): this {
 		return this.command(StandardCommand.StdAccountDiscoverSchema, handler)
 	}
 
@@ -186,17 +191,23 @@ export class Connector {
 			async (
 				context: Context,
 				input: StdApplicationDiscoveryListDatasetsInput | any,
-				res: Response<StdApplicationDiscoveryListDatasetsOutput>,
+				res: Response<StdApplicationDiscoveryListDatasetsOutput>
 			): Promise<void> => {
 				// Fallback (to be deprecated after migration)
 				if (!input || !Array.isArray(input.datasetIds) || input.datasetIds.length === 0) {
-					console.log("Inside stdApplicationDiscoveryListWithDataset handling without dataset context - fallback mode: " + JSON.stringify(input));
-					await handler(context, input, res);
+					console.log(
+						'Inside stdApplicationDiscoveryListWithDataset handling without dataset context - fallback mode: ' +
+							JSON.stringify(input)
+					)
+					await handler(context, input, res)
 					return
 				}
 				// Dataset-aware handling
 				for (const datasetId of input.datasetIds) {
-					const datasetRes = new ResponseStreamTransform<StdApplicationDiscoveryListOutput, StdApplicationDiscoveryListDatasetsOutput>(res, (v: StdApplicationDiscoveryListOutput): StdApplicationDiscoveryListDatasetsOutput => {
+					const datasetRes = new ResponseStreamTransform<
+						StdApplicationDiscoveryListOutput,
+						StdApplicationDiscoveryListDatasetsOutput
+					>(res, (v: StdApplicationDiscoveryListOutput): StdApplicationDiscoveryListDatasetsOutput => {
 						return {
 							...v,
 							datasetId,
@@ -204,7 +215,8 @@ export class Connector {
 					})
 					await handler(context, { datasetId }, datasetRes)
 				}
-			})
+			}
+		)
 	}
 
 	/**
@@ -279,7 +291,6 @@ export class Connector {
 		return this.command(StandardCommand.StdSsfStreamCreate, handler)
 	}
 
-
 	/**
 	 * Add a handler for 'std:ssf-stream:update' command
 	 * @param handler handler
@@ -325,26 +336,66 @@ export class Connector {
 	 * @param handler handler
 	 */
 	stdAgentList(handler: StdAgentListHandler): this {
-		return this.command(StandardCommand.StdAgentList, async (context: Context, input: StdAgentListDatasetsInput, res: Response<StdAgentListDatasetsOutput>): Promise<void> => {
-			for (const datasetId of input.datasetIds) {
-				const datasetRes = new ResponseStreamTransform<StdAgentListOutput,StdAgentListDatasetsOutput>(res, (v: StdAgentListOutput): StdAgentListDatasetsOutput => {
-					return {
-						...v,
-						datasetId,
-					};
-				})
+		return this.command(
+			StandardCommand.StdAgentList,
+			async (
+				context: Context,
+				input: StdAgentListDatasetsInput,
+				res: Response<StdAgentListDatasetsOutput>
+			): Promise<void> => {
+				for (const datasetId of input.datasetIds) {
+					const datasetRes = new ResponseStreamTransform<StdAgentListOutput, StdAgentListDatasetsOutput>(
+						res,
+						(v: StdAgentListOutput): StdAgentListDatasetsOutput => {
+							return {
+								...v,
+								datasetId,
+							}
+						}
+					)
 
-				const datasetSchema = input.datasetSchemas?.[datasetId];
+					const datasetSchema = input.datasetSchemas?.[datasetId]
 
-				const handlerInput: StdAgentListInput = datasetSchema
-					? { datasetId, datasetSchema }
-					: { datasetId };
+					const handlerInput: StdAgentListInput = datasetSchema ? { datasetId, datasetSchema } : { datasetId }
 
-				await handler(context, handlerInput, datasetRes);
+					await handler(context, handlerInput, datasetRes)
+				}
 			}
-		})
+		)
 	}
 
+	/**
+	 * Add a handler for 'std:machine-identityt:list' command
+	 * @param handler handler
+	 */
+	stdMachineIdentityList(handler: StdMachineIdentityListHandler): this {
+		return this.command(
+			StandardCommand.StdMachineIdentityList,
+			async (
+				context: Context,
+				input: StdMachineIdentityListDatasetsInput,
+				res: Response<StdMachineIdentityListDatasetsOutput>
+			): Promise<void> => {
+				for (const datasetId of input.datasetIds) {
+					const datasetRes = new ResponseStreamTransform<StdMachineIdentityListOutput, StdMachineIdentityListDatasetsOutput>(
+						res,
+						(v: StdMachineIdentityListOutput): StdMachineIdentityListDatasetsOutput => {
+							return {
+								...v,
+								datasetId,
+							}
+						}
+					)
+
+					const datasetSchema = input.datasetSchemas?.[datasetId]
+
+					const handlerInput: StdMachineIdentityListInput = datasetSchema ? { datasetId, datasetSchema } : { datasetId }
+
+					await handler(context, handlerInput, datasetRes)
+				}
+			}
+		)
+	}
 
 	/**
 	 * Add a handler for a command of specified type
@@ -366,9 +417,15 @@ export class Connector {
 	 * @param input command input
 	 * @param res writable
 	 */
-	async _exec(type: string, context: Context, input: any, res: Writable, customizer?: ConnectorCustomizer): Promise<void> {
-		let totalTime: number = 0;
-		let roCount: number = 0;
+	async _exec(
+		type: string,
+		context: Context,
+		input: any,
+		res: Writable,
+		customizer?: ConnectorCustomizer
+	): Promise<void> {
+		let totalTime: number = 0
+		let roCount: number = 0
 		const handler: CommandHandler | undefined = this._handlers.get(type)
 		if (!handler) {
 			throw new Error(`unsupported command: ${type}`)
@@ -381,13 +438,17 @@ export class Connector {
 			}
 
 			// If before handler exists, run the before handler and updates the command input
-			let beforeHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(CustomizerType.Before, type))
+			let beforeHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(
+				customizer.handlerKey(CustomizerType.Before, type)
+			)
 			if (beforeHandler) {
 				input = await beforeHandler(context, input)
 			}
 
 			// If after handler does not exist, run the command handler with updated input
-			let afterHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(customizer.handlerKey(CustomizerType.After, type))
+			let afterHandler: ConnectorCustomizerHandler | undefined = customizer.handlers.get(
+				customizer.handlerKey(CustomizerType.After, type)
+			)
 			if (!afterHandler) {
 				return handler(context, input, new ResponseStream<any>(res))
 			}
@@ -400,14 +461,14 @@ export class Connector {
 				async transform(rawResponse: RawResponse, encoding: BufferEncoding, callback: TransformCallback) {
 					if (rawResponse.type == ResponseType.Output) {
 						try {
-							const start = performance.now();
+							const start = performance.now()
 							rawResponse.data = await afterHandler!(context, rawResponse.data)
-							const end = performance.now();
+							const end = performance.now()
 							res.write(rawResponse)
 
 							// Accumulate the total time
-							totalTime += end - start;
-							roCount++;
+							totalTime += end - start
+							roCount++
 							callback()
 						} catch (e: any) {
 							callback(e)
@@ -423,19 +484,19 @@ export class Connector {
 			// the interceptor could be ended but is still flushing while this _exec method is resolved. That would cause the writable
 			// stream that get passed into this _exec method to end as well, and then receive another write call, causing that stream to fail.
 			let interceptorComplete = new Promise<void>((resolve, reject) => {
-				resInterceptor.on('finish', function(){
+				resInterceptor.on('finish', function () {
 					// Calculate the average time once all chunks are processed. Here roCount should never be 0
-    				const averageTime = totalTime / roCount;
-					console.log(`After customizer time total execution time: ${totalTime} ms`);
-					console.log(`Average time per output: ${averageTime.toFixed(2)} ms`);
+					const averageTime = totalTime / roCount
+					console.log(`After customizer time total execution time: ${totalTime} ms`)
+					console.log(`Average time per output: ${averageTime.toFixed(2)} ms`)
 					resolve()
 				})
 
 				resInterceptor.on('error', function (e) {
 					// Calculate the average time once all chunks are processed
-    				const averageTime = roCount > 0 ? totalTime / roCount : 0;
-					console.log(`After customizer time total execution time: ${totalTime} ms`);
-					console.log(`Average time per output: ${averageTime.toFixed(2)} ms`);
+					const averageTime = roCount > 0 ? totalTime / roCount : 0
+					console.log(`After customizer time total execution time: ${totalTime} ms`)
+					console.log(`Average time per output: ${averageTime.toFixed(2)} ms`)
 					reject(e)
 				})
 			})
