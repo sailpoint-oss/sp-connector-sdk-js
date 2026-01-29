@@ -332,6 +332,7 @@ export class Connector {
 	}
 
 	/**
+	 * @deprecated The 'std:agent:list' command is deprecated, please use 'std:machine-identity:list'
 	 * Add a handler for 'std:agent:list' command
 	 * @param handler handler
 	 */
@@ -377,19 +378,21 @@ export class Connector {
 				res: Response<StdMachineIdentityListDatasetsOutput>
 			): Promise<void> => {
 				for (const datasetId of input.datasetIds) {
-					const datasetRes = new ResponseStreamTransform<StdMachineIdentityListOutput, StdMachineIdentityListDatasetsOutput>(
-						res,
-						(v: StdMachineIdentityListOutput): StdMachineIdentityListDatasetsOutput => {
-							return {
-								...v,
-								datasetId,
-							}
+					const datasetRes = new ResponseStreamTransform<
+						StdMachineIdentityListOutput,
+						StdMachineIdentityListDatasetsOutput
+					>(res, (v: StdMachineIdentityListOutput): StdMachineIdentityListDatasetsOutput => {
+						return {
+							...v,
+							datasetId,
 						}
-					)
+					})
 
 					const datasetSchema = input.datasetSchemas?.[datasetId]
 
-					const handlerInput: StdMachineIdentityListInput = datasetSchema ? { datasetId, datasetSchema } : { datasetId }
+					const handlerInput: StdMachineIdentityListInput = datasetSchema
+						? { datasetId, datasetSchema }
+						: { datasetId }
 
 					await handler(context, handlerInput, datasetRes)
 				}
