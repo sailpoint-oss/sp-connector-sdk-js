@@ -1,6 +1,12 @@
 /* Copyright (c) 2024. SailPoint Technologies, Inc. All rights reserved. */
 
 /**
+ * Risk level values allowed in application discovery output.
+ * Only "High", "Medium", or "Low" are valid values.
+ */
+export type RiskLevel = 'High' | 'Medium' | 'Low';
+
+/**
  * Input object of `std:application-discovery:list` command
  */
 export type StdApplicationDiscoveryInputList = {}
@@ -30,7 +36,10 @@ export type StdApplicationDiscoveryOutputList = {
 	businessUnit?: string
 	installType?: string
 	environment?: string
-	riskScore?: string
+	riskScore?: number
+	riskLevel?: RiskLevel
+	isBusiness?: boolean
+	totalSigninsCount?: number
 	isPrivileged?: boolean
 	warrantyExpiration?: string
 	attributes?: Record<string, any>
@@ -44,6 +53,7 @@ export type StdApplicationDiscoveryOutputList = {
  */
 export type StdApplicationDiscoveryListInput = {
 	datasetId: string
+	additionalParameters?: Record<string, any>
 }
 
 /**
@@ -71,7 +81,10 @@ export type StdApplicationDiscoveryListOutput = {
 	businessUnit?: string
 	installType?: string
 	environment?: string
-	riskScore?: string
+	riskScore?: number
+	riskLevel?: RiskLevel
+	isBusiness?: boolean
+	totalSigninsCount?: number
 	isPrivileged?: boolean
 	warrantyExpiration?: string
 	attributes?: Record<string, any>
@@ -83,6 +96,7 @@ export type StdApplicationDiscoveryListOutput = {
  */
 export type StdApplicationDiscoveryListDatasetsInput = {
 	datasetIds: string[]
+	additionalParameters?: Record<string, any>
 }
 
 export type StdApplicationDiscoveryListDatasetsOutput = StdApplicationDiscoveryListOutput & {

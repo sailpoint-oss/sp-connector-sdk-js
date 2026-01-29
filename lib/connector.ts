@@ -193,13 +193,21 @@ export class Connector {
 				input: StdApplicationDiscoveryListDatasetsInput | any,
 				res: Response<StdApplicationDiscoveryListDatasetsOutput>
 			): Promise<void> => {
+				// Helper function to build handler input
+				const buildHandlerInput = (datasetId: string, additionalParams?: Record<string, any>): any => {
+					const handlerInput: any = { datasetId };
+					if (additionalParams) {
+						handlerInput.additionalParameters = additionalParams;
+					}
+					return handlerInput;
+				};
+
 				// Fallback (to be deprecated after migration)
 				if (!input || !Array.isArray(input.datasetIds) || input.datasetIds.length === 0) {
-					console.log(
-						'Inside stdApplicationDiscoveryListWithDataset handling without dataset context - fallback mode: ' +
-							JSON.stringify(input)
-					)
-					await handler(context, input, res)
+					const datasetId = input?.datasetId || '';
+					const additionalParams = input?.additionalParameters;
+					console.log(`Received input - datasetId: ${datasetId}, additionalParameters: ${JSON.stringify(additionalParams || {})}`);
+					await handler(context, buildHandlerInput(datasetId, additionalParams), res);
 					return
 				}
 				// Dataset-aware handling
@@ -212,12 +220,14 @@ export class Connector {
 							...v,
 							datasetId,
 						}
-					})
-					await handler(context, { datasetId }, datasetRes)
+					});
+					
+					const additionalParams = input?.additionalParameters;
+					console.log(`Processing dataset ${datasetId} with additionalParameters: ${JSON.stringify(additionalParams || {})}`);
+					await handler(context, buildHandlerInput(datasetId, additionalParams), datasetRes);
 				}
-			}
-		)
-	}
+			})
+		}
 
 	/**
 	 * Add a handler for 'std:entitlement:list' command
