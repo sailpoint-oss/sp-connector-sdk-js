@@ -235,6 +235,194 @@ describe('exec handlers', () => {
 		expect(datasetIds).toEqual(["dataset1", "dataset2"])
 	})
 
+	describe('stdApplicationDiscoveryListWithDataset - additionalParameters enhancements', () => {
+		it('should pass additionalParameters in fallback mode (single datasetId)', async () => {
+			let receivedInput: any = null;
+			const connector = createConnector().stdApplicationDiscoveryListWithDataset(async (context, input, res) => {
+				receivedInput = input;
+			})
+
+			const additionalParams = {
+				savvy_url: 'https://test.s3.url/presigned',
+				other_param: 'test_value'
+			};
+
+			await connector._exec(
+				StandardCommand.StdApplicationDiscoveryList,
+				MOCK_CONTEXT,
+				{ datasetId: 'savvy:applications', additionalParameters: additionalParams },
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(receivedInput).toBeDefined();
+			expect(receivedInput.datasetId).toBe('savvy:applications');
+			expect(receivedInput.additionalParameters).toBeDefined();
+			expect(receivedInput.additionalParameters.savvy_url).toBe('https://test.s3.url/presigned');
+			expect(receivedInput.additionalParameters.other_param).toBe('test_value');
+		})
+
+		it('should handle fallback mode without additionalParameters (backward compatibility)', async () => {
+			let receivedInput: any = null;
+			const connector = createConnector().stdApplicationDiscoveryListWithDataset(async (context, input, res) => {
+				receivedInput = input;
+			})
+
+			await connector._exec(
+				StandardCommand.StdApplicationDiscoveryList,
+				MOCK_CONTEXT,
+				{ datasetId: 'savvy:applications' },
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(receivedInput).toBeDefined();
+			expect(receivedInput.datasetId).toBe('savvy:applications');
+			expect(receivedInput.additionalParameters).toBeUndefined();
+		})
+
+		it('should pass additionalParameters in dataset-aware mode (array of datasetIds)', async () => {
+			const receivedInputs: any[] = [];
+			const connector = createConnector().stdApplicationDiscoveryListWithDataset(async (context, input, res) => {
+				receivedInputs.push(input);
+			})
+
+			const additionalParams = {
+				savvy_url: 'https://test.s3.url/presigned',
+				other_param: 'test_value'
+			};
+
+			await connector._exec(
+				StandardCommand.StdApplicationDiscoveryList,
+				MOCK_CONTEXT,
+				{ datasetIds: ['savvy:applications', 'savvy:other'], additionalParameters: additionalParams },
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(receivedInputs.length).toBe(2);
+			expect(receivedInputs[0].datasetId).toBe('savvy:applications');
+			expect(receivedInputs[0].additionalParameters).toBeDefined();
+			expect(receivedInputs[0].additionalParameters.savvy_url).toBe('https://test.s3.url/presigned');
+			expect(receivedInputs[0].additionalParameters.other_param).toBe('test_value');
+			expect(receivedInputs[1].datasetId).toBe('savvy:other');
+			expect(receivedInputs[1].additionalParameters).toBeDefined();
+			expect(receivedInputs[1].additionalParameters.savvy_url).toBe('https://test.s3.url/presigned');
+			expect(receivedInputs[1].additionalParameters.other_param).toBe('test_value');
+		})
+
+		it('should handle dataset-aware mode without additionalParameters (backward compatibility)', async () => {
+			const receivedInputs: any[] = [];
+			const connector = createConnector().stdApplicationDiscoveryListWithDataset(async (context, input, res) => {
+				receivedInputs.push(input);
+			})
+
+			await connector._exec(
+				StandardCommand.StdApplicationDiscoveryList,
+				MOCK_CONTEXT,
+				{ datasetIds: ['savvy:applications', 'savvy:other'] },
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(receivedInputs.length).toBe(2);
+			expect(receivedInputs[0].datasetId).toBe('savvy:applications');
+			expect(receivedInputs[0].additionalParameters).toBeUndefined();
+			expect(receivedInputs[1].datasetId).toBe('savvy:other');
+			expect(receivedInputs[1].additionalParameters).toBeUndefined();
+		})
+
+		it('should handle empty datasetIds array (fallback to single datasetId mode)', async () => {
+			let receivedInput: any = null;
+			const connector = createConnector().stdApplicationDiscoveryListWithDataset(async (context, input, res) => {
+				receivedInput = input;
+			})
+
+			const additionalParams = {
+				savvy_url: 'https://test.s3.url/presigned'
+			};
+
+			await connector._exec(
+				StandardCommand.StdApplicationDiscoveryList,
+				MOCK_CONTEXT,
+				{ datasetIds: [], datasetId: 'savvy:applications', additionalParameters: additionalParams },
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(receivedInput).toBeDefined();
+			expect(receivedInput.datasetId).toBe('savvy:applications');
+			expect(receivedInput.additionalParameters).toBeDefined();
+			expect(receivedInput.additionalParameters.savvy_url).toBe('https://test.s3.url/presigned');
+		})
+
+		it('should handle null input (fallback mode with empty datasetId)', async () => {
+			let receivedInput: any = null;
+			const connector = createConnector().stdApplicationDiscoveryListWithDataset(async (context, input, res) => {
+				receivedInput = input;
+			})
+
+			await connector._exec(
+				StandardCommand.StdApplicationDiscoveryList,
+				MOCK_CONTEXT,
+				null,
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(receivedInput).toBeDefined();
+			expect(receivedInput.datasetId).toBe('');
+			expect(receivedInput.additionalParameters).toBeUndefined();
+		})
+
+		it('should handle undefined input (fallback mode with empty datasetId)', async () => {
+			let receivedInput: any = null;
+			const connector = createConnector().stdApplicationDiscoveryListWithDataset(async (context, input, res) => {
+				receivedInput = input;
+			})
+
+			await connector._exec(
+				StandardCommand.StdApplicationDiscoveryList,
+				MOCK_CONTEXT,
+				undefined,
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(receivedInput).toBeDefined();
+			expect(receivedInput.datasetId).toBe('');
+			expect(receivedInput.additionalParameters).toBeUndefined();
+		})
+
+		it('should handle multiple datasets with complex additionalParameters', async () => {
+			const receivedInputs: any[] = [];
+			const connector = createConnector().stdApplicationDiscoveryListWithDataset(async (context, input, res) => {
+				receivedInputs.push(input);
+			})
+
+			const additionalParams = {
+				savvy_url: 'https://test.s3.url/presigned',
+				param1: 'value1',
+				param2: 123,
+				nested: {
+					key: 'nested_value'
+				},
+				array: [1, 2, 3]
+			};
+
+			await connector._exec(
+				StandardCommand.StdApplicationDiscoveryList,
+				MOCK_CONTEXT,
+				{ datasetIds: ['dataset1', 'dataset2', 'dataset3'], additionalParameters: additionalParams },
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(receivedInputs.length).toBe(3);
+			receivedInputs.forEach((input, index) => {
+				expect(input.datasetId).toBe(`dataset${index + 1}`);
+				expect(input.additionalParameters).toBeDefined();
+				expect(input.additionalParameters.savvy_url).toBe('https://test.s3.url/presigned');
+				expect(input.additionalParameters.param1).toBe('value1');
+				expect(input.additionalParameters.param2).toBe(123);
+				expect(input.additionalParameters.nested).toEqual({ key: 'nested_value' });
+				expect(input.additionalParameters.array).toEqual([1, 2, 3]);
+			});
+		})
+	})
+
 	it('should execute stdEntitlementListHandler', async () => {
 		const connector = createConnector().stdEntitlementList(async (context, input, res) => {
 			expect(context).toBeDefined()
