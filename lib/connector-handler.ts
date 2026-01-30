@@ -19,6 +19,10 @@ import {
 	StdAccountUpdateOutput,
 	StdAgentListInput,
 	StdAgentListOutput,
+	StdMachineIdentityListInput,
+	StdMachineIdentityListOutput,
+	StdResourceListInput,
+	StdResourceListOutput,
 	StdAuthenticateInput,
 	StdAuthenticateOutput,
 	StdConfigOptionsInput,
@@ -58,7 +62,6 @@ import {
 	StdApplicationDiscoveryListOutput,
 } from './commands'
 import { Response } from './response'
-import { StdMachineIdentityListInput, StdMachineIdentityListOutput } from './commands/std-machine-identity-list'
 
 /**
  * Connector context object
@@ -243,4 +246,9 @@ export type StdMachineIdentityListHandler = (
 	context: Context,
 	input: StdMachineIdentityListInput,
 	res: Response<StdMachineIdentityListOutput>
+) => Promise<void>
+export type StdResourceListHandler = (
+	context: Context,
+	input: StdResourceListInput,
+	res: Response<StdResourceListOutput>
 ) => Promise<void>

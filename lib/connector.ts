@@ -32,6 +32,7 @@ import {
 	StdSsfStreamVerifyHandler,
 	StdSsfStreamReplaceHandler,
 	StdMachineIdentityListHandler,
+	StdResourceListHandler,
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import {
@@ -47,6 +48,10 @@ import {
 	StdMachineIdentityListDatasetsOutput,
 	StdMachineIdentityListInput,
 	StdMachineIdentityListOutput,
+	StdResourceListDatasetsInput,
+	StdResourceListDatasetsOutput,
+	StdResourceListInput,
+	StdResourceListOutput,
 } from './commands'
 import { RawResponse, ResponseStream, ResponseType, Response, ResponseStreamTransform } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
@@ -401,6 +406,41 @@ export class Connector {
 					const datasetSchema = input.datasetSchemas?.[datasetId]
 
 					const handlerInput: StdMachineIdentityListInput = datasetSchema
+						? { datasetId, datasetSchema }
+						: { datasetId }
+
+					await handler(context, handlerInput, datasetRes)
+				}
+			}
+		)
+	}
+
+	/**
+	 * Add a handler for 'std:resource:list' command
+	 * @param handler handler
+	 */
+	stdResourceList(handler: StdResourceListHandler): this {
+		return this.command(
+			StandardCommand.StdResourceList,
+			async (
+				context: Context,
+				input: StdResourceListDatasetsInput,
+				res: Response<StdResourceListDatasetsOutput>
+			): Promise<void> => {
+				for (const datasetId of input.datasetIds) {
+					const datasetRes = new ResponseStreamTransform<
+						StdResourceListOutput,
+						StdResourceListDatasetsOutput
+					>(res, (v: StdResourceListOutput): StdResourceListDatasetsOutput => {
+						return {
+							...v,
+							datasetId,
+						}
+					})
+
+					const datasetSchema = input.datasetSchemas?.[datasetId]
+
+					const handlerInput: StdResourceListInput = datasetSchema
 						? { datasetId, datasetSchema }
 						: { datasetId }
 

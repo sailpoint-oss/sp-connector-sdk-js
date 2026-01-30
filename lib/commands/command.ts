@@ -15,6 +15,7 @@ export enum StandardCommand {
 	StdAccountUpdate = 'std:account:update',
 	StdAgentList = 'std:agent:list',
 	StdMachineIdentityList = 'std:machine-identity:list',
+	StdResourceList = 'std:resource:list',
 	StdAuthenticate = 'std:authenticate',
 	StdEntitlementList = 'std:entitlement:list',
 	StdEntitlementRead = 'std:entitlement:read',
