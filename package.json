@@ -32,7 +32,7 @@
 		"debug": "^4.4.1",
 		"express": "^5.0.1",
 		"jsep": "^1.4.0",
-		"pino": "^8.5.0"
+		"pino": "^10.3.0"
 	},
 	"devDependencies": {
 		"@tsconfig/node16": "1.0.1",
