@@ -45,4 +45,4 @@ export const logger = pino({
     mixinMergeStrategy(mergeObject:any, mixinObject:any) {
         return {...mergeObject, ...mixinObject}
     }
-})
+}, pino.destination({sync: process.env["PINO_DEST_SYNC"] === 'true'}))
