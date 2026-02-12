@@ -18,6 +18,7 @@ export const logLevel = (): string => {
     return 'info';
 }
 
+
 export const logger = pino({
     timestamp:false,
 		messageKey: 'message',
@@ -45,4 +46,5 @@ export const logger = pino({
     mixinMergeStrategy(mergeObject:any, mixinObject:any) {
         return {...mergeObject, ...mixinObject}
     }
-})
+}, pino.transport({target: 'pino/file'}));
+//}, pino.destination({sync: process.env["PINO_DEST_SYNC"] === 'true'}))
