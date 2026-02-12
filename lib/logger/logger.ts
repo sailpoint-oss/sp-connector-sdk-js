@@ -18,11 +18,13 @@ export const logLevel = (): string => {
     return 'info';
 }
 
+
 export const logger = pino({
     timestamp:false,
 		messageKey: 'message',
     level: logLevel(),
     base:undefined,
+		transport: pino.transport({target: 'pino/file'}),
 		formatters: {
 			level: (label: string) => {
 				return { level: label.toUpperCase() }
@@ -45,4 +47,5 @@ export const logger = pino({
     mixinMergeStrategy(mergeObject:any, mixinObject:any) {
         return {...mergeObject, ...mixinObject}
     }
-}, pino.destination({sync: process.env["PINO_DEST_SYNC"] === 'true'}))
+});
+//}, pino.destination({sync: process.env["PINO_DEST_SYNC"] === 'true'}))
