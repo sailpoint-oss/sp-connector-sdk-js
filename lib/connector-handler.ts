@@ -70,6 +70,7 @@ export interface Context {
 	id?: string
 	name?: string
 	version?: number
+	connectorInstanceId?: string
 	invocationId?: string
 	spanId? :string
 	requestId?: string
