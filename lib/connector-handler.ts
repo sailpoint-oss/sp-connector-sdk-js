@@ -78,6 +78,7 @@ export interface Context {
 
 	reloadConfig(): Promise<any>
 	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse>;
+	generateTokenViaOAuth2Broker(request: GenerateTokenViaOAuth2BrokerRequest): Promise<GenerateTokenViaOAuth2BrokerResponse>;
 }
 export class AssumeAwsRoleRequest {
 	roleArn: string;
@@ -99,6 +100,32 @@ export class AssumeAwsRoleResponse {
 		this.secretAccessKey = secretAccessKey;
 		this.sessionToken = sessionToken;
 		this.expiration = expiration;
+	}
+}
+export class GenerateTokenViaOAuth2BrokerRequest {
+	provider: string;
+	sourceId: string;
+	refreshToken: string;
+	clientConfig?: Record<string, unknown>;
+	constructor(provider: string, sourceId: string, refreshToken: string, clientConfig?: Record<string, unknown>) {
+		this.provider = provider;
+		this.sourceId = sourceId;
+		this.refreshToken = refreshToken;
+		this.clientConfig = clientConfig;
+	}
+}
+export class GenerateTokenViaOAuth2BrokerResponse {
+	accessToken: string;
+	tokenType?: string;
+	refreshToken?: string;
+	expiry: string;
+	customAttributes?: Record<string, unknown>;
+	constructor(accessToken: string, expiry: string, tokenType?: string, refreshToken?: string, customAttributes?: Record<string, unknown>) {
+		this.accessToken = accessToken;
+		this.expiry = expiry;
+		this.tokenType = tokenType;
+		this.refreshToken = refreshToken;
+		this.customAttributes = customAttributes;
 	}
 }
 export type StdAccountCreateHandler = (

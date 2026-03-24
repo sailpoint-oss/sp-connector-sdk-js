@@ -9,7 +9,13 @@ import { major } from 'semver'
 
 import packageJson from '../package.json'
 import { createConnectorCustomizer } from './connector-customizer'
-import { Context, AssumeAwsRoleRequest, AssumeAwsRoleResponse } from './connector-handler'
+import {
+	Context,
+	AssumeAwsRoleRequest,
+	AssumeAwsRoleResponse,
+	GenerateTokenViaOAuth2BrokerRequest,
+	GenerateTokenViaOAuth2BrokerResponse,
+} from './connector-handler'
 import path from 'path'
 
 const mockFS = require('mock-fs');
@@ -26,9 +32,65 @@ class MockContext implements Context {
 	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse> {
 		return Promise.resolve(new AssumeAwsRoleResponse('ccessKeyId', 'secretAccessKey', 'sessionToken', '123'))
 	}
+
+	generateTokenViaOAuth2Broker(
+		request: GenerateTokenViaOAuth2BrokerRequest
+	): Promise<GenerateTokenViaOAuth2BrokerResponse> {
+		return Promise.resolve(
+			new GenerateTokenViaOAuth2BrokerResponse('mockAccessToken', '2025-12-31T23:59:59Z', 'Bearer', 'mockRefreshToken')
+		)
+	}
 }
 
 const MOCK_CONTEXT = new MockContext()
+
+describe('GenerateTokenViaOAuth2BrokerRequest and GenerateTokenViaOAuth2BrokerResponse', () => {
+	it('GenerateTokenViaOAuth2BrokerRequest should assign all fields correctly', () => {
+		const request = new GenerateTokenViaOAuth2BrokerRequest(
+			'salesforce',
+			'source-123',
+			'refresh-token-xyz',
+			{ okta_domain: 'acme', tenant_id: 'tenant-1' }
+		)
+		expect(request.provider).toBe('salesforce')
+		expect(request.sourceId).toBe('source-123')
+		expect(request.refreshToken).toBe('refresh-token-xyz')
+		expect(request.clientConfig).toEqual({ okta_domain: 'acme', tenant_id: 'tenant-1' })
+	})
+
+	it('GenerateTokenViaOAuth2BrokerRequest should work without optional clientConfig', () => {
+		const request = new GenerateTokenViaOAuth2BrokerRequest('google', 'source-456', 'refresh-abc')
+		expect(request.provider).toBe('google')
+		expect(request.sourceId).toBe('source-456')
+		expect(request.refreshToken).toBe('refresh-abc')
+		expect(request.clientConfig).toBeUndefined()
+	})
+
+	it('GenerateTokenViaOAuth2BrokerResponse should assign all fields correctly', () => {
+		const customAttrs = { instance_url: 'https://acme.salesforce.com', id_token: 'jwt-xyz' }
+		const response = new GenerateTokenViaOAuth2BrokerResponse(
+			'access-token-123',
+			'2025-12-31T23:59:59Z',
+			'Bearer',
+			'new-refresh-token',
+			customAttrs
+		)
+		expect(response.accessToken).toBe('access-token-123')
+		expect(response.expiry).toBe('2025-12-31T23:59:59Z')
+		expect(response.tokenType).toBe('Bearer')
+		expect(response.refreshToken).toBe('new-refresh-token')
+		expect(response.customAttributes).toEqual(customAttrs)
+	})
+
+	it('GenerateTokenViaOAuth2BrokerResponse should work with minimal required fields', () => {
+		const response = new GenerateTokenViaOAuth2BrokerResponse('minimal-token', '2025-06-15T12:00:00Z')
+		expect(response.accessToken).toBe('minimal-token')
+		expect(response.expiry).toBe('2025-06-15T12:00:00Z')
+		expect(response.tokenType).toBeUndefined()
+		expect(response.refreshToken).toBeUndefined()
+		expect(response.customAttributes).toBeUndefined()
+	})
+})
 
 describe('class properties and methods', () => {
 	it('sdkVersion in Connector class should match major version in package.json', () => {
@@ -187,6 +249,25 @@ describe('exec handlers', () => {
 		)
 	})
 
+	it('should execute handler that calls context.generateTokenViaOAuth2Broker', async () => {
+		const connector = createConnector().stdTestConnection(async (context, input, res) => {
+			expect(context).toBeDefined()
+			const request = new GenerateTokenViaOAuth2BrokerRequest('salesforce', 'source-1', 'refresh-token')
+			const tokenResponse = await context.generateTokenViaOAuth2Broker(request)
+			expect(tokenResponse.accessToken).toBe('mockAccessToken')
+			expect(tokenResponse.expiry).toBe('2025-12-31T23:59:59Z')
+			expect(tokenResponse.tokenType).toBe('Bearer')
+			expect(tokenResponse.refreshToken).toBe('mockRefreshToken')
+			res.send({})
+		})
+
+		await connector._exec(
+			StandardCommand.StdTestConnection,
+			MOCK_CONTEXT,
+			undefined,
+			new PassThrough({ objectMode: true })
+		)
+	})
 
 	it('should execute stdConfigOptionsHandler', async () => {
 		const connector = createConnector().stdConfigOptions(async (context, input, res) => {
