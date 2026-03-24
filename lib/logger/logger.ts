@@ -19,7 +19,7 @@ export const logLevel = (): string => {
 }
 
 export const logger = pino({
-    timestamp: pino.stdTimeFunctions.isoTime,
+    timestamp: () => `,"timestamp":"${new Date().toISOString()}"`,
     messageKey: 'message',
     level: logLevel(),
     base:undefined,
