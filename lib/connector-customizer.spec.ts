@@ -6,8 +6,8 @@ import {
 	Context,
 	AssumeAwsRoleRequest,
 	AssumeAwsRoleResponse,
-	GenerateTokenViaOAuth2BrokerRequest,
-	GenerateTokenViaOAuth2BrokerResponse,
+	OAuth2AccessTokenRequest,
+	OAuth2AccessTokenResponse,
 } from './connector-handler'
 
 class MockContext implements Context {
@@ -23,12 +23,13 @@ class MockContext implements Context {
 		return Promise.resolve(new AssumeAwsRoleResponse('ccessKeyId', 'secretAccessKey', 'sessionToken', '123'))
 	}
 
-	generateTokenViaOAuth2Broker(
-		request: GenerateTokenViaOAuth2BrokerRequest
-	): Promise<GenerateTokenViaOAuth2BrokerResponse> {
-		return Promise.resolve(
-			new GenerateTokenViaOAuth2BrokerResponse('mockAccessToken', '2025-12-31T23:59:59Z', 'Bearer', 'mockRefreshToken')
-		)
+	getOAuth2AccessToken(request: OAuth2AccessTokenRequest): Promise<OAuth2AccessTokenResponse> {
+		return Promise.resolve({
+			accessToken: 'mockAccessToken',
+			expiry: '2025-12-31T23:59:59Z',
+			tokenType: 'Bearer',
+			refreshToken: 'mockRefreshToken',
+		})
 	}
 }
 
@@ -117,12 +118,15 @@ describe('exec handlers', () => {
 		}
 	})
 
-	it('should customizer handler call context.generateTokenViaOAuth2Broker', async () => {
+	it('should customizer handler call context.getOAuth2AccessToken', async () => {
 		const customizer = createConnectorCustomizer().beforeStdTestConnection(async (context, input) => {
-			const request = new GenerateTokenViaOAuth2BrokerRequest('google', 'source-99', 'refresh-xyz', {
-				okta_domain: 'acme',
-			})
-			const tokenResponse = await context.generateTokenViaOAuth2Broker(request)
+			const request: OAuth2AccessTokenRequest = {
+				provider: 'google',
+				sourceId: 'source-99',
+				refreshToken: 'refresh-xyz',
+				clientConfig: { okta_domain: 'acme' },
+			}
+			const tokenResponse = await context.getOAuth2AccessToken(request)
 			expect(tokenResponse.accessToken).toBe('mockAccessToken')
 			expect(tokenResponse.expiry).toBe('2025-12-31T23:59:59Z')
 			expect(tokenResponse.tokenType).toBe('Bearer')

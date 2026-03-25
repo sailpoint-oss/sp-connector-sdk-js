@@ -79,7 +79,11 @@ export interface Context {
 
 	reloadConfig(): Promise<any>
 	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse>;
-	generateTokenViaOAuth2Broker(request: GenerateTokenViaOAuth2BrokerRequest): Promise<GenerateTokenViaOAuth2BrokerResponse>;
+	/**
+	 * Request body is forwarded to the runtime. The consumer supplies `api` and any other fields
+	 * according to the connector runtime contract for the backend being invoked.
+	 */
+	getOAuth2AccessToken(request: OAuth2AccessTokenRequest): Promise<OAuth2AccessTokenResponse>;
 }
 export class AssumeAwsRoleRequest {
 	roleArn: string;
@@ -103,32 +107,12 @@ export class AssumeAwsRoleResponse {
 		this.expiration = expiration;
 	}
 }
-export class GenerateTokenViaOAuth2BrokerRequest {
-	provider: string;
-	sourceId: string;
-	refreshToken: string;
-	clientConfig?: Record<string, unknown>;
-	constructor(provider: string, sourceId: string, refreshToken: string, clientConfig?: Record<string, unknown>) {
-		this.provider = provider;
-		this.sourceId = sourceId;
-		this.refreshToken = refreshToken;
-		this.clientConfig = clientConfig;
-	}
-}
-export class GenerateTokenViaOAuth2BrokerResponse {
-	accessToken: string;
-	tokenType?: string;
-	refreshToken?: string;
-	expiry: string;
-	customAttributes?: Record<string, unknown>;
-	constructor(accessToken: string, expiry: string, tokenType?: string, refreshToken?: string, customAttributes?: Record<string, unknown>) {
-		this.accessToken = accessToken;
-		this.expiry = expiry;
-		this.tokenType = tokenType;
-		this.refreshToken = refreshToken;
-		this.customAttributes = customAttributes;
-	}
-}
+/** Generic OAuth2 token request; runtime interprets fields per `api` and payload. */
+export type OAuth2AccessTokenRequest = Record<string, unknown>
+
+/** Generic response from the OAuth2 token operation; shape depends on backend. */
+export type OAuth2AccessTokenResponse = Record<string, unknown>
+
 export type StdAccountCreateHandler = (
 	context: Context,
 	input: StdAccountCreateInput,

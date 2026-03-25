@@ -13,8 +13,8 @@ import {
 	Context,
 	AssumeAwsRoleRequest,
 	AssumeAwsRoleResponse,
-	GenerateTokenViaOAuth2BrokerRequest,
-	GenerateTokenViaOAuth2BrokerResponse,
+	OAuth2AccessTokenRequest,
+	OAuth2AccessTokenResponse,
 } from './connector-handler'
 import path from 'path'
 
@@ -33,62 +33,64 @@ class MockContext implements Context {
 		return Promise.resolve(new AssumeAwsRoleResponse('ccessKeyId', 'secretAccessKey', 'sessionToken', '123'))
 	}
 
-	generateTokenViaOAuth2Broker(
-		request: GenerateTokenViaOAuth2BrokerRequest
-	): Promise<GenerateTokenViaOAuth2BrokerResponse> {
-		return Promise.resolve(
-			new GenerateTokenViaOAuth2BrokerResponse('mockAccessToken', '2025-12-31T23:59:59Z', 'Bearer', 'mockRefreshToken')
-		)
+	getOAuth2AccessToken(request: OAuth2AccessTokenRequest): Promise<OAuth2AccessTokenResponse> {
+		return Promise.resolve({
+			accessToken: 'mockAccessToken',
+			expiry: '2025-12-31T23:59:59Z',
+			tokenType: 'Bearer',
+			refreshToken: 'mockRefreshToken',
+		})
 	}
 }
 
 const MOCK_CONTEXT = new MockContext()
 
-describe('GenerateTokenViaOAuth2BrokerRequest and GenerateTokenViaOAuth2BrokerResponse', () => {
-	it('GenerateTokenViaOAuth2BrokerRequest should assign all fields correctly', () => {
-		const request = new GenerateTokenViaOAuth2BrokerRequest(
-			'salesforce',
-			'source-123',
-			'refresh-token-xyz',
-			{ okta_domain: 'acme', tenant_id: 'tenant-1' }
-		)
-		expect(request.provider).toBe('salesforce')
-		expect(request.sourceId).toBe('source-123')
-		expect(request.refreshToken).toBe('refresh-token-xyz')
-		expect(request.clientConfig).toEqual({ okta_domain: 'acme', tenant_id: 'tenant-1' })
+describe('OAuth2AccessTokenRequest and OAuth2AccessTokenResponse', () => {
+	it('OAuth2AccessTokenRequest accepts a flat credential-shaped body', () => {
+		const request: OAuth2AccessTokenRequest = {
+			provider: 'salesforce',
+			sourceId: 'source-123',
+			refreshToken: 'refresh-token-xyz',
+			clientConfig: { okta_domain: 'acme', tenant_id: 'tenant-1' },
+		}
+		const generic: OAuth2AccessTokenRequest = { ...request }
+		expect(generic.provider).toBe('salesforce')
+		expect(generic.sourceId).toBe('source-123')
+		expect(generic.refreshToken).toBe('refresh-token-xyz')
+		expect(generic.clientConfig).toEqual({ okta_domain: 'acme', tenant_id: 'tenant-1' })
 	})
 
-	it('GenerateTokenViaOAuth2BrokerRequest should work without optional clientConfig', () => {
-		const request = new GenerateTokenViaOAuth2BrokerRequest('google', 'source-456', 'refresh-abc')
-		expect(request.provider).toBe('google')
-		expect(request.sourceId).toBe('source-456')
-		expect(request.refreshToken).toBe('refresh-abc')
-		expect(request.clientConfig).toBeUndefined()
+	it('OAuth2AccessTokenRequest accepts arbitrary api and payload chosen by the consumer', () => {
+		const request: OAuth2AccessTokenRequest = {
+			api: 'vendor-specific-token-api',
+			payload: {
+				provider: 'google',
+				sourceId: 'source-456',
+				refreshToken: 'refresh-abc',
+			},
+			meta: { traceId: 't1' },
+		}
+		expect(request.api).toBe('vendor-specific-token-api')
+		expect((request.payload as Record<string, string>).provider).toBe('google')
+		expect(request.meta).toEqual({ traceId: 't1' })
 	})
 
-	it('GenerateTokenViaOAuth2BrokerResponse should assign all fields correctly', () => {
-		const customAttrs = { instance_url: 'https://acme.salesforce.com', id_token: 'jwt-xyz' }
-		const response = new GenerateTokenViaOAuth2BrokerResponse(
-			'access-token-123',
-			'2025-12-31T23:59:59Z',
-			'Bearer',
-			'new-refresh-token',
-			customAttrs
-		)
+	it('OAuth2AccessTokenResponse is a generic record', () => {
+		const response: OAuth2AccessTokenResponse = {
+			accessToken: 'access-token-123',
+			expiry: '2025-12-31T23:59:59Z',
+			tokenType: 'Bearer',
+			refreshToken: 'new-refresh-token',
+			customAttributes: {
+				instance_url: 'https://acme.salesforce.com',
+				id_token: 'jwt-xyz',
+			},
+		}
 		expect(response.accessToken).toBe('access-token-123')
-		expect(response.expiry).toBe('2025-12-31T23:59:59Z')
-		expect(response.tokenType).toBe('Bearer')
-		expect(response.refreshToken).toBe('new-refresh-token')
-		expect(response.customAttributes).toEqual(customAttrs)
-	})
-
-	it('GenerateTokenViaOAuth2BrokerResponse should work with minimal required fields', () => {
-		const response = new GenerateTokenViaOAuth2BrokerResponse('minimal-token', '2025-06-15T12:00:00Z')
-		expect(response.accessToken).toBe('minimal-token')
-		expect(response.expiry).toBe('2025-06-15T12:00:00Z')
-		expect(response.tokenType).toBeUndefined()
-		expect(response.refreshToken).toBeUndefined()
-		expect(response.customAttributes).toBeUndefined()
+		expect(response.customAttributes).toEqual({
+			instance_url: 'https://acme.salesforce.com',
+			id_token: 'jwt-xyz',
+		})
 	})
 })
 
@@ -249,11 +251,15 @@ describe('exec handlers', () => {
 		)
 	})
 
-	it('should execute handler that calls context.generateTokenViaOAuth2Broker', async () => {
+	it('should execute handler that calls context.getOAuth2AccessToken', async () => {
 		const connector = createConnector().stdTestConnection(async (context, input, res) => {
 			expect(context).toBeDefined()
-			const request = new GenerateTokenViaOAuth2BrokerRequest('salesforce', 'source-1', 'refresh-token')
-			const tokenResponse = await context.generateTokenViaOAuth2Broker(request)
+			const request: OAuth2AccessTokenRequest = {
+				provider: 'salesforce',
+				sourceId: 'source-1',
+				refreshToken: 'refresh-token',
+			}
+			const tokenResponse = await context.getOAuth2AccessToken(request)
 			expect(tokenResponse.accessToken).toBe('mockAccessToken')
 			expect(tokenResponse.expiry).toBe('2025-12-31T23:59:59Z')
 			expect(tokenResponse.tokenType).toBe('Bearer')
