@@ -80,8 +80,8 @@ export interface Context {
 	reloadConfig(): Promise<any>
 	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse>;
 	/**
-	 * Request body is forwarded to the runtime. The consumer supplies `api` and any other fields
-	 * according to the connector runtime contract for the backend being invoked.
+	 * Request body is forwarded to the runtime. See {@link OAuth2AccessTokenRequest};
+	 * the connector runtime defines how the body is interpreted.
 	 */
 	getOAuth2AccessToken(request: OAuth2AccessTokenRequest): Promise<OAuth2AccessTokenResponse>;
 }
@@ -107,11 +107,33 @@ export class AssumeAwsRoleResponse {
 		this.expiration = expiration;
 	}
 }
-/** Generic OAuth2 token request; runtime interprets fields per `api` and payload. */
-export type OAuth2AccessTokenRequest = Record<string, unknown>
+/** Required credential fields for OAuth2 token refresh (flat request body). */
+export interface OAuth2RefreshCredentials {
+	provider: string
+	refreshToken: string
+	clientConfig?: Record<string, unknown>
+}
 
-/** Generic response from the OAuth2 token operation; shape depends on backend. */
-export type OAuth2AccessTokenResponse = Record<string, unknown>
+/**
+ * Request for {@link Context.getOAuth2AccessToken}: flat body with {@link OAuth2RefreshCredentials}
+ * plus any other keys the runtime forwards (`Record` allows optional envelope fields at the same level).
+ */
+export type OAuth2AccessTokenRequest = OAuth2RefreshCredentials & Record<string, unknown>
+
+/** Typical response from SailPoint OAuth2 broker refresh. */
+export interface OAuth2TokenResponse {
+	accessToken: string
+	expiry: string
+	tokenType: string
+	refreshToken?: string
+	customAttributes?: Record<string, unknown>
+}
+
+/**
+ * Response from {@link Context.getOAuth2AccessToken}. Broker refresh uses {@link OAuth2TokenResponse};
+ * other backends may return a different key set—see runtime documentation.
+ */
+export type OAuth2AccessTokenResponse = OAuth2TokenResponse | Record<string, unknown>
 
 export type StdAccountCreateHandler = (
 	context: Context,

@@ -49,29 +49,21 @@ describe('OAuth2AccessTokenRequest and OAuth2AccessTokenResponse', () => {
 	it('OAuth2AccessTokenRequest accepts a flat credential-shaped body', () => {
 		const request: OAuth2AccessTokenRequest = {
 			provider: 'salesforce',
-			sourceId: 'source-123',
 			refreshToken: 'refresh-token-xyz',
 			clientConfig: { okta_domain: 'acme', tenant_id: 'tenant-1' },
 		}
 		const generic: OAuth2AccessTokenRequest = { ...request }
 		expect(generic.provider).toBe('salesforce')
-		expect(generic.sourceId).toBe('source-123')
 		expect(generic.refreshToken).toBe('refresh-token-xyz')
 		expect(generic.clientConfig).toEqual({ okta_domain: 'acme', tenant_id: 'tenant-1' })
 	})
 
-	it('OAuth2AccessTokenRequest accepts arbitrary api and payload chosen by the consumer', () => {
+	it('OAuth2AccessTokenRequest allows extra top-level keys alongside credentials', () => {
 		const request: OAuth2AccessTokenRequest = {
-			api: 'vendor-specific-token-api',
-			payload: {
-				provider: 'google',
-				sourceId: 'source-456',
-				refreshToken: 'refresh-abc',
-			},
+			provider: 'google',
+			refreshToken: 'refresh-abc',
 			meta: { traceId: 't1' },
 		}
-		expect(request.api).toBe('vendor-specific-token-api')
-		expect((request.payload as Record<string, string>).provider).toBe('google')
 		expect(request.meta).toEqual({ traceId: 't1' })
 	})
 
@@ -256,7 +248,6 @@ describe('exec handlers', () => {
 			expect(context).toBeDefined()
 			const request: OAuth2AccessTokenRequest = {
 				provider: 'salesforce',
-				sourceId: 'source-1',
 				refreshToken: 'refresh-token',
 			}
 			const tokenResponse = await context.getOAuth2AccessToken(request)

@@ -122,7 +122,6 @@ describe('exec handlers', () => {
 		const customizer = createConnectorCustomizer().beforeStdTestConnection(async (context, input) => {
 			const request: OAuth2AccessTokenRequest = {
 				provider: 'google',
-				sourceId: 'source-99',
 				refreshToken: 'refresh-xyz',
 				clientConfig: { okta_domain: 'acme' },
 			}
