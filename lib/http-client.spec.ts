@@ -2,27 +2,69 @@
 
 import axios from 'axios'
 import { createConnectorHttpClient } from './http-client'
+import { connectorCache } from './cache'
+
+// Track interceptor callbacks per instance so we can invoke them in tests
+let interceptorCallbacks: {
+	request: Array<{ success: Function; error: Function }>
+	response: Array<{ success: Function; error: Function }>
+}
 
 jest.mock('axios', () => {
-	const interceptors = {
-		request: { use: jest.fn() },
-		response: { use: jest.fn() },
-	}
-	const instance = {
-		interceptors,
-		defaults: { headers: { common: {} } },
-	}
+	const createMock = jest.fn(() => {
+		interceptorCallbacks = {
+			request: [],
+			response: [],
+		}
+		const interceptors = {
+			request: {
+				use: jest.fn((success: Function, error?: Function) => {
+					interceptorCallbacks.request.push({ success, error: error || (() => {}) })
+				}),
+			},
+			response: {
+				use: jest.fn((success: Function, error?: Function) => {
+					interceptorCallbacks.response.push({ success, error: error || (() => {}) })
+				}),
+			},
+		}
+		return {
+			interceptors,
+			defaults: { headers: { common: {} } },
+		}
+	})
+
 	return {
 		__esModule: true,
 		default: {
-			create: jest.fn(() => instance),
+			create: createMock,
+			post: jest.fn(),
 		},
 	}
 })
 
+// Helper to create a mock InternalAxiosRequestConfig with headers.set
+function mockRequestConfig(overrides: Record<string, any> = {}) {
+	const headersMap: Record<string, string> = {}
+	return {
+		method: 'get',
+		url: '/test',
+		baseURL: 'https://api.example.com',
+		headers: {
+			set: jest.fn((key: string, value: string) => {
+				headersMap[key] = value
+			}),
+			_map: headersMap,
+		},
+		params: {},
+		...overrides,
+	}
+}
+
 describe('createConnectorHttpClient', () => {
 	beforeEach(() => {
 		jest.clearAllMocks()
+		connectorCache.clear(true)
 	})
 
 	it('should create an Axios instance with default options', () => {
@@ -77,64 +119,304 @@ describe('createConnectorHttpClient', () => {
 		)
 	})
 
-	it('should register request and response interceptors', () => {
-		const client = createConnectorHttpClient()
+	describe('logging interceptors', () => {
+		it('request interceptor should pass through config', () => {
+			createConnectorHttpClient()
+			const loggingInterceptor = interceptorCallbacks.request[interceptorCallbacks.request.length - 1]
 
-		expect(client.interceptors.request.use).toHaveBeenCalledTimes(1)
-		expect(client.interceptors.response.use).toHaveBeenCalledTimes(1)
+			const config = { method: 'get', url: '/test', baseURL: 'https://api.example.com' }
+			const result = loggingInterceptor.success(config)
+			expect(result).toBe(config)
+		})
 
-		const [reqSuccess, reqError] = (client.interceptors.request.use as jest.Mock).mock.calls[0]
-		const [resSuccess, resError] = (client.interceptors.response.use as jest.Mock).mock.calls[0]
+		it('request interceptor should reject on error', async () => {
+			createConnectorHttpClient()
+			const loggingInterceptor = interceptorCallbacks.request[interceptorCallbacks.request.length - 1]
 
-		expect(typeof reqSuccess).toBe('function')
-		expect(typeof reqError).toBe('function')
-		expect(typeof resSuccess).toBe('function')
-		expect(typeof resError).toBe('function')
+			const error = new Error('request failed')
+			await expect(loggingInterceptor.error(error)).rejects.toBe(error)
+		})
+
+		it('response interceptor should pass through response', () => {
+			createConnectorHttpClient()
+			const loggingInterceptor = interceptorCallbacks.response[interceptorCallbacks.response.length - 1]
+
+			const response = { config: { method: 'get', url: '/test' }, status: 200 }
+			const result = loggingInterceptor.success(response)
+			expect(result).toBe(response)
+		})
+
+		it('response interceptor should reject on response error', async () => {
+			createConnectorHttpClient()
+			const loggingInterceptor = interceptorCallbacks.response[interceptorCallbacks.response.length - 1]
+
+			const error = {
+				config: { method: 'get', url: '/test' },
+				response: { status: 404 },
+				message: 'Not Found',
+			}
+			await expect(loggingInterceptor.error(error)).rejects.toBe(error)
+		})
+
+		it('response interceptor should reject on network error', async () => {
+			createConnectorHttpClient()
+			const loggingInterceptor = interceptorCallbacks.response[interceptorCallbacks.response.length - 1]
+
+			const error = { message: 'Network Error' }
+			await expect(loggingInterceptor.error(error)).rejects.toBe(error)
+		})
 	})
 
-	it('request interceptor should pass through config', () => {
-		const client = createConnectorHttpClient()
-		const [reqSuccess] = (client.interceptors.request.use as jest.Mock).mock.calls[0]
+	describe('basic auth', () => {
+		it('should set Authorization header with base64 encoded credentials', () => {
+			createConnectorHttpClient({
+				auth: { type: 'basic', username: 'user', password: 'pass' },
+			})
 
-		const config = { method: 'get', url: '/test', baseURL: 'https://api.example.com' }
-		const result = reqSuccess(config)
-		expect(result).toBe(config)
+			expect(interceptorCallbacks.request.length).toBe(2) // auth + logging
+			const authInterceptor = interceptorCallbacks.request[0]
+
+			const config = mockRequestConfig()
+			authInterceptor.success(config)
+
+			const expected = Buffer.from('user:pass').toString('base64')
+			expect(config.headers.set).toHaveBeenCalledWith('Authorization', `Basic ${expected}`)
+		})
 	})
 
-	it('request interceptor should reject on error', async () => {
-		const client = createConnectorHttpClient()
-		const [, reqError] = (client.interceptors.request.use as jest.Mock).mock.calls[0]
+	describe('bearer auth', () => {
+		it('should set Authorization header with bearer token', () => {
+			createConnectorHttpClient({
+				auth: { type: 'bearer', token: 'my-token-123' },
+			})
 
-		const error = new Error('request failed')
-		await expect(reqError(error)).rejects.toBe(error)
+			const authInterceptor = interceptorCallbacks.request[0]
+
+			const config = mockRequestConfig()
+			authInterceptor.success(config)
+
+			expect(config.headers.set).toHaveBeenCalledWith('Authorization', 'Bearer my-token-123')
+		})
 	})
 
-	it('response interceptor should pass through response', () => {
-		const client = createConnectorHttpClient()
-		const [resSuccess] = (client.interceptors.response.use as jest.Mock).mock.calls[0]
+	describe('apiKey auth', () => {
+		it('should set API key as header', () => {
+			createConnectorHttpClient({
+				auth: { type: 'apiKey', in: 'header', name: 'X-API-Key', value: 'key-123' },
+			})
 
-		const response = { config: { method: 'get', url: '/test' }, status: 200 }
-		const result = resSuccess(response)
-		expect(result).toBe(response)
+			const authInterceptor = interceptorCallbacks.request[0]
+
+			const config = mockRequestConfig()
+			authInterceptor.success(config)
+
+			expect(config.headers.set).toHaveBeenCalledWith('X-API-Key', 'key-123')
+		})
+
+		it('should set API key as query parameter', () => {
+			createConnectorHttpClient({
+				auth: { type: 'apiKey', in: 'query', name: 'api_key', value: 'key-456' },
+			})
+
+			const authInterceptor = interceptorCallbacks.request[0]
+
+			const config = mockRequestConfig({ params: { existing: 'param' } })
+			authInterceptor.success(config)
+
+			expect(config.params).toEqual({ existing: 'param', api_key: 'key-456' })
+		})
 	})
 
-	it('response interceptor should reject on response error', async () => {
-		const client = createConnectorHttpClient()
-		const [, resError] = (client.interceptors.response.use as jest.Mock).mock.calls[0]
-
-		const error = {
-			config: { method: 'get', url: '/test' },
-			response: { status: 404 },
-			message: 'Not Found',
+	describe('oauth2 client credentials auth', () => {
+		const oauthConfig = {
+			type: 'oauth2ClientCredentials' as const,
+			tokenUrl: 'https://auth.example.com/token',
+			clientId: 'my-client',
+			clientSecret: 'my-secret',
 		}
-		await expect(resError(error)).rejects.toBe(error)
+
+		it('should fetch token and set Authorization header with credentials in body', async () => {
+			;(axios.post as jest.Mock).mockResolvedValue({
+				data: { access_token: 'oauth-token-abc', expires_in: 3600 },
+			})
+
+			createConnectorHttpClient({
+				auth: { ...oauthConfig, scope: 'read write' },
+			})
+
+			const authInterceptor = interceptorCallbacks.request[0]
+			const config = mockRequestConfig()
+			await authInterceptor.success(config)
+
+			expect(axios.post).toHaveBeenCalledWith(
+				'https://auth.example.com/token',
+				expect.stringContaining('grant_type=client_credentials'),
+				expect.objectContaining({
+					headers: expect.objectContaining({
+						'Content-Type': 'application/x-www-form-urlencoded',
+					}),
+				})
+			)
+
+			const postBody = (axios.post as jest.Mock).mock.calls[0][1]
+			expect(postBody).toContain('client_id=my-client')
+			expect(postBody).toContain('client_secret=my-secret')
+			expect(postBody).toContain('scope=read+write')
+
+			expect(config.headers.set).toHaveBeenCalledWith('Authorization', 'Bearer oauth-token-abc')
+		})
+
+		it('should send credentials in Authorization header when credentialPlacement is header', async () => {
+			;(axios.post as jest.Mock).mockResolvedValue({
+				data: { access_token: 'oauth-token-header', expires_in: 3600 },
+			})
+
+			createConnectorHttpClient({
+				auth: { ...oauthConfig, credentialPlacement: 'header' },
+			})
+
+			const authInterceptor = interceptorCallbacks.request[0]
+			const config = mockRequestConfig()
+			await authInterceptor.success(config)
+
+			const expectedBasic = Buffer.from('my-client:my-secret').toString('base64')
+			const postHeaders = (axios.post as jest.Mock).mock.calls[0][2].headers
+			expect(postHeaders['Authorization']).toBe(`Basic ${expectedBasic}`)
+
+			const postBody = (axios.post as jest.Mock).mock.calls[0][1]
+			expect(postBody).not.toContain('client_id')
+			expect(postBody).not.toContain('client_secret')
+		})
+
+		it('should cache token in connectorCache and reuse across requests', async () => {
+			;(axios.post as jest.Mock).mockResolvedValue({
+				data: { access_token: 'cached-token', expires_in: 3600 },
+			})
+
+			createConnectorHttpClient({ auth: oauthConfig })
+
+			const authInterceptor = interceptorCallbacks.request[0]
+
+			// First request - fetches token
+			const config1 = mockRequestConfig()
+			await authInterceptor.success(config1)
+			expect(axios.post).toHaveBeenCalledTimes(1)
+
+			// Second request - uses cached token
+			const config2 = mockRequestConfig()
+			await authInterceptor.success(config2)
+			expect(axios.post).toHaveBeenCalledTimes(1)
+
+			expect(config2.headers.set).toHaveBeenCalledWith('Authorization', 'Bearer cached-token')
+		})
+
+		it('should reuse cached token across separate client instances', async () => {
+			;(axios.post as jest.Mock).mockResolvedValue({
+				data: { access_token: 'shared-token', expires_in: 3600 },
+			})
+
+			// First client fetches the token
+			createConnectorHttpClient({ auth: oauthConfig })
+			const authInterceptor1 = interceptorCallbacks.request[0]
+			const config1 = mockRequestConfig()
+			await authInterceptor1.success(config1)
+			expect(axios.post).toHaveBeenCalledTimes(1)
+
+			// Second client with same credentials should use the cached token
+			createConnectorHttpClient({ auth: oauthConfig })
+			const authInterceptor2 = interceptorCallbacks.request[0]
+			const config2 = mockRequestConfig()
+			await authInterceptor2.success(config2)
+			expect(axios.post).toHaveBeenCalledTimes(1) // still 1
+
+			expect(config2.headers.set).toHaveBeenCalledWith('Authorization', 'Bearer shared-token')
+		})
+
+		it('should refresh token when cache entry expires', async () => {
+			jest.useFakeTimers()
+
+			;(axios.post as jest.Mock)
+				.mockResolvedValueOnce({
+					data: { access_token: 'token-1', expires_in: 60 },
+				})
+				.mockResolvedValueOnce({
+					data: { access_token: 'token-2', expires_in: 3600 },
+				})
+
+			createConnectorHttpClient({ auth: oauthConfig })
+
+			const authInterceptor = interceptorCallbacks.request[0]
+
+			// First request
+			const config1 = mockRequestConfig()
+			await authInterceptor.success(config1)
+			expect(config1.headers.set).toHaveBeenCalledWith('Authorization', 'Bearer token-1')
+
+			// Advance time past the TTL (60s - 30s buffer = 30s TTL)
+			jest.advanceTimersByTime(30000)
+
+			// Second request - token expired, should fetch new one
+			const config2 = mockRequestConfig()
+			await authInterceptor.success(config2)
+			expect(axios.post).toHaveBeenCalledTimes(2)
+			expect(config2.headers.set).toHaveBeenCalledWith('Authorization', 'Bearer token-2')
+
+			jest.useRealTimers()
+		})
+
+		it('should deduplicate concurrent token requests', async () => {
+			let resolveToken: Function
+			;(axios.post as jest.Mock).mockImplementation(
+				() =>
+					new Promise((resolve) => {
+						resolveToken = () => resolve({ data: { access_token: 'deduped-token', expires_in: 3600 } })
+					})
+			)
+
+			createConnectorHttpClient({ auth: oauthConfig })
+
+			const authInterceptor = interceptorCallbacks.request[0]
+
+			const config1 = mockRequestConfig()
+			const config2 = mockRequestConfig()
+			const promise1 = authInterceptor.success(config1)
+			const promise2 = authInterceptor.success(config2)
+
+			resolveToken!()
+			await promise1
+			await promise2
+
+			expect(axios.post).toHaveBeenCalledTimes(1)
+			expect(config1.headers.set).toHaveBeenCalledWith('Authorization', 'Bearer deduped-token')
+			expect(config2.headers.set).toHaveBeenCalledWith('Authorization', 'Bearer deduped-token')
+		})
+
+		it('should default expires_in to 3600 if not provided', async () => {
+			;(axios.post as jest.Mock).mockResolvedValue({
+				data: { access_token: 'no-expiry-token' },
+			})
+
+			createConnectorHttpClient({ auth: oauthConfig })
+
+			const authInterceptor = interceptorCallbacks.request[0]
+			const config = mockRequestConfig()
+			await authInterceptor.success(config)
+
+			expect(config.headers.set).toHaveBeenCalledWith('Authorization', 'Bearer no-expiry-token')
+
+			// Second request should use cached token
+			const config2 = mockRequestConfig()
+			await authInterceptor.success(config2)
+			expect(axios.post).toHaveBeenCalledTimes(1)
+		})
 	})
 
-	it('response interceptor should reject on network error', async () => {
-		const client = createConnectorHttpClient()
-		const [, resError] = (client.interceptors.response.use as jest.Mock).mock.calls[0]
+	describe('no auth', () => {
+		it('should not add auth interceptor when auth is not configured', () => {
+			createConnectorHttpClient()
 
-		const error = { message: 'Network Error' }
-		await expect(resError(error)).rejects.toBe(error)
+			expect(interceptorCallbacks.request.length).toBe(1)
+			expect(interceptorCallbacks.response.length).toBe(1)
+		})
 	})
 })
