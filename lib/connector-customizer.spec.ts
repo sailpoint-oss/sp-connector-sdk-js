@@ -2,7 +2,13 @@
 
 import { StandardCommand } from './commands'
 import { CustomizerType, createConnectorCustomizer } from './connector-customizer'
-import { Context, AssumeAwsRoleRequest, AssumeAwsRoleResponse } from './connector-handler'
+import {
+	Context,
+	AssumeAwsRoleRequest,
+	AssumeAwsRoleResponse,
+	OAuth2AccessTokenRequest,
+	OAuth2AccessTokenResponse,
+} from './connector-handler'
 
 class MockContext implements Context {
 	config = {}
@@ -17,6 +23,14 @@ class MockContext implements Context {
 		return Promise.resolve(new AssumeAwsRoleResponse('ccessKeyId', 'secretAccessKey', 'sessionToken', '123'))
 	}
 
+	getOAuth2AccessToken(request: OAuth2AccessTokenRequest): Promise<OAuth2AccessTokenResponse> {
+		return Promise.resolve({
+			accessToken: 'mockAccessToken',
+			expiry: '2025-12-31T23:59:59Z',
+			tokenType: 'Bearer',
+			refreshToken: 'mockRefreshToken',
+		})
+	}
 }
 
 const MOCK_CONTEXT = new MockContext()
@@ -102,6 +116,27 @@ describe('exec handlers', () => {
 		} catch (e) {
 			expect(e).toStrictEqual(new Error(`No handler found for type: before:std:account:create`))
 		}
+	})
+
+	it('should customizer handler call context.getOAuth2AccessToken', async () => {
+		const customizer = createConnectorCustomizer().beforeStdTestConnection(async (context, input) => {
+			const request: OAuth2AccessTokenRequest = {
+				provider: 'google',
+				refreshToken: 'refresh-xyz',
+				clientConfig: { okta_domain: 'acme' },
+			}
+			const tokenResponse = await context.getOAuth2AccessToken(request)
+			expect(tokenResponse.accessToken).toBe('mockAccessToken')
+			expect(tokenResponse.expiry).toBe('2025-12-31T23:59:59Z')
+			expect(tokenResponse.tokenType).toBe('Bearer')
+			return input
+		})
+
+		await customizer._exec(
+			customizer.handlerKey(CustomizerType.Before, StandardCommand.StdTestConnection),
+			MOCK_CONTEXT,
+			{}
+		)
 	})
 })
 

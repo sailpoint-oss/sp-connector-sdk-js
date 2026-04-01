@@ -9,7 +9,13 @@ import { major } from 'semver'
 
 import packageJson from '../package.json'
 import { createConnectorCustomizer } from './connector-customizer'
-import { Context, AssumeAwsRoleRequest, AssumeAwsRoleResponse } from './connector-handler'
+import {
+	Context,
+	AssumeAwsRoleRequest,
+	AssumeAwsRoleResponse,
+	OAuth2AccessTokenRequest,
+	OAuth2AccessTokenResponse,
+} from './connector-handler'
 import path from 'path'
 
 const mockFS = require('mock-fs');
@@ -26,9 +32,59 @@ class MockContext implements Context {
 	assumeAwsRole(assumeAwsRoleRequest: AssumeAwsRoleRequest): Promise<AssumeAwsRoleResponse> {
 		return Promise.resolve(new AssumeAwsRoleResponse('ccessKeyId', 'secretAccessKey', 'sessionToken', '123'))
 	}
+
+	getOAuth2AccessToken(request: OAuth2AccessTokenRequest): Promise<OAuth2AccessTokenResponse> {
+		return Promise.resolve({
+			accessToken: 'mockAccessToken',
+			expiry: '2025-12-31T23:59:59Z',
+			tokenType: 'Bearer',
+			refreshToken: 'mockRefreshToken',
+		})
+	}
 }
 
 const MOCK_CONTEXT = new MockContext()
+
+describe('OAuth2AccessTokenRequest and OAuth2AccessTokenResponse', () => {
+	it('OAuth2AccessTokenRequest accepts a flat credential-shaped body', () => {
+		const request: OAuth2AccessTokenRequest = {
+			provider: 'salesforce',
+			refreshToken: 'refresh-token-xyz',
+			clientConfig: { okta_domain: 'acme', tenant_id: 'tenant-1' },
+		}
+		const generic: OAuth2AccessTokenRequest = { ...request }
+		expect(generic.provider).toBe('salesforce')
+		expect(generic.refreshToken).toBe('refresh-token-xyz')
+		expect(generic.clientConfig).toEqual({ okta_domain: 'acme', tenant_id: 'tenant-1' })
+	})
+
+	it('OAuth2AccessTokenRequest allows extra top-level keys alongside credentials', () => {
+		const request: OAuth2AccessTokenRequest = {
+			provider: 'google',
+			refreshToken: 'refresh-abc',
+			meta: { traceId: 't1' },
+		}
+		expect(request.meta).toEqual({ traceId: 't1' })
+	})
+
+	it('OAuth2AccessTokenResponse is a generic record', () => {
+		const response: OAuth2AccessTokenResponse = {
+			accessToken: 'access-token-123',
+			expiry: '2025-12-31T23:59:59Z',
+			tokenType: 'Bearer',
+			refreshToken: 'new-refresh-token',
+			customAttributes: {
+				instance_url: 'https://acme.salesforce.com',
+				id_token: 'jwt-xyz',
+			},
+		}
+		expect(response.accessToken).toBe('access-token-123')
+		expect(response.customAttributes).toEqual({
+			instance_url: 'https://acme.salesforce.com',
+			id_token: 'jwt-xyz',
+		})
+	})
+})
 
 describe('class properties and methods', () => {
 	it('sdkVersion in Connector class should match major version in package.json', () => {
@@ -187,6 +243,28 @@ describe('exec handlers', () => {
 		)
 	})
 
+	it('should execute handler that calls context.getOAuth2AccessToken', async () => {
+		const connector = createConnector().stdTestConnection(async (context, input, res) => {
+			expect(context).toBeDefined()
+			const request: OAuth2AccessTokenRequest = {
+				provider: 'salesforce',
+				refreshToken: 'refresh-token',
+			}
+			const tokenResponse = await context.getOAuth2AccessToken(request)
+			expect(tokenResponse.accessToken).toBe('mockAccessToken')
+			expect(tokenResponse.expiry).toBe('2025-12-31T23:59:59Z')
+			expect(tokenResponse.tokenType).toBe('Bearer')
+			expect(tokenResponse.refreshToken).toBe('mockRefreshToken')
+			res.send({})
+		})
+
+		await connector._exec(
+			StandardCommand.StdTestConnection,
+			MOCK_CONTEXT,
+			undefined,
+			new PassThrough({ objectMode: true })
+		)
+	})
 
 	it('should execute stdConfigOptionsHandler', async () => {
 		const connector = createConnector().stdConfigOptions(async (context, input, res) => {
