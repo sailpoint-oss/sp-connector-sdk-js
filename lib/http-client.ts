@@ -1,6 +1,6 @@
 /* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
 
-import axios, { AxiosInstance, CreateAxiosDefaults, InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosError, AxiosInstance, CreateAxiosDefaults, InternalAxiosRequestConfig } from 'axios'
 import { logger } from './logger'
 import { connectorCache, SDK_CACHE_PREFIX } from './cache'
 
@@ -8,6 +8,12 @@ export type { AxiosInstance } from 'axios'
 
 /** Cache key prefix for auth tokens */
 const AUTH_CACHE_PREFIX = `${SDK_CACHE_PREFIX}auth:`
+
+/** Custom config property to track retry count */
+const RETRY_COUNT_KEY = '__retryCount'
+
+/** Default status codes that trigger a retry */
+const DEFAULT_RETRYABLE_STATUS_CODES = [429, 500, 502, 503, 504]
 
 /**
  * Basic authentication using username and password
@@ -67,6 +73,42 @@ export interface OAuth2ClientCredentialsAuth {
 export type AuthConfig = BasicAuth | BearerTokenAuth | ApiKeyAuth | OAuth2ClientCredentialsAuth
 
 /**
+ * Configuration for automatic request retry with exponential backoff.
+ */
+export interface RetryConfig {
+	/**
+	 * Maximum number of retry attempts. Set to 0 to disable retries.
+	 * Default: 3
+	 */
+	maxRetries?: number
+
+	/**
+	 * Base delay in milliseconds for exponential backoff. The actual delay is
+	 * `baseDelay * 2^(attempt - 1)` plus jitter.
+	 * Default: 1000
+	 */
+	baseDelay?: number
+
+	/**
+	 * Maximum delay in milliseconds between retries.
+	 * Default: 30000
+	 */
+	maxDelay?: number
+
+	/**
+	 * HTTP status codes that should trigger a retry.
+	 * Default: [429, 500, 502, 503, 504]
+	 */
+	retryableStatusCodes?: number[]
+
+	/**
+	 * Whether to retry on network errors (no response received).
+	 * Default: true
+	 */
+	retryOnNetworkError?: boolean
+}
+
+/**
  * Options for creating a connector HTTP client
  */
 export interface HttpClientOptions {
@@ -89,6 +131,12 @@ export interface HttpClientOptions {
 	 * Authentication configuration. Supports basic, bearer, apiKey, and oauth2ClientCredentials.
 	 */
 	auth?: AuthConfig
+
+	/**
+	 * Retry configuration. Enabled by default with 3 retries and exponential backoff.
+	 * Set to `false` to disable retries entirely.
+	 */
+	retry?: RetryConfig | false
 
 	/**
 	 * Additional Axios configuration options
@@ -179,11 +227,51 @@ async function fetchOAuth2Token(
 }
 
 /**
+ * Parses the Retry-After header value into milliseconds to wait.
+ * Supports both seconds (integer) and HTTP-date formats.
+ * Returns undefined if the header is missing or unparseable.
+ */
+export function parseRetryAfter(headerValue: string | undefined | null): number | undefined {
+	if (!headerValue) {
+		return undefined
+	}
+
+	// Try parsing as integer seconds
+	const seconds = Number(headerValue)
+	if (!isNaN(seconds) && seconds >= 0) {
+		return seconds * 1000
+	}
+
+	// Try parsing as HTTP-date
+	const date = new Date(headerValue)
+	if (!isNaN(date.getTime())) {
+		const delay = date.getTime() - Date.now()
+		return Math.max(delay, 0)
+	}
+
+	return undefined
+}
+
+/**
+ * Calculates the delay for a retry attempt using exponential backoff with jitter.
+ */
+export function calculateRetryDelay(attempt: number, baseDelay: number, maxDelay: number): number {
+	const exponentialDelay = baseDelay * Math.pow(2, attempt - 1)
+	const jitter = Math.random() * baseDelay * 0.5
+	return Math.min(exponentialDelay + jitter, maxDelay)
+}
+
+function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/**
  * Creates a pre-configured Axios HTTP client instance for use within connectors.
  *
  * The client includes:
  * - Configurable base URL, headers, and timeout
  * - Built-in authentication (basic, bearer, apiKey, oauth2ClientCredentials)
+ * - Automatic retry with exponential backoff (429, 5xx, network errors)
  * - Token caching via the shared `connectorCache` (persists across warm invocations)
  * - Request/response logging via the SDK's pino logger
  * - Error logging for failed requests
@@ -226,11 +314,27 @@ async function fetchOAuth2Token(
  * })
  * ```
  *
+ * @example Custom retry configuration
+ * ```typescript
+ * const httpClient = createConnectorHttpClient({
+ *     baseURL: config.apiUrl,
+ *     retry: { maxRetries: 5, baseDelay: 2000 },
+ * })
+ * ```
+ *
+ * @example Disable retries
+ * ```typescript
+ * const httpClient = createConnectorHttpClient({
+ *     baseURL: config.apiUrl,
+ *     retry: false,
+ * })
+ * ```
+ *
  * @param options Configuration options for the HTTP client
  * @returns A configured Axios instance
  */
 export function createConnectorHttpClient(options: HttpClientOptions = {}): AxiosInstance {
-	const { baseURL, headers, timeout = 30000, auth, axiosOptions = {} } = options
+	const { baseURL, headers, timeout = 30000, auth, retry, axiosOptions = {} } = options
 
 	const client = axios.create({
 		...axiosOptions,
@@ -324,6 +428,66 @@ export function createConnectorHttpClient(options: HttpClientOptions = {}): Axio
 			return Promise.reject(error)
 		}
 	)
+
+	// Retry interceptor (added after logging so retries are logged)
+	if (retry !== false) {
+		const retryConfig: Required<RetryConfig> = {
+			maxRetries: retry?.maxRetries ?? 3,
+			baseDelay: retry?.baseDelay ?? 1000,
+			maxDelay: retry?.maxDelay ?? 30000,
+			retryableStatusCodes: retry?.retryableStatusCodes ?? DEFAULT_RETRYABLE_STATUS_CODES,
+			retryOnNetworkError: retry?.retryOnNetworkError ?? true,
+		}
+
+		client.interceptors.response.use(undefined, async (error: AxiosError) => {
+			const config = error.config
+			if (!config) {
+				return Promise.reject(error)
+			}
+
+			const retryCount: number = (config as any)[RETRY_COUNT_KEY] || 0
+
+			if (retryCount >= retryConfig.maxRetries) {
+				return Promise.reject(error)
+			}
+
+			const status = error.response?.status
+			const isRetryable = status
+				? retryConfig.retryableStatusCodes.includes(status)
+				: retryConfig.retryOnNetworkError && !error.response
+
+			if (!isRetryable) {
+				return Promise.reject(error)
+			}
+
+			const attempt = retryCount + 1
+
+			// For 429, prefer Retry-After header
+			let delay: number
+			if (status === 429) {
+				const retryAfterHeader = error.response?.headers?.['retry-after']
+				const retryAfterMs = parseRetryAfter(retryAfterHeader)
+				delay = retryAfterMs ?? calculateRetryDelay(attempt, retryConfig.baseDelay, retryConfig.maxDelay)
+			} else {
+				delay = calculateRetryDelay(attempt, retryConfig.baseDelay, retryConfig.maxDelay)
+			}
+
+			log.info(
+				{
+					attempt,
+					maxRetries: retryConfig.maxRetries,
+					status,
+					delay: Math.round(delay),
+					url: config.url,
+				},
+				'Retrying request'
+			)
+
+			;(config as any)[RETRY_COUNT_KEY] = attempt
+			await sleep(delay)
+			return client.request(config)
+		})
+	}
 
 	return client
 }

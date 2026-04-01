@@ -1,7 +1,7 @@
 /* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
 
 import axios from 'axios'
-import { createConnectorHttpClient } from './http-client'
+import { createConnectorHttpClient, parseRetryAfter, calculateRetryDelay } from './http-client'
 import { connectorCache } from './cache'
 
 // Track interceptor callbacks per instance so we can invoke them in tests
@@ -9,6 +9,7 @@ let interceptorCallbacks: {
 	request: Array<{ success: Function; error: Function }>
 	response: Array<{ success: Function; error: Function }>
 }
+let mockClientRequest: jest.Mock
 
 jest.mock('axios', () => {
 	const createMock = jest.fn(() => {
@@ -16,6 +17,7 @@ jest.mock('axios', () => {
 			request: [],
 			response: [],
 		}
+		mockClientRequest = jest.fn()
 		const interceptors = {
 			request: {
 				use: jest.fn((success: Function, error?: Function) => {
@@ -31,6 +33,7 @@ jest.mock('axios', () => {
 		return {
 			interceptors,
 			defaults: { headers: { common: {} } },
+			request: mockClientRequest,
 		}
 	})
 
@@ -139,7 +142,8 @@ describe('createConnectorHttpClient', () => {
 
 		it('response interceptor should pass through response', () => {
 			createConnectorHttpClient()
-			const loggingInterceptor = interceptorCallbacks.response[interceptorCallbacks.response.length - 1]
+			// Logging is the first response interceptor (index 0), retry is index 1
+			const loggingInterceptor = interceptorCallbacks.response[0]
 
 			const response = { config: { method: 'get', url: '/test' }, status: 200 }
 			const result = loggingInterceptor.success(response)
@@ -148,7 +152,7 @@ describe('createConnectorHttpClient', () => {
 
 		it('response interceptor should reject on response error', async () => {
 			createConnectorHttpClient()
-			const loggingInterceptor = interceptorCallbacks.response[interceptorCallbacks.response.length - 1]
+			const loggingInterceptor = interceptorCallbacks.response[0]
 
 			const error = {
 				config: { method: 'get', url: '/test' },
@@ -160,7 +164,7 @@ describe('createConnectorHttpClient', () => {
 
 		it('response interceptor should reject on network error', async () => {
 			createConnectorHttpClient()
-			const loggingInterceptor = interceptorCallbacks.response[interceptorCallbacks.response.length - 1]
+			const loggingInterceptor = interceptorCallbacks.response[0]
 
 			const error = { message: 'Network Error' }
 			await expect(loggingInterceptor.error(error)).rejects.toBe(error)
@@ -173,7 +177,8 @@ describe('createConnectorHttpClient', () => {
 				auth: { type: 'basic', username: 'user', password: 'pass' },
 			})
 
-			expect(interceptorCallbacks.request.length).toBe(2) // auth + logging
+			// auth + logging = 2 request interceptors
+			expect(interceptorCallbacks.request.length).toBe(2)
 			const authInterceptor = interceptorCallbacks.request[0]
 
 			const config = mockRequestConfig()
@@ -415,8 +420,406 @@ describe('createConnectorHttpClient', () => {
 		it('should not add auth interceptor when auth is not configured', () => {
 			createConnectorHttpClient()
 
+			// 1 request (logging) + 2 response (logging + retry)
 			expect(interceptorCallbacks.request.length).toBe(1)
+			expect(interceptorCallbacks.response.length).toBe(2)
+		})
+	})
+
+	describe('retry', () => {
+		// Helper to get the retry interceptor (last response interceptor)
+		function getRetryInterceptor() {
+			return interceptorCallbacks.response[interceptorCallbacks.response.length - 1]
+		}
+
+		it('should register retry interceptor by default', () => {
+			createConnectorHttpClient()
+
+			// logging + retry = 2 response interceptors
+			expect(interceptorCallbacks.response.length).toBe(2)
+		})
+
+		it('should not register retry interceptor when retry is false', () => {
+			createConnectorHttpClient({ retry: false })
+
+			// Only logging interceptor
 			expect(interceptorCallbacks.response.length).toBe(1)
 		})
+
+		it('should retry on 429 status', async () => {
+			jest.useFakeTimers()
+
+			createConnectorHttpClient()
+			const retryInterceptor = getRetryInterceptor()
+
+			const config = { method: 'get', url: '/test' }
+			const error = {
+				config,
+				response: { status: 429, headers: {} },
+				message: 'Too Many Requests',
+			}
+
+			mockClientRequest.mockResolvedValue({ status: 200 })
+
+			const promise = retryInterceptor.error(error)
+			await jest.advanceTimersByTimeAsync(2000)
+			await promise
+
+			expect(mockClientRequest).toHaveBeenCalledWith(
+				expect.objectContaining({ __retryCount: 1 })
+			)
+
+			jest.useRealTimers()
+		})
+
+		it('should retry on 500 status', async () => {
+			jest.useFakeTimers()
+
+			createConnectorHttpClient()
+			const retryInterceptor = getRetryInterceptor()
+
+			const config = { method: 'get', url: '/test' }
+			const error = {
+				config,
+				response: { status: 500, headers: {} },
+				message: 'Internal Server Error',
+			}
+
+			mockClientRequest.mockResolvedValue({ status: 200 })
+
+			const promise = retryInterceptor.error(error)
+			await jest.advanceTimersByTimeAsync(2000)
+			await promise
+
+			expect(mockClientRequest).toHaveBeenCalled()
+
+			jest.useRealTimers()
+		})
+
+		it('should retry on 502 status', async () => {
+			jest.useFakeTimers()
+
+			createConnectorHttpClient()
+			const retryInterceptor = getRetryInterceptor()
+
+			const config = { method: 'get', url: '/test' }
+			const error = {
+				config,
+				response: { status: 502, headers: {} },
+				message: 'Bad Gateway',
+			}
+
+			mockClientRequest.mockResolvedValue({ status: 200 })
+
+			const promise = retryInterceptor.error(error)
+			await jest.advanceTimersByTimeAsync(2000)
+			await promise
+
+			expect(mockClientRequest).toHaveBeenCalled()
+
+			jest.useRealTimers()
+		})
+
+		it('should retry on 503 status', async () => {
+			jest.useFakeTimers()
+
+			createConnectorHttpClient()
+			const retryInterceptor = getRetryInterceptor()
+
+			const config = { method: 'get', url: '/test' }
+			const error = {
+				config,
+				response: { status: 503, headers: {} },
+				message: 'Service Unavailable',
+			}
+
+			mockClientRequest.mockResolvedValue({ status: 200 })
+
+			const promise = retryInterceptor.error(error)
+			await jest.advanceTimersByTimeAsync(2000)
+			await promise
+
+			expect(mockClientRequest).toHaveBeenCalled()
+
+			jest.useRealTimers()
+		})
+
+		it('should retry on network errors', async () => {
+			jest.useFakeTimers()
+
+			createConnectorHttpClient()
+			const retryInterceptor = getRetryInterceptor()
+
+			const config = { method: 'get', url: '/test' }
+			const error = {
+				config,
+				message: 'Network Error',
+				// No response property = network error
+			}
+
+			mockClientRequest.mockResolvedValue({ status: 200 })
+
+			const promise = retryInterceptor.error(error)
+			await jest.advanceTimersByTimeAsync(2000)
+			await promise
+
+			expect(mockClientRequest).toHaveBeenCalled()
+
+			jest.useRealTimers()
+		})
+
+		it('should not retry on 400 status', async () => {
+			createConnectorHttpClient()
+			const retryInterceptor = getRetryInterceptor()
+
+			const config = { method: 'get', url: '/test' }
+			const error = {
+				config,
+				response: { status: 400, headers: {} },
+				message: 'Bad Request',
+			}
+
+			await expect(retryInterceptor.error(error)).rejects.toBe(error)
+			expect(mockClientRequest).not.toHaveBeenCalled()
+		})
+
+		it('should not retry on 401 status', async () => {
+			createConnectorHttpClient()
+			const retryInterceptor = getRetryInterceptor()
+
+			const config = { method: 'get', url: '/test' }
+			const error = {
+				config,
+				response: { status: 401, headers: {} },
+				message: 'Unauthorized',
+			}
+
+			await expect(retryInterceptor.error(error)).rejects.toBe(error)
+			expect(mockClientRequest).not.toHaveBeenCalled()
+		})
+
+		it('should not retry on 404 status', async () => {
+			createConnectorHttpClient()
+			const retryInterceptor = getRetryInterceptor()
+
+			const config = { method: 'get', url: '/test' }
+			const error = {
+				config,
+				response: { status: 404, headers: {} },
+				message: 'Not Found',
+			}
+
+			await expect(retryInterceptor.error(error)).rejects.toBe(error)
+			expect(mockClientRequest).not.toHaveBeenCalled()
+		})
+
+		it('should stop retrying after maxRetries', async () => {
+			createConnectorHttpClient({ retry: { maxRetries: 2 } })
+			const retryInterceptor = getRetryInterceptor()
+
+			const config = { method: 'get', url: '/test', __retryCount: 2 }
+			const error = {
+				config,
+				response: { status: 500, headers: {} },
+				message: 'Internal Server Error',
+			}
+
+			await expect(retryInterceptor.error(error)).rejects.toBe(error)
+			expect(mockClientRequest).not.toHaveBeenCalled()
+		})
+
+		it('should respect Retry-After header (seconds) on 429', async () => {
+			jest.useFakeTimers()
+
+			createConnectorHttpClient()
+			const retryInterceptor = getRetryInterceptor()
+
+			const config = { method: 'get', url: '/test' }
+			const error = {
+				config,
+				response: { status: 429, headers: { 'retry-after': '5' } },
+				message: 'Too Many Requests',
+			}
+
+			mockClientRequest.mockResolvedValue({ status: 200 })
+
+			const promise = retryInterceptor.error(error)
+
+			// Should not have retried before 5 seconds
+			await jest.advanceTimersByTimeAsync(4900)
+			expect(mockClientRequest).not.toHaveBeenCalled()
+
+			// Should retry after 5 seconds
+			await jest.advanceTimersByTimeAsync(200)
+			await promise
+
+			expect(mockClientRequest).toHaveBeenCalled()
+
+			jest.useRealTimers()
+		})
+
+		it('should respect Retry-After header (HTTP-date) on 429', async () => {
+			jest.useFakeTimers()
+			const futureDate = new Date(Date.now() + 3000).toUTCString()
+
+			createConnectorHttpClient()
+			const retryInterceptor = getRetryInterceptor()
+
+			const config = { method: 'get', url: '/test' }
+			const error = {
+				config,
+				response: { status: 429, headers: { 'retry-after': futureDate } },
+				message: 'Too Many Requests',
+			}
+
+			mockClientRequest.mockResolvedValue({ status: 200 })
+
+			const promise = retryInterceptor.error(error)
+			await jest.advanceTimersByTimeAsync(3100)
+			await promise
+
+			expect(mockClientRequest).toHaveBeenCalled()
+
+			jest.useRealTimers()
+		})
+
+		it('should reject when error has no config', async () => {
+			createConnectorHttpClient()
+			const retryInterceptor = getRetryInterceptor()
+
+			const error = { message: 'No config' }
+
+			await expect(retryInterceptor.error(error)).rejects.toBe(error)
+			expect(mockClientRequest).not.toHaveBeenCalled()
+		})
+
+		it('should not retry network errors when retryOnNetworkError is false', async () => {
+			createConnectorHttpClient({ retry: { retryOnNetworkError: false } })
+			const retryInterceptor = getRetryInterceptor()
+
+			const config = { method: 'get', url: '/test' }
+			const error = {
+				config,
+				message: 'Network Error',
+			}
+
+			await expect(retryInterceptor.error(error)).rejects.toBe(error)
+			expect(mockClientRequest).not.toHaveBeenCalled()
+		})
+
+		it('should use custom retryableStatusCodes', async () => {
+			jest.useFakeTimers()
+
+			createConnectorHttpClient({ retry: { retryableStatusCodes: [418] } })
+			const retryInterceptor = getRetryInterceptor()
+
+			// 418 should now be retryable
+			const config1 = { method: 'get', url: '/test' }
+			const error1 = {
+				config: config1,
+				response: { status: 418, headers: {} },
+				message: "I'm a teapot",
+			}
+
+			mockClientRequest.mockResolvedValue({ status: 200 })
+
+			const promise = retryInterceptor.error(error1)
+			await jest.advanceTimersByTimeAsync(2000)
+			await promise
+
+			expect(mockClientRequest).toHaveBeenCalled()
+
+			jest.useRealTimers()
+		})
+
+		it('should increment retry count on each attempt', async () => {
+			jest.useFakeTimers()
+
+			createConnectorHttpClient()
+			const retryInterceptor = getRetryInterceptor()
+
+			const config = { method: 'get', url: '/test' }
+			const error = {
+				config,
+				response: { status: 500, headers: {} },
+				message: 'Server Error',
+			}
+
+			mockClientRequest.mockResolvedValue({ status: 200 })
+
+			const promise = retryInterceptor.error(error)
+			await jest.advanceTimersByTimeAsync(2000)
+			await promise
+
+			expect((config as any).__retryCount).toBe(1)
+
+			jest.useRealTimers()
+		})
+	})
+})
+
+describe('parseRetryAfter', () => {
+	it('should return undefined for null/undefined', () => {
+		expect(parseRetryAfter(null)).toBeUndefined()
+		expect(parseRetryAfter(undefined)).toBeUndefined()
+	})
+
+	it('should parse integer seconds', () => {
+		expect(parseRetryAfter('5')).toBe(5000)
+		expect(parseRetryAfter('0')).toBe(0)
+		expect(parseRetryAfter('120')).toBe(120000)
+	})
+
+	it('should parse HTTP-date format', () => {
+		const futureDate = new Date(Date.now() + 10000).toUTCString()
+		const result = parseRetryAfter(futureDate)
+		expect(result).toBeDefined()
+		expect(result!).toBeGreaterThan(0)
+		expect(result!).toBeLessThanOrEqual(10100)
+	})
+
+	it('should return 0 for past dates', () => {
+		const pastDate = new Date(Date.now() - 10000).toUTCString()
+		expect(parseRetryAfter(pastDate)).toBe(0)
+	})
+
+	it('should return undefined for unparseable values', () => {
+		expect(parseRetryAfter('not-a-date-or-number')).toBeUndefined()
+	})
+})
+
+describe('calculateRetryDelay', () => {
+	it('should increase exponentially', () => {
+		// Use a fixed seed by mocking Math.random to remove jitter
+		jest.spyOn(Math, 'random').mockReturnValue(0)
+
+		const delay1 = calculateRetryDelay(1, 1000, 30000)
+		const delay2 = calculateRetryDelay(2, 1000, 30000)
+		const delay3 = calculateRetryDelay(3, 1000, 30000)
+
+		expect(delay1).toBe(1000) // 1000 * 2^0 = 1000
+		expect(delay2).toBe(2000) // 1000 * 2^1 = 2000
+		expect(delay3).toBe(4000) // 1000 * 2^2 = 4000
+
+		jest.spyOn(Math, 'random').mockRestore()
+	})
+
+	it('should cap at maxDelay', () => {
+		jest.spyOn(Math, 'random').mockReturnValue(0)
+
+		const delay = calculateRetryDelay(10, 1000, 5000)
+		expect(delay).toBe(5000)
+
+		jest.spyOn(Math, 'random').mockRestore()
+	})
+
+	it('should add jitter', () => {
+		jest.spyOn(Math, 'random').mockReturnValue(1) // max jitter
+
+		const delay = calculateRetryDelay(1, 1000, 30000)
+		// 1000 + (1 * 1000 * 0.5) = 1500
+		expect(delay).toBe(1500)
+
+		jest.spyOn(Math, 'random').mockRestore()
 	})
 })
