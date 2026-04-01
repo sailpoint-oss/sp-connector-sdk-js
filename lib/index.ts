@@ -13,4 +13,5 @@ export * from './partitionAdapter'
 export * from './filter';
 export * from './unescape';
 export * from './cache';
+export * from './data-store';
 export * from './http-client';
