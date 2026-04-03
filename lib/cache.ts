@@ -25,18 +25,13 @@ interface CacheEntry<T> {
  * ```typescript
  * import { connectorCache } from '@sailpoint/connector-sdk'
  *
- * // Cache an API response for 5 minutes
- * const users = connectorCache.get<User[]>('all-users')
- * if (!users) {
- *     const fetched = await fetchUsers()
- *     connectorCache.set('all-users', fetched, 300)
- *     return fetched
- * }
- * return users
+ * // Cache an API response for 5 minutes using fetch()
+ * const users = await connectorCache.fetch('all-users', () => myClient.getUsers(), 300)
  * ```
  */
 export class ConnectorCache {
 	private readonly store = new Map<string, CacheEntry<any>>()
+	private readonly inflight = new Map<string, Promise<any>>()
 
 	/**
 	 * Get a value from the cache. Returns `undefined` if the key does not exist or has expired.
@@ -74,6 +69,54 @@ export class ConnectorCache {
 	 */
 	has(key: string): boolean {
 		return this.get(key) !== undefined
+	}
+
+	/**
+	 * Return the cached value for `key`, or compute and store it if absent.
+	 *
+	 * If the key is not in the cache (or has expired), `factory` is called once to produce
+	 * the value, which is then stored with the given TTL. Concurrent calls with the same key
+	 * are deduplicated — only one `factory` invocation runs, and all callers receive the
+	 * same result.
+	 *
+	 * @param key Cache key
+	 * @param factory Async function that produces the value when the cache is empty
+	 * @param ttlSeconds Time-to-live in seconds. If omitted, the entry never expires.
+	 *
+	 * @example
+	 * ```typescript
+	 * const entitlementMap = await connectorCache.fetch(
+	 *     'entitlement-map',
+	 *     async () => {
+	 *         const entitlements = await client.listEntitlements()
+	 *         return new Map(entitlements.map(e => [e.id, e.name]))
+	 *     },
+	 *     600,
+	 * )
+	 * ```
+	 */
+	async fetch<T = any>(key: string, factory: () => Promise<T>, ttlSeconds?: number): Promise<T> {
+		const cached = this.get<T>(key)
+		if (cached !== undefined) {
+			return cached
+		}
+
+		const existing = this.inflight.get(key)
+		if (existing) {
+			return existing as Promise<T>
+		}
+
+		const promise = factory().then((value) => {
+			this.set(key, value, ttlSeconds)
+			this.inflight.delete(key)
+			return value
+		}).catch((err) => {
+			this.inflight.delete(key)
+			throw err
+		})
+
+		this.inflight.set(key, promise)
+		return promise
 	}
 
 	/**

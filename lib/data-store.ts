@@ -1,6 +1,7 @@
 /* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
 
 import { Patch, PatchOp, Response } from './response'
+import { Context } from './connector-handler'
 
 /**
  * A persistent key-value data store backed by connector source `connectorAttributes`.
@@ -9,6 +10,9 @@ import { Patch, PatchOp, Response } from './response'
  * Under the hood, changes are sent via `patchConfig` as JSON Patch operations targeting
  * `/connectorAttributes/<key>`. Only changed values are patched — if a value is set to
  * the same thing it was before, no patch is emitted.
+ *
+ * During long aggregations, call `reload(context)` to pick up config changes that occurred
+ * mid-run (including values written by a previous `flush()` call in the same invocation).
  *
  * @example
  * ```typescript
@@ -34,7 +38,7 @@ import { Patch, PatchOp, Response } from './response'
  * ```
  */
 export class ConnectorDataStore {
-	private readonly config: Record<string, any>
+	private config: Record<string, any>
 	private readonly res: Response<any>
 	private readonly pending = new Map<string, { op: 'set' | 'delete'; value?: any }>()
 
@@ -93,8 +97,10 @@ export class ConnectorDataStore {
 
 	/**
 	 * Send all accumulated changes as a single `patchConfig` call.
-	 * Only emits patches for values that differ from the original config.
-	 * After flushing, pending changes are cleared.
+	 * Only emits patches for values that differ from the current config.
+	 * After flushing, the local config is updated to reflect the sent patches so that
+	 * subsequent `set()` calls in the same invocation use the correct baseline for
+	 * change detection.
 	 */
 	flush(): void {
 		if (this.pending.size === 0) {
@@ -121,7 +127,42 @@ export class ConnectorDataStore {
 			this.res.patchConfig(patches)
 		}
 
+		// Update the local config to reflect the flushed patches so subsequent set() calls
+		// correctly detect changes rather than re-patching already-written values.
+		if (!this.config.connectorAttributes) {
+			this.config.connectorAttributes = {}
+		}
+		for (const [key, entry] of this.pending) {
+			if (entry.op === 'delete') {
+				delete this.config.connectorAttributes[key]
+			} else {
+				this.config.connectorAttributes[key] = entry.value
+			}
+		}
+
 		this.pending.clear()
+	}
+
+	/**
+	 * Reload the connector config from ISC via the command context and update the data
+	 * store's baseline. Call this during long aggregations to pick up config changes that
+	 * occurred mid-run — for example, values written by a previous `flush()` call or
+	 * updates made externally.
+	 *
+	 * Pending changes are preserved across a reload.
+	 *
+	 * @param context The command context passed to the handler
+	 *
+	 * @example
+	 * ```typescript
+	 * // Flush a batch of changes, then reload so the next batch uses the updated baseline
+	 * dataStore.set('cursor', nextCursor)
+	 * dataStore.flush()
+	 * await dataStore.reload(context)
+	 * ```
+	 */
+	async reload(context: Context): Promise<void> {
+		this.config = await context.reloadConfig()
 	}
 
 	private deepEqual(a: any, b: any): boolean {

@@ -133,6 +133,50 @@ describe('ConnectorDataStore', () => {
 		})
 	})
 
+	describe('reload', () => {
+		function mockContext(freshConfig: any) {
+			return { reloadConfig: jest.fn().mockResolvedValue(freshConfig) } as any
+		}
+
+		it('should update the config baseline from context.reloadConfig', async () => {
+			const config = { connectorAttributes: { key: 'old' } }
+			const store = createConnectorDataStore(config, mockResponse())
+
+			const context = mockContext({ connectorAttributes: { key: 'new' } })
+			await store.reload(context)
+
+			expect(store.get('key')).toBe('new')
+			expect(context.reloadConfig).toHaveBeenCalledTimes(1)
+		})
+
+		it('should preserve pending changes across a reload', async () => {
+			const config = { connectorAttributes: {} }
+			const store = createConnectorDataStore(config, mockResponse())
+
+			store.set('pending', 'value')
+
+			const context = mockContext({ connectorAttributes: { other: 'from-isc' } })
+			await store.reload(context)
+
+			// Pending change is still there
+			expect(store.get('pending')).toBe('value')
+			expect(store.hasPendingChanges).toBe(true)
+		})
+
+		it('should use reloaded config for change detection after reload', async () => {
+			const config = { connectorAttributes: {} }
+			const store = createConnectorDataStore(config, mockResponse())
+
+			// After reload, 'key' now exists with 'value' in ISC
+			const context = mockContext({ connectorAttributes: { key: 'value' } })
+			await store.reload(context)
+
+			// Setting to the same value should be a no-op
+			store.set('key', 'value')
+			expect(store.hasPendingChanges).toBe(false)
+		})
+	})
+
 	describe('flush', () => {
 		it('should send Add patches for new keys', () => {
 			const res = mockResponse()
@@ -225,6 +269,51 @@ describe('ConnectorDataStore', () => {
 			// Second flush should be a no-op
 			store.flush()
 			expect(res.patchConfig).toHaveBeenCalledTimes(1)
+		})
+
+		it('should update local config after flush so subsequent set() calls detect no change', () => {
+			const res = mockResponse()
+			const config = { connectorAttributes: {} }
+			const store = createConnectorDataStore(config, res)
+
+			store.set('key', 'value')
+			store.flush()
+
+			// Second flush with the same value should be a no-op — baseline was updated
+			store.set('key', 'value')
+			expect(store.hasPendingChanges).toBe(false)
+			store.flush()
+			expect(res.patchConfig).toHaveBeenCalledTimes(1)
+		})
+
+		it('should update local config after flush so Replace is used instead of Add on second write', () => {
+			const res = mockResponse()
+			const config = { connectorAttributes: {} }
+			const store = createConnectorDataStore(config, res)
+
+			store.set('key', 'first')
+			store.flush()
+
+			store.set('key', 'second')
+			store.flush()
+
+			const firstPatches = (res.patchConfig as jest.Mock).mock.calls[0][0]
+			const secondPatches = (res.patchConfig as jest.Mock).mock.calls[1][0]
+			expect(firstPatches[0].op).toBe(PatchOp.Add)
+			expect(secondPatches[0].op).toBe(PatchOp.Replace)
+		})
+
+		it('should update local config after flush so deleted keys are gone from baseline', () => {
+			const res = mockResponse()
+			const config = { connectorAttributes: { key: 'value' } }
+			const store = createConnectorDataStore(config, res)
+
+			store.delete('key')
+			store.flush()
+
+			// key no longer exists in baseline, so a second delete is a no-op
+			store.delete('key')
+			expect(store.hasPendingChanges).toBe(false)
 		})
 
 		it('should handle config with no connectorAttributes (all adds)', () => {

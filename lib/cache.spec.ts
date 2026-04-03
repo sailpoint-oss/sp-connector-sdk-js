@@ -131,6 +131,111 @@ describe('ConnectorCache', () => {
 		})
 	})
 
+	describe('fetch', () => {
+		it('should call factory and return value on cache miss', async () => {
+			const factory = jest.fn().mockResolvedValue('computed')
+			const result = await cache.fetch('key', factory)
+
+			expect(result).toBe('computed')
+			expect(factory).toHaveBeenCalledTimes(1)
+		})
+
+		it('should return cached value without calling factory on cache hit', async () => {
+			cache.set('key', 'cached')
+			const factory = jest.fn().mockResolvedValue('computed')
+			const result = await cache.fetch('key', factory)
+
+			expect(result).toBe('cached')
+			expect(factory).not.toHaveBeenCalled()
+		})
+
+		it('should store the computed value in the cache', async () => {
+			await cache.fetch('key', async () => 'value')
+
+			expect(cache.get('key')).toBe('value')
+		})
+
+		it('should store the computed value with TTL', async () => {
+			jest.useFakeTimers()
+
+			await cache.fetch('key', async () => 'value', 60)
+
+			jest.advanceTimersByTime(59000)
+			expect(cache.get('key')).toBe('value')
+
+			jest.advanceTimersByTime(1000)
+			expect(cache.get('key')).toBeUndefined()
+
+			jest.useRealTimers()
+		})
+
+		it('should deduplicate concurrent calls for the same key', async () => {
+			let resolveFactory: (v: string) => void
+			const factory = jest.fn().mockImplementation(
+				() => new Promise<string>((resolve) => { resolveFactory = resolve })
+			)
+
+			const promise1 = cache.fetch<string>('key', factory)
+			const promise2 = cache.fetch<string>('key', factory)
+
+			resolveFactory!('result')
+			const [r1, r2] = await Promise.all([promise1, promise2])
+
+			expect(factory).toHaveBeenCalledTimes(1)
+			expect(r1).toBe('result')
+			expect(r2).toBe('result')
+		})
+
+		it('should call factory again after previous call resolves', async () => {
+			const factory = jest.fn()
+				.mockResolvedValueOnce('first')
+				.mockResolvedValueOnce('second')
+
+			await cache.fetch('key', factory)
+			cache.delete('key')
+			const result = await cache.fetch('key', factory)
+
+			expect(factory).toHaveBeenCalledTimes(2)
+			expect(result).toBe('second')
+		})
+
+		it('should propagate factory errors to all concurrent callers', async () => {
+			const error = new Error('factory failed')
+			let rejectFactory: (e: Error) => void
+			const factory = jest.fn().mockImplementation(
+				() => new Promise<string>((_, reject) => { rejectFactory = reject })
+			)
+
+			const promise1 = cache.fetch<string>('key', factory)
+			const promise2 = cache.fetch<string>('key', factory)
+
+			rejectFactory!(error)
+
+			await expect(promise1).rejects.toBe(error)
+			await expect(promise2).rejects.toBe(error)
+			expect(factory).toHaveBeenCalledTimes(1)
+		})
+
+		it('should allow retry after a factory error', async () => {
+			const factory = jest.fn()
+				.mockRejectedValueOnce(new Error('first failure'))
+				.mockResolvedValueOnce('success')
+
+			await expect(cache.fetch('key', factory)).rejects.toThrow('first failure')
+			const result = await cache.fetch('key', factory)
+
+			expect(factory).toHaveBeenCalledTimes(2)
+			expect(result).toBe('success')
+		})
+
+		it('should not cache the value when factory errors', async () => {
+			const factory = jest.fn().mockRejectedValue(new Error('fail'))
+
+			await expect(cache.fetch('key', factory)).rejects.toThrow()
+			expect(cache.has('key')).toBe(false)
+		})
+	})
+
 	describe('SDK reserved keys', () => {
 		it('should allow internal SDK keys', () => {
 			cache.set(`${SDK_CACHE_PREFIX}auth:token`, 'secret')
