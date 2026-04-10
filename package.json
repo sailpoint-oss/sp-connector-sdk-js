@@ -29,6 +29,7 @@
 	},
 	"dependencies": {
 		"archiver": "^7.0.1",
+		"axios": "^1.14.0",
 		"debug": "^4.4.1",
 		"express": "^5.2.1",
 		"jsep": "^1.4.0",
