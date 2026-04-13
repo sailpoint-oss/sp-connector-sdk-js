@@ -14,29 +14,22 @@ function mockResponse(): Response<any> {
 
 describe('ConnectorDataStore', () => {
 	describe('get', () => {
-		it('should read from connectorAttributes', () => {
-			const config = { connectorAttributes: { lastSync: '2026-01-01' } }
+		it('should read from config', () => {
+			const config = { lastSync: '2026-01-01' }
 			const store = createConnectorDataStore(config, mockResponse())
 
 			expect(store.get('lastSync')).toBe('2026-01-01')
 		})
 
 		it('should return undefined for missing keys', () => {
-			const config = { connectorAttributes: {} }
+			const config = {}
 			const store = createConnectorDataStore(config, mockResponse())
 
 			expect(store.get('missing')).toBeUndefined()
 		})
 
-		it('should return undefined when connectorAttributes is missing', () => {
-			const config = {}
-			const store = createConnectorDataStore(config, mockResponse())
-
-			expect(store.get('anything')).toBeUndefined()
-		})
-
 		it('should return pending value if set', () => {
-			const config = { connectorAttributes: { key: 'old' } }
+			const config = { key: 'old' }
 			const store = createConnectorDataStore(config, mockResponse())
 
 			store.set('key', 'new')
@@ -44,7 +37,7 @@ describe('ConnectorDataStore', () => {
 		})
 
 		it('should return undefined for pending deletes', () => {
-			const config = { connectorAttributes: { key: 'value' } }
+			const config = { key: 'value' }
 			const store = createConnectorDataStore(config, mockResponse())
 
 			store.delete('key')
@@ -52,7 +45,7 @@ describe('ConnectorDataStore', () => {
 		})
 
 		it('should support generic types', () => {
-			const config = { connectorAttributes: { count: 42 } }
+			const config = { count: 42 }
 			const store = createConnectorDataStore(config, mockResponse())
 
 			const val = store.get<number>('count')
@@ -63,7 +56,7 @@ describe('ConnectorDataStore', () => {
 	describe('set', () => {
 		it('should buffer changes without calling patchConfig', () => {
 			const res = mockResponse()
-			const config = { connectorAttributes: {} }
+			const config = {}
 			const store = createConnectorDataStore(config, res)
 
 			store.set('key', 'value')
@@ -71,7 +64,7 @@ describe('ConnectorDataStore', () => {
 		})
 
 		it('should skip if value is identical to current (primitive)', () => {
-			const config = { connectorAttributes: { key: 'same' } }
+			const config = { key: 'same' }
 			const store = createConnectorDataStore(config, mockResponse())
 
 			store.set('key', 'same')
@@ -79,7 +72,7 @@ describe('ConnectorDataStore', () => {
 		})
 
 		it('should skip if value is identical to current (object)', () => {
-			const config = { connectorAttributes: { data: { a: 1, b: 2 } } }
+			const config = { data: { a: 1, b: 2 } }
 			const store = createConnectorDataStore(config, mockResponse())
 
 			store.set('data', { a: 1, b: 2 })
@@ -87,7 +80,7 @@ describe('ConnectorDataStore', () => {
 		})
 
 		it('should detect changes in objects', () => {
-			const config = { connectorAttributes: { data: { a: 1 } } }
+			const config = { data: { a: 1 } }
 			const store = createConnectorDataStore(config, mockResponse())
 
 			store.set('data', { a: 2 })
@@ -95,7 +88,7 @@ describe('ConnectorDataStore', () => {
 		})
 
 		it('should remove pending entry if set back to original value', () => {
-			const config = { connectorAttributes: { key: 'original' } }
+			const config = { key: 'original' }
 			const store = createConnectorDataStore(config, mockResponse())
 
 			store.set('key', 'changed')
@@ -108,7 +101,7 @@ describe('ConnectorDataStore', () => {
 
 	describe('delete', () => {
 		it('should buffer a delete for existing keys', () => {
-			const config = { connectorAttributes: { key: 'value' } }
+			const config = { key: 'value' }
 			const store = createConnectorDataStore(config, mockResponse())
 
 			store.delete('key')
@@ -116,7 +109,7 @@ describe('ConnectorDataStore', () => {
 		})
 
 		it('should not buffer a delete for keys that do not exist', () => {
-			const config = { connectorAttributes: {} }
+			const config = {}
 			const store = createConnectorDataStore(config, mockResponse())
 
 			store.delete('missing')
@@ -139,10 +132,10 @@ describe('ConnectorDataStore', () => {
 		}
 
 		it('should update the config baseline from context.reloadConfig', async () => {
-			const config = { connectorAttributes: { key: 'old' } }
+			const config = { key: 'old' }
 			const store = createConnectorDataStore(config, mockResponse())
 
-			const context = mockContext({ connectorAttributes: { key: 'new' } })
+			const context = mockContext({ key: 'new' })
 			await store.reload(context)
 
 			expect(store.get('key')).toBe('new')
@@ -150,12 +143,12 @@ describe('ConnectorDataStore', () => {
 		})
 
 		it('should preserve pending changes across a reload', async () => {
-			const config = { connectorAttributes: {} }
+			const config = {}
 			const store = createConnectorDataStore(config, mockResponse())
 
 			store.set('pending', 'value')
 
-			const context = mockContext({ connectorAttributes: { other: 'from-isc' } })
+			const context = mockContext({ other: 'from-isc' })
 			await store.reload(context)
 
 			// Pending change is still there
@@ -164,11 +157,11 @@ describe('ConnectorDataStore', () => {
 		})
 
 		it('should use reloaded config for change detection after reload', async () => {
-			const config = { connectorAttributes: {} }
+			const config = {}
 			const store = createConnectorDataStore(config, mockResponse())
 
 			// After reload, 'key' now exists with 'value' in ISC
-			const context = mockContext({ connectorAttributes: { key: 'value' } })
+			const context = mockContext({ key: 'value' })
 			await store.reload(context)
 
 			// Setting to the same value should be a no-op
@@ -180,46 +173,46 @@ describe('ConnectorDataStore', () => {
 	describe('flush', () => {
 		it('should send Add patches for new keys', () => {
 			const res = mockResponse()
-			const config = { connectorAttributes: {} }
+			const config = {}
 			const store = createConnectorDataStore(config, res)
 
 			store.set('newKey', 'newValue')
 			store.flush()
 
 			expect(res.patchConfig).toHaveBeenCalledWith([
-				{ op: PatchOp.Add, path: '/connectorAttributes/newKey', value: 'newValue' },
+				{ op: PatchOp.Add, path: '/newKey', value: 'newValue' },
 			])
 		})
 
 		it('should send Replace patches for existing keys', () => {
 			const res = mockResponse()
-			const config = { connectorAttributes: { existing: 'old' } }
+			const config = { existing: 'old' }
 			const store = createConnectorDataStore(config, res)
 
 			store.set('existing', 'updated')
 			store.flush()
 
 			expect(res.patchConfig).toHaveBeenCalledWith([
-				{ op: PatchOp.Replace, path: '/connectorAttributes/existing', value: 'updated' },
+				{ op: PatchOp.Replace, path: '/existing', value: 'updated' },
 			])
 		})
 
 		it('should send Remove patches for deleted keys', () => {
 			const res = mockResponse()
-			const config = { connectorAttributes: { toRemove: 'value' } }
+			const config = { toRemove: 'value' }
 			const store = createConnectorDataStore(config, res)
 
 			store.delete('toRemove')
 			store.flush()
 
 			expect(res.patchConfig).toHaveBeenCalledWith([
-				{ op: PatchOp.Remove, path: '/connectorAttributes/toRemove' },
+				{ op: PatchOp.Remove, path: '/toRemove' },
 			])
 		})
 
 		it('should batch multiple changes into a single patchConfig call', () => {
 			const res = mockResponse()
-			const config = { connectorAttributes: { existing: 'old', toRemove: 'bye' } }
+			const config = { existing: 'old', toRemove: 'bye' }
 			const store = createConnectorDataStore(config, res)
 
 			store.set('existing', 'updated')
@@ -232,23 +225,23 @@ describe('ConnectorDataStore', () => {
 			expect(patches).toHaveLength(3)
 			expect(patches).toContainEqual({
 				op: PatchOp.Replace,
-				path: '/connectorAttributes/existing',
+				path: '/existing',
 				value: 'updated',
 			})
 			expect(patches).toContainEqual({
 				op: PatchOp.Add,
-				path: '/connectorAttributes/brand-new',
+				path: '/brand-new',
 				value: 123,
 			})
 			expect(patches).toContainEqual({
 				op: PatchOp.Remove,
-				path: '/connectorAttributes/toRemove',
+				path: '/toRemove',
 			})
 		})
 
 		it('should not call patchConfig when there are no changes', () => {
 			const res = mockResponse()
-			const config = { connectorAttributes: { key: 'value' } }
+			const config = { key: 'value' }
 			const store = createConnectorDataStore(config, res)
 
 			store.set('key', 'value') // same value, no change
@@ -259,7 +252,7 @@ describe('ConnectorDataStore', () => {
 
 		it('should clear pending changes after flush', () => {
 			const res = mockResponse()
-			const config = { connectorAttributes: {} }
+			const config = {}
 			const store = createConnectorDataStore(config, res)
 
 			store.set('key', 'value')
@@ -273,7 +266,7 @@ describe('ConnectorDataStore', () => {
 
 		it('should update local config after flush so subsequent set() calls detect no change', () => {
 			const res = mockResponse()
-			const config = { connectorAttributes: {} }
+			const config = {}
 			const store = createConnectorDataStore(config, res)
 
 			store.set('key', 'value')
@@ -288,7 +281,7 @@ describe('ConnectorDataStore', () => {
 
 		it('should update local config after flush so Replace is used instead of Add on second write', () => {
 			const res = mockResponse()
-			const config = { connectorAttributes: {} }
+			const config = {}
 			const store = createConnectorDataStore(config, res)
 
 			store.set('key', 'first')
@@ -305,7 +298,7 @@ describe('ConnectorDataStore', () => {
 
 		it('should update local config after flush so deleted keys are gone from baseline', () => {
 			const res = mockResponse()
-			const config = { connectorAttributes: { key: 'value' } }
+			const config = { key: 'value' }
 			const store = createConnectorDataStore(config, res)
 
 			store.delete('key')
@@ -316,7 +309,7 @@ describe('ConnectorDataStore', () => {
 			expect(store.hasPendingChanges).toBe(false)
 		})
 
-		it('should handle config with no connectorAttributes (all adds)', () => {
+		it('should handle empty config (all adds)', () => {
 			const res = mockResponse()
 			const config = {}
 			const store = createConnectorDataStore(config, res)
@@ -325,13 +318,13 @@ describe('ConnectorDataStore', () => {
 			store.flush()
 
 			expect(res.patchConfig).toHaveBeenCalledWith([
-				{ op: PatchOp.Add, path: '/connectorAttributes/key', value: 'value' },
+				{ op: PatchOp.Add, path: '/key', value: 'value' },
 			])
 		})
 
 		it('should handle complex values (objects, arrays)', () => {
 			const res = mockResponse()
-			const config = { connectorAttributes: {} }
+			const config = {}
 			const store = createConnectorDataStore(config, res)
 
 			store.set('metadata', { users: ['a', 'b'], cursor: { page: 2, token: 'abc' } })
@@ -340,7 +333,7 @@ describe('ConnectorDataStore', () => {
 			expect(res.patchConfig).toHaveBeenCalledWith([
 				{
 					op: PatchOp.Add,
-					path: '/connectorAttributes/metadata',
+					path: '/metadata',
 					value: { users: ['a', 'b'], cursor: { page: 2, token: 'abc' } },
 				},
 			])

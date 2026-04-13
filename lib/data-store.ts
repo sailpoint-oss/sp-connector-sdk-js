@@ -2,14 +2,15 @@
 
 import { Patch, PatchOp, Response } from './response'
 import { Context } from './connector-handler'
+import { logger } from './logger'
 
 /**
- * A persistent key-value data store backed by connector source `connectorAttributes`.
+ * A persistent key-value data store backed by source config attributes.
  *
  * Provides a simple API to read and write values that persist across connector invocations.
  * Under the hood, changes are sent via `patchConfig` as JSON Patch operations targeting
- * `/connectorAttributes/<key>`. Only changed values are patched — if a value is set to
- * the same thing it was before, no patch is emitted.
+ * `/<key>` directly. Only changed values are patched — if a value is set to the same thing
+ * it was before, no patch is emitted.
  *
  * During long aggregations, call `reload(context)` to pick up config changes that occurred
  * mid-run (including values written by a previous `flush()` call in the same invocation).
@@ -48,7 +49,7 @@ export class ConnectorDataStore {
 	}
 
 	/**
-	 * Get a value from connectorAttributes.
+	 * Get a value from the config.
 	 * Returns the pending value if one has been set, otherwise the original config value.
 	 * @param key Attribute key
 	 */
@@ -57,17 +58,17 @@ export class ConnectorDataStore {
 		if (pendingEntry) {
 			return pendingEntry.op === 'delete' ? undefined : (pendingEntry.value as T)
 		}
-		return this.config?.connectorAttributes?.[key] as T | undefined
+		return this.config?.[key] as T | undefined
 	}
 
 	/**
-	 * Set a value in connectorAttributes. The change is buffered until `flush()` is called.
+	 * Set a value in the config. The change is buffered until `flush()` is called.
 	 * If the value is identical to the current stored value, no patch will be emitted.
 	 * @param key Attribute key
 	 * @param value Value to store (must be JSON-serializable)
 	 */
 	set(key: string, value: any): void {
-		const current = this.config?.connectorAttributes?.[key]
+		const current = this.config?.[key]
 		if (this.deepEqual(current, value)) {
 			this.pending.delete(key)
 			return
@@ -76,12 +77,12 @@ export class ConnectorDataStore {
 	}
 
 	/**
-	 * Remove a key from connectorAttributes. The change is buffered until `flush()` is called.
+	 * Remove a key from the config. The change is buffered until `flush()` is called.
 	 * If the key doesn't exist, no patch will be emitted.
 	 * @param key Attribute key to remove
 	 */
 	delete(key: string): void {
-		const exists = this.config?.connectorAttributes?.hasOwnProperty(key)
+		const exists = this.config?.hasOwnProperty(key)
 		if (!exists && !this.pending.has(key)) {
 			return
 		}
@@ -107,36 +108,36 @@ export class ConnectorDataStore {
 			return
 		}
 
+		const log = logger.child({ component: 'data-store' })
+		log.debug({ config: this.config ?? null }, 'data-store flush: config baseline')
+
 		const patches: Patch[] = []
-		const hasConnectorAttributes = this.config?.connectorAttributes != null
 
 		for (const [key, entry] of this.pending) {
 			if (entry.op === 'delete') {
-				patches.push({ op: PatchOp.Remove, path: `/connectorAttributes/${key}` })
+				patches.push({ op: PatchOp.Remove, path: `/${key}` })
 			} else {
-				const existed = hasConnectorAttributes && this.config.connectorAttributes.hasOwnProperty(key)
+				const existed = this.config?.hasOwnProperty(key)
 				patches.push({
 					op: existed ? PatchOp.Replace : PatchOp.Add,
-					path: `/connectorAttributes/${key}`,
+					path: `/${key}`,
 					value: entry.value,
 				})
 			}
 		}
 
+		log.debug({ patches }, 'data-store flush: sending patches')
+
 		if (patches.length > 0) {
 			this.res.patchConfig(patches)
 		}
 
-		// Update the local config to reflect the flushed patches so subsequent set() calls
-		// correctly detect changes rather than re-patching already-written values.
-		if (!this.config.connectorAttributes) {
-			this.config.connectorAttributes = {}
-		}
+		// Update the local config baseline so subsequent set() calls detect no change
 		for (const [key, entry] of this.pending) {
 			if (entry.op === 'delete') {
-				delete this.config.connectorAttributes[key]
+				delete this.config[key]
 			} else {
-				this.config.connectorAttributes[key] = entry.value
+				this.config[key] = entry.value
 			}
 		}
 
@@ -175,7 +176,7 @@ export class ConnectorDataStore {
 }
 
 /**
- * Creates a persistent data store backed by `connectorAttributes` in the source config.
+ * Creates a persistent data store backed by source config attributes.
  *
  * @param config The connector config object (from `readConfig()`)
  * @param res The response object from the current command handler
