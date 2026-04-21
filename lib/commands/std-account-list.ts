@@ -6,6 +6,7 @@ import { AccountSchema, Attributes, CommandState, ObjectOutput, Permission } fro
  * Input object of `std:account:list` command
  */
 export type StdAccountListInput = {
+	datasetId?: string
 	stateful?: boolean
 	state?: CommandState
 	schema?: AccountSchema
@@ -22,4 +23,18 @@ export type StdAccountListOutput = ObjectOutput & {
 	finalUpdate?: boolean
 	attributes: Attributes
 	permissions?: Permission[]
+}
+
+/**
+ * Input object of `std:account:list` command
+ */
+export type StdAccountListDatasetsInput = StdAccountListInput & {
+	datasetIds?: string[]
+}
+
+/**
+ * Output object of `std:account:list` command
+ */
+export type StdAccountListDatasetsOutput = StdAccountListOutput & {
+	datasetId?: string
 }

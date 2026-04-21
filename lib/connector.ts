@@ -37,6 +37,10 @@ import {
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import {
 	StandardCommand,
+	StdAccountListDatasetsInput,
+	StdAccountListDatasetsOutput,
+	StdAccountListInput,
+	StdAccountListOutput,
 	StdAgentListDatasetsInput,
 	StdAgentListDatasetsOutput,
 	StdAgentListInput,
@@ -133,7 +137,40 @@ export class Connector {
 	 * @param handler handler
 	 */
 	stdAccountList(handler: StdAccountListHandler): this {
-		return this.command(StandardCommand.StdAccountList, handler)
+		return this.command(StandardCommand.StdAccountList, async (
+			context: Context,
+			input: StdAccountListDatasetsInput,
+			res: Response<StdAccountListDatasetsOutput>
+		): Promise<void> => {
+
+			// For backward compatibility, if datasetIds are not provided, call the standard handler
+			if (!input.datasetIds) {
+				await handler(context, input, res)
+				return
+			}
+
+			// When datasetIds are provided, call the handler for each datasetId
+			for (const datasetId of input.datasetIds) {
+				const datasetRes = new ResponseStreamTransform<StdAccountListOutput, StdAccountListDatasetsOutput>(
+					res,
+					(v: StdAccountListOutput): StdAccountListDatasetsOutput => {
+						return {
+							...v,
+							datasetId,
+						}
+					}
+				)
+
+				const handlerInput: StdAccountListInput = {
+					datasetId: datasetId,
+					stateful: input.stateful,
+					state: input.state,
+					schema: input.schema,
+				}
+
+				await handler(context, handlerInput, datasetRes)
+			}
+		})
 	}
 
 	/**

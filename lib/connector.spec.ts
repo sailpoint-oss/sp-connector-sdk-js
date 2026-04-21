@@ -182,14 +182,30 @@ describe('exec handlers', () => {
 	it('should execute stdAccountListHandler', async () => {
 		const connector = createConnector().stdAccountList(async (context, input, res) => {
 			expect(context).toBeDefined()
-			expect(input).toBeUndefined()
+			expect(input).toEqual({})
 			expect(res).toBeInstanceOf(ResponseStream)
 		})
 
 		await connector._exec(
 			StandardCommand.StdAccountList,
 			MOCK_CONTEXT,
-			undefined,
+			{},
+			new PassThrough({ objectMode: true })
+		)
+	})
+
+	it('should execute stdAccountListHandler with datasetIds', async () => {
+		const connector = createConnector().stdAccountList(async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input).toBeDefined()
+			expect(input.datasetId).toEqual("dataset")
+			expect(res).toBeInstanceOf(ResponseStreamTransform)
+		})
+
+		await connector._exec(
+			StandardCommand.StdAccountList,
+			MOCK_CONTEXT,
+			{ datasetIds: ["dataset"] },
 			new PassThrough({ objectMode: true })
 		)
 	})
