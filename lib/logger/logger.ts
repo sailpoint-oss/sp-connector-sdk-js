@@ -18,6 +18,22 @@ export const logLevel = (): string => {
     return 'info';
 }
 
+/** Fields merged into each log line from async context (when set). */
+export function getAsyncContextLogFields(): Record<string, unknown> {
+    const ctx = contextState.getStore();
+    if (ctx === undefined) {
+        return {};
+    }
+
+    return {
+        id: ctx.id,
+        version: ctx.version,
+        invocationId: ctx.invocationId,
+        requestId: ctx.requestId,
+        commandType: ctx.commandType,
+    };
+}
+
 export const logger = pino({
     timestamp: () => `,"timestamp":"${new Date().toISOString()}"`,
     messageKey: 'message',
@@ -29,18 +45,7 @@ export const logger = pino({
             },
         },
     mixin() {
-            const ctx = contextState.getStore();
-            if (ctx === undefined) {
-                return {}
-            }
-
-            return {
-                    id: ctx.id,
-                    version: ctx.version,
-                    invocationId: ctx.invocationId,
-                    requestId: ctx.requestId,
-                    commandType: ctx.commandType,
-            }
+        return getAsyncContextLogFields();
     },
     mixinMergeStrategy(mergeObject:any, mixinObject:any) {
         return {...mergeObject, ...mixinObject}
