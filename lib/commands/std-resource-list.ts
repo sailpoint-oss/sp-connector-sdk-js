@@ -7,7 +7,6 @@ import { DatasetSchema } from './command'
  */
 export type StdResourceListInput = {
 	datasetId: string
-	datasetSchema?: DatasetSchema
 }
 
 /**
@@ -19,19 +18,10 @@ export type StdResourceListOutput = {
 }
 
 /**
- * Input object of `std:resource:list` command
- * Schemas is a record mapping datasetId to datasetSchema
- */
-export type StdResourceListDatasetsInput = {
-	datasetIds: string[]
-	datasetSchemas?: Record<string, DatasetSchema>
-}
-
-/**
  * Output object of `std:resource:list` command
  */
-export type StdResourceListDatasetsOutput = {
-	datasetId: string
+export type StdResourceListDatasetOutput = {
 	identity: string
-	attributes: Record<string,any>
+	attributes: Record<string, any>
 }
+
