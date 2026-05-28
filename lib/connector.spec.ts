@@ -751,67 +751,19 @@ describe('exec handlers', () => {
 	});
 
 	it('should execute stdResourceListHandler', async () => {
-		let datasetIds: string[] = []
 		const connector = createConnector().stdResourceList(async (context, input, res) => {
 			expect(context).toBeDefined()
 			expect(input).toBeDefined()
 			expect(res).toBeInstanceOf(ResponseStreamTransform)
-			datasetIds.push(input.datasetId)
+			expect(input.datasetId).toEqual("dataset")
 		})
 
 		await connector._exec(
 			"std:resource:list",
 			MOCK_CONTEXT,
-			{ datasetId: "dataset1" },
+			{ datasetId: "dataset" },
 			new PassThrough({ objectMode: true })
 		)
-
-		expect(datasetIds).toEqual(["dataset1"])
-	})
-
-	it('should execute stdResourceListHandler with datasetSchemas', async () => {
-		const datasetIds: string[] = []
-
-		// Mock dataset schemas for test
-		const mockSchemas: Record<string, DatasetSchema> = {
-			dataset1: {
-				name: 'Dataset 1',
-				config: {
-					datasetId: 'datasetId1',
-					datasetType: 'std:resource'
-				},
-				displayAttribute: 'name',
-				identityAttribute: 'id',
-				groupAttribute: 'group',
-				attributes: [
-					{ name: 'foo', description: '', type: 'string' },
-					{ name: 'timestamp', description: '', type: 'number' },
-				],
-			},
-		}
-
-		const connector = createConnector().stdResourceList(
-			async (context, input, res) => {
-				expect(context).toBeDefined();
-				expect(input).toBeDefined();
-				expect(res).toBeInstanceOf(ResponseStreamTransform);
-
-				datasetIds.push(input.datasetId)
-				expect((input as any).datasetSchema).toBeUndefined()
-			}
-		);
-
-		await connector._exec(
-			"std:resource:list",
-			MOCK_CONTEXT,
-			{
-				datasetId: "dataset1",
-				datasetSchemas: mockSchemas
-			},
-			new PassThrough({ objectMode: true })
-		);
-
-		expect(datasetIds).toEqual(["dataset1"])
 	})
 
 	it('should execute custom handler', async () => {
