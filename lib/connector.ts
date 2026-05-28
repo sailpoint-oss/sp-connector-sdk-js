@@ -48,8 +48,6 @@ import {
 	StdMachineIdentityListDatasetsOutput,
 	StdMachineIdentityListInput,
 	StdMachineIdentityListOutput,
-	StdResourceListDatasetsInput,
-	StdResourceListDatasetsOutput,
 	StdResourceListInput,
 	StdResourceListOutput,
 } from './commands'
@@ -424,28 +422,20 @@ export class Connector {
 			StandardCommand.StdResourceList,
 			async (
 				context: Context,
-				input: StdResourceListDatasetsInput,
-				res: Response<StdResourceListDatasetsOutput>
+				input: StdResourceListInput,
+				res: Response<StdResourceListOutput>
 			): Promise<void> => {
-				for (const datasetId of input.datasetIds) {
-					const datasetRes = new ResponseStreamTransform<
-						StdResourceListOutput,
-						StdResourceListDatasetsOutput
-					>(res, (v: StdResourceListOutput): StdResourceListDatasetsOutput => {
-						return {
-							...v,
-							datasetId,
-						}
-					})
+				const datasetRes = new ResponseStreamTransform<
+					StdResourceListOutput,
+					any
+				>(res, (v: StdResourceListOutput): any => {
+					return {
+						...v,
+						datasetId: input.datasetId,
+					}
+				})
 
-					const datasetSchema = input.datasetSchemas?.[datasetId]
-
-					const handlerInput: StdResourceListInput = datasetSchema
-						? { datasetId, datasetSchema }
-						: { datasetId }
-
-					await handler(context, handlerInput, datasetRes)
-				}
+				await handler(context, input, datasetRes)
 			}
 		)
 	}
