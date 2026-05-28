@@ -13,6 +13,10 @@
 
 # Dependency directories
 node_modules/
+*.tgz
+
+# Accidental npm pack / extract artifacts
+/package/
 
 # Compiled source
 dist/
