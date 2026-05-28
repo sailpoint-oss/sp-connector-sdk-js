@@ -762,16 +762,15 @@ describe('exec handlers', () => {
 		await connector._exec(
 			"std:resource:list",
 			MOCK_CONTEXT,
-			{ datasetIds: ["dataset1", "dataset2"] },
+			{ datasetId: "dataset1" },
 			new PassThrough({ objectMode: true })
 		)
 
-		expect(datasetIds).toEqual(["dataset1", "dataset2"])
+		expect(datasetIds).toEqual(["dataset1"])
 	})
 
 	it('should execute stdResourceListHandler with datasetSchemas', async () => {
 		const datasetIds: string[] = []
-		const receivedSchemas: (DatasetSchema | undefined)[] = []
 
 		// Mock dataset schemas for test
 		const mockSchemas: Record<string, DatasetSchema> = {
@@ -789,20 +788,6 @@ describe('exec handlers', () => {
 					{ name: 'timestamp', description: '', type: 'number' },
 				],
 			},
-			dataset2: {
-				name: 'Dataset 2',
-				config: {
-					datasetId: 'datasetId2',
-					datasetType: 'std:resource'
-				},
-				displayAttribute: 'displayName',
-				identityAttribute: 'identifier',
-				groupAttribute: 'group',
-				attributes: [
-					{ name: 'firstname', description: '', type: 'string' },
-					{ name: 'lastname', description: '', type: 'string' },
-				],
-			},
 		}
 
 		const connector = createConnector().stdResourceList(
@@ -812,7 +797,7 @@ describe('exec handlers', () => {
 				expect(res).toBeInstanceOf(ResponseStreamTransform);
 
 				datasetIds.push(input.datasetId)
-				receivedSchemas.push(input.datasetSchema)
+				expect((input as any).datasetSchema).toBeUndefined()
 			}
 		);
 
@@ -820,20 +805,13 @@ describe('exec handlers', () => {
 			"std:resource:list",
 			MOCK_CONTEXT,
 			{
-				datasetIds: ["dataset1", "dataset2"],
+				datasetId: "dataset1",
 				datasetSchemas: mockSchemas
 			},
 			new PassThrough({ objectMode: true })
 		);
 
-		// Ensure datasetIds are handled in order
-		expect(datasetIds).toEqual(["dataset1", "dataset2"])
-
-		// Ensure schema values match
-		expect(receivedSchemas).toEqual([
-			mockSchemas["dataset1"],
-			mockSchemas["dataset2"]
-		])
+		expect(datasetIds).toEqual(["dataset1"])
 	})
 
 	it('should execute custom handler', async () => {
