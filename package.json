@@ -1,6 +1,6 @@
 {
 	"name": "@sailpoint/connector-sdk",
-	"version": "1.0.0",
+	"version": "1.2.2",
 	"description": "JavaScript framework to build SailPoint Connectors",
 	"author": "SailPoint Technologies, Inc.",
 	"license": "Copyright (c) 2023. SailPoint Technologies, Inc. All rights reserved.",
@@ -33,7 +33,9 @@
 		"debug": "^4.4.1",
 		"express": "^5.2.1",
 		"jsep": "^1.4.0",
-		"pino": "^8.5.0"
+		"path-to-regexp": "^8.4.0",
+		"pino": "^8.5.0",
+		"qs": "^6.14.2"
 	},
 	"devDependencies": {
 		"@tsconfig/node16": "1.0.1",
@@ -53,7 +55,10 @@
 	},
 	"overrides": {
 		"minimist": "^1.2.6",
-		"debug": "^4.4.1"
+		"debug": "^4.4.1",
+		"lodash": "^4.18.0",
+		"path-to-regexp": "^8.4.0",
+		"qs": "^6.14.2"
 	},
 	"jest": {
 		"preset": "ts-jest",
