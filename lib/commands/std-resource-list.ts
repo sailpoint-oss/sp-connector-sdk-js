@@ -14,14 +14,6 @@ export type StdResourceListInput = {
  */
 export type StdResourceListOutput = {
 	identity: string
+	resourceId: string
 	attributes: Record<string, any>
 }
-
-/**
- * Output object of `std:resource:list` command
- */
-export type StdResourceListDatasetOutput = {
-	identity: string
-	attributes: Record<string, any>
-}
-
