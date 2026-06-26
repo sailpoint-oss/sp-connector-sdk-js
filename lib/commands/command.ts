@@ -205,45 +205,6 @@ export type DatasetSchema = Schema & {
 }
 
 /**
- * Condition expression within a correlation config rule
- */
-export type CorrelationConfigConditionExpression = {
-	leftAttributeName: string
-	operatorType: string
-	rightAttributeName: string
-	transform?: string
-	ordinal: number
-}
-
-/**
- * Action taken when a correlation config rule matches
- */
-export type CorrelationConfigRuleAction = {
-	type: string
-	payload: Record<string, unknown>
-}
-
-/**
- * Rule within a correlation config
- */
-export type CorrelationConfigRule = {
-	priority: number
-	isDefault?: boolean
-	ruleType: string
-	ruleAction: CorrelationConfigRuleAction
-	conditionExpressions: CorrelationConfigConditionExpression[]
-}
-
-/**
- * Correlation config from connector specification resource schema
- */
-export type CorrelationConfig = {
-	type: string
-	attributes?: Record<string, unknown>
-	rules: CorrelationConfigRule[]
-}
-
-/**
  * Resource schema from connector specification `resources` entry
  */
 export type ResourceSchema = {
@@ -252,7 +213,6 @@ export type ResourceSchema = {
 	type: string
 	displayAttribute?: string
 	identityAttribute?: string
-	correlationConfigs?: CorrelationConfig[] | null
 	schema?: Record<string, unknown>
 	features?: ('PROVISIONING' | 'SEARCH' | 'ENABLE' | 'DISABLE' | 'DELETE')[]
 }
