@@ -17,4 +17,5 @@ export type StdResourceEnableInput = ObjectInput & {
 export type StdResourceEnableOutput = ObjectOutput & {
 	resourceId: string
 	attributes: Record<string, any>
+	disabled?: boolean
 }

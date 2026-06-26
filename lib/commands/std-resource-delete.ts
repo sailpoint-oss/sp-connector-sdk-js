@@ -17,4 +17,5 @@ export type StdResourceDeleteInput = ObjectInput & {
 export type StdResourceDeleteOutput = ObjectOutput & {
 	resourceId: string
 	attributes: Record<string, any>
+	deleted?: boolean
 }

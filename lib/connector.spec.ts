@@ -776,6 +776,12 @@ describe('exec handlers', () => {
 			expect(input.datasetId).toStrictEqual('aws:account')
 			expect(input.resourceId).toStrictEqual('aws:iam-role')
 			expect(res).toBeInstanceOf(ResponseStream)
+			res.send({
+				identity: input.identity,
+				resourceId: input.resourceId,
+				attributes: { id: input.identity },
+				deleted: true,
+			})
 		})
 
 		await connector._exec(
@@ -797,6 +803,12 @@ describe('exec handlers', () => {
 			expect(input.datasetId).toStrictEqual('aws:account')
 			expect(input.resourceId).toStrictEqual('aws:iam-role')
 			expect(res).toBeInstanceOf(ResponseStream)
+			res.send({
+				identity: input.identity,
+				resourceId: input.resourceId,
+				attributes: { id: input.identity },
+				disabled: true,
+			})
 		})
 
 		await connector._exec(
@@ -818,6 +830,12 @@ describe('exec handlers', () => {
 			expect(input.datasetId).toStrictEqual('aws:account')
 			expect(input.resourceId).toStrictEqual('aws:iam-role')
 			expect(res).toBeInstanceOf(ResponseStream)
+			res.send({
+				identity: input.identity,
+				resourceId: input.resourceId,
+				attributes: { id: input.identity },
+				disabled: false,
+			})
 		})
 
 		await connector._exec(
