@@ -213,12 +213,19 @@ export type ResourceInput = {
 }
 
 /**
+ * Classification of a resource object
+ */
+export type ResourceClassification = 'human' | 'machine' | null
+
+/**
  * Output object for std:resource:* commands
  */
 export type ResourceOutput = {
 	identity: string
 	resourceId: string
 	attributes: Record<string, any>
+	uuid?: string
+	classification?: ResourceClassification
 	deleted?: boolean
 	disabled?: boolean
 }
