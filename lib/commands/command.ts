@@ -205,16 +205,22 @@ export type DatasetSchema = Schema & {
 }
 
 /**
- * Resource schema from connector specification `resources` entry
+ * Shared input fields for std:resource:* commands
  */
-export type ResourceSchema = {
-	id: string
-	name: string
-	type: string
-	displayAttribute?: string
-	identityAttribute?: string
-	schema?: Record<string, unknown>
-	features?: ('PROVISIONING' | 'SEARCH' | 'ENABLE' | 'DISABLE' | 'DELETE')[]
+export type ResourceInput = {
+	datasetId: string
+	schema?: Schema
+}
+
+/**
+ * Output object for std:resource:* commands
+ */
+export type ResourceOutput = {
+	identity: string
+	resourceId: string
+	attributes: Record<string, any>
+	deleted?: boolean
+	disabled?: boolean
 }
 
 /**
