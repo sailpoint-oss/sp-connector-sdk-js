@@ -1,6 +1,6 @@
 /* Copyright (c) 2026. SailPoint Technologies, Inc. All rights reserved. */
 
-import { ObjectInput, ObjectOutput, ResourceSchema } from './command'
+import { ObjectInput, ResourceSchema } from './command'
 
 /**
  * Input object of `std:resource:disable` command
@@ -14,7 +14,8 @@ export type StdResourceDisableInput = ObjectInput & {
 /**
  * Output object of `std:resource:disable` command
  */
-export type StdResourceDisableOutput = ObjectOutput & {
+export type StdResourceDisableOutput = {
+	identity: string
 	resourceId: string
 	attributes: Record<string, any>
 	disabled?: boolean

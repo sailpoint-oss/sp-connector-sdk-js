@@ -1,6 +1,6 @@
 /* Copyright (c) 2026. SailPoint Technologies, Inc. All rights reserved. */
 
-import { ObjectInput, ObjectOutput, ResourceSchema } from './command'
+import { ObjectInput, ResourceSchema } from './command'
 
 /**
  * Input object of `std:resource:delete` command
@@ -14,7 +14,8 @@ export type StdResourceDeleteInput = ObjectInput & {
 /**
  * Output object of `std:resource:delete` command
  */
-export type StdResourceDeleteOutput = ObjectOutput & {
+export type StdResourceDeleteOutput = {
+	identity: string
 	resourceId: string
 	attributes: Record<string, any>
 	deleted?: boolean
