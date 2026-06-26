@@ -121,9 +121,12 @@ describe('class properties and methods', () => {
 			.stdAgentList(async (context, input, res) => {})
 			.stdMachineIdentityList(async (context, input, res) => {})
 			.stdResourceList(async (context, input, res) => {})
+			.stdResourceDelete(async (context, input, res) => {})
+			.stdResourceDisable(async (context, input, res) => {})
+			.stdResourceEnable(async (context, input, res) => {})
 			.command('mock:custom:command', async (context, input, res) => {})
 
-		expect(connector.handlers.size).toBe(28)
+		expect(connector.handlers.size).toBe(31)
 	})
 })
 
@@ -762,6 +765,57 @@ describe('exec handlers', () => {
 			"std:resource:list",
 			MOCK_CONTEXT,
 			{ datasetId: "dataset" },
+			new PassThrough({ objectMode: true })
+		)
+	})
+
+	it('should execute stdResourceDeleteHandler', async () => {
+		const connector = createConnector().stdResourceDelete(async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input.identity).toStrictEqual('mockIdentity')
+			expect(res).toBeInstanceOf(ResponseStream)
+		})
+
+		await connector._exec(
+			StandardCommand.StdResourceDelete,
+			MOCK_CONTEXT,
+			{
+				identity: 'mockIdentity',
+			},
+			new PassThrough({ objectMode: true })
+		)
+	})
+
+	it('should execute stdResourceDisableHandler', async () => {
+		const connector = createConnector().stdResourceDisable(async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input.identity).toStrictEqual('mockIdentity')
+			expect(res).toBeInstanceOf(ResponseStream)
+		})
+
+		await connector._exec(
+			StandardCommand.StdResourceDisable,
+			MOCK_CONTEXT,
+			{
+				identity: 'mockIdentity',
+			},
+			new PassThrough({ objectMode: true })
+		)
+	})
+
+	it('should execute stdResourceEnableHandler', async () => {
+		const connector = createConnector().stdResourceEnable(async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input.identity).toStrictEqual('mockIdentity')
+			expect(res).toBeInstanceOf(ResponseStream)
+		})
+
+		await connector._exec(
+			StandardCommand.StdResourceEnable,
+			MOCK_CONTEXT,
+			{
+				identity: 'mockIdentity',
+			},
 			new PassThrough({ objectMode: true })
 		)
 	})

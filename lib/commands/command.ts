@@ -16,6 +16,9 @@ export enum StandardCommand {
 	StdAgentList = 'std:agent:list',
 	StdMachineIdentityList = 'std:machine-identity:list',
 	StdResourceList = 'std:resource:list',
+	StdResourceDelete = 'std:resource:delete',
+	StdResourceDisable = 'std:resource:disable',
+	StdResourceEnable = 'std:resource:enable',
 	StdAuthenticate = 'std:authenticate',
 	StdEntitlementList = 'std:entitlement:list',
 	StdEntitlementRead = 'std:entitlement:read',
@@ -199,6 +202,59 @@ export type DatasetSchema = Schema & {
 	name: string,
 	groupAttribute?: string,
 	config: DatasetConfig
+}
+
+/**
+ * Condition expression within a correlation config rule
+ */
+export type CorrelationConfigConditionExpression = {
+	leftAttributeName: string
+	operatorType: string
+	rightAttributeName: string
+	transform?: string
+	ordinal: number
+}
+
+/**
+ * Action taken when a correlation config rule matches
+ */
+export type CorrelationConfigRuleAction = {
+	type: string
+	payload: Record<string, unknown>
+}
+
+/**
+ * Rule within a correlation config
+ */
+export type CorrelationConfigRule = {
+	priority: number
+	isDefault?: boolean
+	ruleType: string
+	ruleAction: CorrelationConfigRuleAction
+	conditionExpressions: CorrelationConfigConditionExpression[]
+}
+
+/**
+ * Correlation config from connector specification resource schema
+ */
+export type CorrelationConfig = {
+	type: string
+	attributes?: Record<string, unknown>
+	rules: CorrelationConfigRule[]
+}
+
+/**
+ * Resource schema from connector specification `resources` entry
+ */
+export type ResourceSchema = {
+	id: string
+	name: string
+	type: string
+	displayAttribute?: string
+	identityAttribute?: string
+	correlationConfigs?: CorrelationConfig[] | null
+	schema?: Record<string, unknown>
+	features?: ('PROVISIONING' | 'SEARCH' | 'ENABLE' | 'DISABLE' | 'DELETE')[]
 }
 
 /**
