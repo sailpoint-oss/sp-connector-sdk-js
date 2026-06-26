@@ -33,6 +33,9 @@ import {
 	StdSsfStreamReplaceHandler,
 	StdMachineIdentityListHandler,
 	StdResourceListHandler,
+	StdResourceDeleteHandler,
+	StdResourceDisableHandler,
+	StdResourceEnableHandler,
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import {
@@ -438,6 +441,30 @@ export class Connector {
 				await handler(context, input, datasetRes)
 			}
 		)
+	}
+
+	/**
+	 * Add a handler for 'std:resource:delete' command
+	 * @param handler handler
+	 */
+	stdResourceDelete(handler: StdResourceDeleteHandler): this {
+		return this.command(StandardCommand.StdResourceDelete, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:resource:disable' command
+	 * @param handler handler
+	 */
+	stdResourceDisable(handler: StdResourceDisableHandler): this {
+		return this.command(StandardCommand.StdResourceDisable, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:resource:enable' command
+	 * @param handler handler
+	 */
+	stdResourceEnable(handler: StdResourceEnableHandler): this {
+		return this.command(StandardCommand.StdResourceEnable, handler)
 	}
 
 	/**

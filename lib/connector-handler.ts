@@ -23,6 +23,12 @@ import {
 	StdMachineIdentityListOutput,
 	StdResourceListInput,
 	StdResourceListOutput,
+	StdResourceDeleteInput,
+	StdResourceDeleteOutput,
+	StdResourceDisableInput,
+	StdResourceDisableOutput,
+	StdResourceEnableInput,
+	StdResourceEnableOutput,
 	StdAuthenticateInput,
 	StdAuthenticateOutput,
 	StdConfigOptionsInput,
@@ -285,4 +291,19 @@ export type StdResourceListHandler = (
 	context: Context,
 	input: StdResourceListInput,
 	res: Response<StdResourceListOutput>
+) => Promise<void>
+export type StdResourceDeleteHandler = (
+	context: Context,
+	input: StdResourceDeleteInput,
+	res: Response<StdResourceDeleteOutput>
+) => Promise<void>
+export type StdResourceDisableHandler = (
+	context: Context,
+	input: StdResourceDisableInput,
+	res: Response<StdResourceDisableOutput>
+) => Promise<void>
+export type StdResourceEnableHandler = (
+	context: Context,
+	input: StdResourceEnableInput,
+	res: Response<StdResourceEnableOutput>
 ) => Promise<void>

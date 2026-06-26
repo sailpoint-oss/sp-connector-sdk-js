@@ -16,6 +16,9 @@ export enum StandardCommand {
 	StdAgentList = 'std:agent:list',
 	StdMachineIdentityList = 'std:machine-identity:list',
 	StdResourceList = 'std:resource:list',
+	StdResourceDelete = 'std:resource:delete',
+	StdResourceDisable = 'std:resource:disable',
+	StdResourceEnable = 'std:resource:enable',
 	StdAuthenticate = 'std:authenticate',
 	StdEntitlementList = 'std:entitlement:list',
 	StdEntitlementRead = 'std:entitlement:read',
@@ -199,6 +202,32 @@ export type DatasetSchema = Schema & {
 	name: string,
 	groupAttribute?: string,
 	config: DatasetConfig
+}
+
+/**
+ * Shared input fields for std:resource:* commands
+ */
+export type ResourceInput = {
+	datasetId: string
+	schema?: Schema
+}
+
+/**
+ * Classification of a resource object
+ */
+export type ResourceClassification = 'human' | 'machine' | null
+
+/**
+ * Output object for std:resource:* commands
+ */
+export type ResourceOutput = {
+	identity: string
+	resourceId: string
+	attributes: Record<string, any>
+	uuid?: string
+	classification?: ResourceClassification
+	deleted?: boolean
+	disabled?: boolean
 }
 
 /**
