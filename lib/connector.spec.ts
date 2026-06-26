@@ -773,6 +773,8 @@ describe('exec handlers', () => {
 		const connector = createConnector().stdResourceDelete(async (context, input, res) => {
 			expect(context).toBeDefined()
 			expect(input.identity).toStrictEqual('mockIdentity')
+			expect(input.datasetId).toStrictEqual('aws:account')
+			expect(input.resourceId).toStrictEqual('aws:iam-role')
 			expect(res).toBeInstanceOf(ResponseStream)
 		})
 
@@ -781,6 +783,8 @@ describe('exec handlers', () => {
 			MOCK_CONTEXT,
 			{
 				identity: 'mockIdentity',
+				datasetId: 'aws:account',
+				resourceId: 'aws:iam-role',
 			},
 			new PassThrough({ objectMode: true })
 		)
@@ -790,6 +794,8 @@ describe('exec handlers', () => {
 		const connector = createConnector().stdResourceDisable(async (context, input, res) => {
 			expect(context).toBeDefined()
 			expect(input.identity).toStrictEqual('mockIdentity')
+			expect(input.datasetId).toStrictEqual('aws:account')
+			expect(input.resourceId).toStrictEqual('aws:iam-role')
 			expect(res).toBeInstanceOf(ResponseStream)
 		})
 
@@ -798,6 +804,8 @@ describe('exec handlers', () => {
 			MOCK_CONTEXT,
 			{
 				identity: 'mockIdentity',
+				datasetId: 'aws:account',
+				resourceId: 'aws:iam-role',
 			},
 			new PassThrough({ objectMode: true })
 		)
@@ -807,6 +815,8 @@ describe('exec handlers', () => {
 		const connector = createConnector().stdResourceEnable(async (context, input, res) => {
 			expect(context).toBeDefined()
 			expect(input.identity).toStrictEqual('mockIdentity')
+			expect(input.datasetId).toStrictEqual('aws:account')
+			expect(input.resourceId).toStrictEqual('aws:iam-role')
 			expect(res).toBeInstanceOf(ResponseStream)
 		})
 
@@ -815,6 +825,8 @@ describe('exec handlers', () => {
 			MOCK_CONTEXT,
 			{
 				identity: 'mockIdentity',
+				datasetId: 'aws:account',
+				resourceId: 'aws:iam-role',
 			},
 			new PassThrough({ objectMode: true })
 		)

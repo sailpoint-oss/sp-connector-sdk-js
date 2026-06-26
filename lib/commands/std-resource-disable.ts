@@ -1,19 +1,20 @@
 /* Copyright (c) 2026. SailPoint Technologies, Inc. All rights reserved. */
 
-import { Attributes, ObjectInput, ObjectOutput, ResourceSchema, Result } from './command'
+import { ObjectInput, ObjectOutput, ResourceSchema } from './command'
 
 /**
  * Input object of `std:resource:disable` command
  */
 export type StdResourceDisableInput = ObjectInput & {
+	datasetId: string
+	resourceId: string
 	schema?: ResourceSchema
-	options?: Record<string, unknown>
 }
 
 /**
  * Output object of `std:resource:disable` command
  */
 export type StdResourceDisableOutput = ObjectOutput & {
-	attributes: Attributes
-	results?: Result[]
+	resourceId: string
+	attributes: Record<string, any>
 }
