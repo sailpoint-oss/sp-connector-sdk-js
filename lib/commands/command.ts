@@ -205,11 +205,34 @@ export type DatasetSchema = Schema & {
 }
 
 /**
+ * Configuration for a resource schema, containing dataset and resource identifiers.
+ */
+export type ResourceConfiguration = {
+	datasetId: string
+	resourceId: string
+	resourceType: string
+	[key: string]: unknown
+}
+
+/**
+ * Schema definition for a dataset resource, extending the base Schema type
+ * with resource-specific fields like name, nativeObjectType, and configuration.
+ */
+export type ResourceSchema = Schema & {
+	name: string
+	nativeObjectType?: string | null
+	hierarchyAttribute?: string | null
+	includePermissions?: boolean
+	configuration: ResourceConfiguration
+}
+
+/**
  * Shared input fields for std:resource:* commands
  */
 export type ResourceInput = {
 	datasetId: string
 	schema?: Schema
+	resourceSchemas?: ResourceSchema[]
 }
 
 /**
