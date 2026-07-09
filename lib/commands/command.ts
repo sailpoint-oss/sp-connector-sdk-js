@@ -169,12 +169,25 @@ export type CommandState = {
 }
 
 /**
+ * Configuration for a resource schema, containing dataset and resource identifiers.
+ */
+export type Configuration = {
+	datasetId: string
+	resourceId: string
+	resourceType: string
+	[key: string]: unknown
+}
+
+/**
  * The common schema
  */
 export type Schema = {
 	displayAttribute: string
 	identityAttribute: string
 	attributes: SchemaAttribute[]
+	name?: string
+	nativeObjectType?: string | null
+	configuration?: Configuration
 }
 
 /**
@@ -202,28 +215,6 @@ export type DatasetSchema = Schema & {
 	name: string,
 	groupAttribute?: string,
 	config: DatasetConfig
-}
-
-/**
- * Configuration for a resource schema, containing dataset and resource identifiers.
- */
-export type ResourceConfiguration = {
-	datasetId: string
-	resourceId: string
-	resourceType: string
-	[key: string]: unknown
-}
-
-/**
- * Schema definition for a dataset resource, extending the base Schema type
- * with resource-specific fields like name, nativeObjectType, and configuration.
- */
-export type ResourceSchema = Omit<Schema, 'identityAttribute' | 'displayAttribute'> & {
-	identityAttribute?: string | null
-	displayAttribute?: string | null
-	nativeObjectType?: string | null
-	name: string
-	configuration: ResourceConfiguration
 }
 
 /**
