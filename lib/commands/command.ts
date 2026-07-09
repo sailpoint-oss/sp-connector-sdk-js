@@ -218,11 +218,11 @@ export type ResourceConfiguration = {
  * Schema definition for a dataset resource, extending the base Schema type
  * with resource-specific fields like name, nativeObjectType, and configuration.
  */
-export type ResourceSchema = Schema & {
-	name: string
+export type ResourceSchema = Omit<Schema, 'identityAttribute' | 'displayAttribute'> & {
+	identityAttribute?: string | null
+	displayAttribute?: string | null
 	nativeObjectType?: string | null
-	hierarchyAttribute?: string | null
-	includePermissions?: boolean
+	name: string
 	configuration: ResourceConfiguration
 }
 
@@ -232,7 +232,6 @@ export type ResourceSchema = Schema & {
 export type ResourceInput = {
 	datasetId: string
 	schema?: Schema
-	resourceSchemas?: ResourceSchema[]
 }
 
 /**
