@@ -2,7 +2,7 @@
 
 import { Connector, createConnector } from './connector'
 import { readConfig } from './config'
-import { DatasetSchema, StandardCommand } from './commands'
+import { DatasetSchema, Schema, StandardCommand } from './commands'
 import { PassThrough } from 'stream'
 import { ResponseStream, ResponseStreamTransform } from './response'
 import { major } from 'semver'
@@ -765,6 +765,40 @@ describe('exec handlers', () => {
 			"std:resource:list",
 			MOCK_CONTEXT,
 			{ datasetId: "dataset" },
+			new PassThrough({ objectMode: true })
+		)
+	})
+
+	it('should execute stdResourceListHandler with schemas', async () => {
+		const mockSchemas: Schema[] = [
+			{
+				name: 'Bedrock Agent',
+				identityAttribute: 'identity',
+				displayAttribute: 'name',
+				configuration: {
+					datasetId: 'aws:bedrock',
+					resourceId: 'aws:bedrock-agent',
+					resourceType: 'std:agent',
+				},
+				attributes: [
+					{ name: 'identity', description: 'Unique agent identifier', type: 'string' },
+					{ name: 'name', description: 'Display name of the agent', type: 'string' },
+				],
+			},
+		]
+
+		const connector = createConnector().stdResourceList(async (context, input, res) => {
+			expect(context).toBeDefined()
+			expect(input).toBeDefined()
+			expect(res).toBeInstanceOf(ResponseStreamTransform)
+			expect(input.datasetId).toEqual('aws:bedrock')
+			expect(input.schemas).toEqual(mockSchemas)
+		})
+
+		await connector._exec(
+			'std:resource:list',
+			MOCK_CONTEXT,
+			{ datasetId: 'aws:bedrock', schemas: mockSchemas },
 			new PassThrough({ objectMode: true })
 		)
 	})

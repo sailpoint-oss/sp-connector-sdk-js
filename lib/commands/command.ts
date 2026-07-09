@@ -169,12 +169,25 @@ export type CommandState = {
 }
 
 /**
+ * Configuration for a resource schema, containing dataset and resource identifiers.
+ */
+export type Configuration = {
+	datasetId: string
+	resourceId: string
+	resourceType: string
+	[key: string]: unknown
+}
+
+/**
  * The common schema
  */
 export type Schema = {
 	displayAttribute: string
 	identityAttribute: string
 	attributes: SchemaAttribute[]
+	name?: string
+	nativeObjectType?: string | null
+	configuration?: Configuration
 }
 
 /**
