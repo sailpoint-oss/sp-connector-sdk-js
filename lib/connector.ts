@@ -59,6 +59,7 @@ import { Transform, TransformCallback, Writable } from 'stream'
 import { contextState } from './async-context';
 import { ConnectorCustomizer, CustomizerType as CustomizerType } from './connector-customizer'
 import { ConnectorCustomizerHandler } from './connector-customizer-handler'
+import { uniqueDatasetIds } from './dataset-ids'
 
 const SDK_VERSION = 1
 
@@ -188,7 +189,7 @@ export class Connector {
 	/**
 	 * Add a handler for 'std:application-discovery:list' command with dataset context
 	 * @param handler Standard handler for dataset-aware discovery list
-	 * If datasetIds are provided in the input, the datasetHandler will be called for each datasetId
+	 * If datasetIds are provided in the input, the datasetHandler will be called for each unique datasetId
 	 * If datasetIds are not provided, the standard handler will be called
 	 */
 	stdApplicationDiscoveryListWithDataset(handler: StdApplicationDiscoveryDatasetListHandler): this {
@@ -217,7 +218,7 @@ export class Connector {
 					return
 				}
 				// Dataset-aware handling
-				for (const datasetId of input.datasetIds) {
+				for (const datasetId of uniqueDatasetIds(input.datasetIds)) {
 					const datasetRes = new ResponseStreamTransform<
 						StdApplicationDiscoveryListOutput,
 						StdApplicationDiscoveryListDatasetsOutput
@@ -360,7 +361,7 @@ export class Connector {
 				input: StdAgentListDatasetsInput,
 				res: Response<StdAgentListDatasetsOutput>
 			): Promise<void> => {
-				for (const datasetId of input.datasetIds) {
+				for (const datasetId of uniqueDatasetIds(input.datasetIds)) {
 					const datasetRes = new ResponseStreamTransform<StdAgentListOutput, StdAgentListDatasetsOutput>(
 						res,
 						(v: StdAgentListOutput): StdAgentListDatasetsOutput => {
@@ -393,7 +394,7 @@ export class Connector {
 				input: StdMachineIdentityListDatasetsInput,
 				res: Response<StdMachineIdentityListDatasetsOutput>
 			): Promise<void> => {
-				for (const datasetId of input.datasetIds) {
+				for (const datasetId of uniqueDatasetIds(input.datasetIds)) {
 					const datasetRes = new ResponseStreamTransform<
 						StdMachineIdentityListOutput,
 						StdMachineIdentityListDatasetsOutput
