@@ -53,8 +53,6 @@ import {
 	StdMachineIdentityListOutput,
 	StdResourceListInput,
 	StdResourceListOutput,
-	StdResourceListDatasetsInput,
-	StdResourceListDatasetsOutput,
 } from './commands'
 import { RawResponse, ResponseStream, ResponseType, Response, ResponseStreamTransform } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
@@ -421,8 +419,6 @@ export class Connector {
 
 	/**
 	 * Add a handler for 'std:resource:list' command
-	 * If datasetIds are provided in the input, the handler will be called for each unique datasetId
-	 * If datasetIds are not provided, the standard handler will be called with datasetId
 	 * @param handler handler
 	 */
 	stdResourceList(handler: StdResourceListHandler): this {
@@ -430,41 +426,20 @@ export class Connector {
 			StandardCommand.StdResourceList,
 			async (
 				context: Context,
-				input: StdResourceListInput | StdResourceListDatasetsInput,
-				res: Response<StdResourceListDatasetsOutput>
+				input: StdResourceListInput,
+				res: Response<StdResourceListOutput>
 			): Promise<void> => {
-				const datasetsInput = input as StdResourceListDatasetsInput
-				const singleDatasetInput = input as StdResourceListInput
+				const datasetRes = new ResponseStreamTransform<
+					StdResourceListOutput,
+					any
+				>(res, (v: StdResourceListOutput): any => {
+					return {
+						...v,
+						datasetId: input.datasetId,
+					}
+				})
 
-				const buildHandlerInput = (datasetId: string): StdResourceListInput => {
-					const schemas = datasetsInput.resourceSchemas?.[datasetId] ?? datasetsInput.schemas
-
-					return schemas ? { datasetId, schemas } : { datasetId }
-				}
-
-				const invokeHandler = async (datasetId: string): Promise<void> => {
-					const datasetRes = new ResponseStreamTransform<
-						StdResourceListOutput,
-						StdResourceListDatasetsOutput
-					>(res, (v: StdResourceListOutput): StdResourceListDatasetsOutput => {
-						return {
-							...v,
-							datasetId,
-						}
-					})
-
-					await handler(context, buildHandlerInput(datasetId), datasetRes)
-				}
-
-				if (!input || !Array.isArray(datasetsInput.datasetIds) || datasetsInput.datasetIds.length === 0) {
-					const datasetId = singleDatasetInput?.datasetId || ''
-					await invokeHandler(datasetId)
-					return
-				}
-
-				for (const datasetId of uniqueDatasetIds(datasetsInput.datasetIds)) {
-					await invokeHandler(datasetId)
-				}
+				await handler(context, input, datasetRes)
 			}
 		)
 	}

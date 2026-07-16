@@ -554,22 +554,6 @@ describe('exec handlers', () => {
 
 			expect(datasetIds).toEqual(['serviceNow:agent'])
 		})
-
-		it('should invoke stdResourceList once per unique datasetId', async () => {
-			const datasetIds: string[] = []
-			const connector = createConnector().stdResourceList(async (_context, input) => {
-				datasetIds.push(input.datasetId)
-			})
-
-			await connector._exec(
-				'std:resource:list',
-				MOCK_CONTEXT,
-				{ datasetIds: ['serviceNow:agent', 'serviceNow:agent', 'other:dataset'] },
-				new PassThrough({ objectMode: true })
-			)
-
-			expect(datasetIds).toEqual(['serviceNow:agent', 'other:dataset'])
-		})
 	})
 
 	it('should execute stdEntitlementListHandler', async () => {
