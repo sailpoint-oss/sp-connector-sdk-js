@@ -506,6 +506,56 @@ describe('exec handlers', () => {
 		})
 	})
 
+	describe('duplicate datasetIds deduplication', () => {
+		it('should invoke stdApplicationDiscoveryListWithDataset once per unique datasetId', async () => {
+			const datasetIds: string[] = []
+			const connector = createConnector().stdApplicationDiscoveryListWithDataset(async (_context, input) => {
+				datasetIds.push(input.datasetId)
+			})
+
+			await connector._exec(
+				StandardCommand.StdApplicationDiscoveryList,
+				MOCK_CONTEXT,
+				{ datasetIds: ['serviceNow:agent', 'serviceNow:agent', 'other:dataset'] },
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(datasetIds).toEqual(['serviceNow:agent', 'other:dataset'])
+		})
+
+		it('should invoke stdAgentList once per unique datasetId', async () => {
+			const datasetIds: string[] = []
+			const connector = createConnector().stdAgentList(async (_context, input) => {
+				datasetIds.push(input.datasetId)
+			})
+
+			await connector._exec(
+				'std:agent:list',
+				MOCK_CONTEXT,
+				{ datasetIds: ['dataset1', 'dataset1', 'dataset2'] },
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(datasetIds).toEqual(['dataset1', 'dataset2'])
+		})
+
+		it('should invoke stdMachineIdentityList once per unique datasetId', async () => {
+			const datasetIds: string[] = []
+			const connector = createConnector().stdMachineIdentityList(async (_context, input) => {
+				datasetIds.push(input.datasetId)
+			})
+
+			await connector._exec(
+				'std:machine-identity:list',
+				MOCK_CONTEXT,
+				{ datasetIds: ['serviceNow:agent', 'serviceNow:agent'] },
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(datasetIds).toEqual(['serviceNow:agent'])
+		})
+	})
+
 	it('should execute stdEntitlementListHandler', async () => {
 		const connector = createConnector().stdEntitlementList(async (context, input, res) => {
 			expect(context).toBeDefined()
