@@ -506,6 +506,166 @@ describe('exec handlers', () => {
 		})
 	})
 
+	describe('duplicate datasetIds deduplication', () => {
+		it('should invoke stdApplicationDiscoveryListWithDataset once per unique datasetId', async () => {
+			const datasetIds: string[] = []
+			const connector = createConnector().stdApplicationDiscoveryListWithDataset(async (_context, input) => {
+				datasetIds.push(input.datasetId)
+			})
+
+			await connector._exec(
+				StandardCommand.StdApplicationDiscoveryList,
+				MOCK_CONTEXT,
+				{ datasetIds: ['serviceNow:agent', 'serviceNow:agent', 'other:dataset'] },
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(datasetIds).toEqual(['serviceNow:agent', 'other:dataset'])
+		})
+
+		it('should invoke stdAgentList once per unique datasetId', async () => {
+			const datasetIds: string[] = []
+			const connector = createConnector().stdAgentList(async (_context, input) => {
+				datasetIds.push(input.datasetId)
+			})
+
+			await connector._exec(
+				'std:agent:list',
+				MOCK_CONTEXT,
+				{ datasetIds: ['dataset1', 'dataset1', 'dataset2'] },
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(datasetIds).toEqual(['dataset1', 'dataset2'])
+		})
+
+		it('should invoke stdMachineIdentityList once per unique datasetId', async () => {
+			const datasetIds: string[] = []
+			const connector = createConnector().stdMachineIdentityList(async (_context, input) => {
+				datasetIds.push(input.datasetId)
+			})
+
+			await connector._exec(
+				'std:machine-identity:list',
+				MOCK_CONTEXT,
+				{ datasetIds: ['serviceNow:agent', 'serviceNow:agent'] },
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(datasetIds).toEqual(['serviceNow:agent'])
+		})
+
+		it('should pass additionalParameters once per unique datasetId in application discovery', async () => {
+			const receivedInputs: any[] = []
+			const connector = createConnector().stdApplicationDiscoveryListWithDataset(async (_context, input) => {
+				receivedInputs.push(input)
+			})
+
+			const additionalParams = {
+				savvy_url: 'https://test.s3.url/presigned',
+				other_param: 'test_value',
+			}
+
+			await connector._exec(
+				StandardCommand.StdApplicationDiscoveryList,
+				MOCK_CONTEXT,
+				{
+					datasetIds: ['savvy:applications', 'savvy:applications', 'savvy:other'],
+					additionalParameters: additionalParams,
+				},
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(receivedInputs).toHaveLength(2)
+			expect(receivedInputs.map((input) => input.datasetId)).toEqual(['savvy:applications', 'savvy:other'])
+			receivedInputs.forEach((input) => {
+				expect(input.additionalParameters).toEqual(additionalParams)
+			})
+		})
+
+		it('should pass datasetSchemas once per unique datasetId in stdAgentList', async () => {
+			const datasetIds: string[] = []
+			const receivedSchemas: (DatasetSchema | undefined)[] = []
+			const mockSchemas: Record<string, DatasetSchema> = {
+				dataset1: {
+					name: 'Dataset 1',
+					config: { datasetId: 'datasetId1', datasetType: 'std:agent' },
+					displayAttribute: 'name',
+					identityAttribute: 'id',
+					groupAttribute: 'group',
+					attributes: [{ name: 'foo', description: '', type: 'string' }],
+				},
+				dataset2: {
+					name: 'Dataset 2',
+					config: { datasetId: 'datasetId2', datasetType: 'std:agent' },
+					displayAttribute: 'displayName',
+					identityAttribute: 'identifier',
+					groupAttribute: 'group',
+					attributes: [{ name: 'firstname', description: '', type: 'string' }],
+				},
+			}
+
+			const connector = createConnector().stdAgentList(async (_context, input) => {
+				datasetIds.push(input.datasetId)
+				receivedSchemas.push(input.datasetSchema)
+			})
+
+			await connector._exec(
+				'std:agent:list',
+				MOCK_CONTEXT,
+				{
+					datasetIds: ['dataset1', 'dataset1', 'dataset2'],
+					datasetSchemas: mockSchemas,
+				},
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(datasetIds).toEqual(['dataset1', 'dataset2'])
+			expect(receivedSchemas).toEqual([mockSchemas.dataset1, mockSchemas.dataset2])
+		})
+
+		it('should pass datasetSchemas once per unique datasetId in stdMachineIdentityList', async () => {
+			const datasetIds: string[] = []
+			const receivedSchemas: (DatasetSchema | undefined)[] = []
+			const mockSchemas: Record<string, DatasetSchema> = {
+				dataset1: {
+					name: 'Dataset 1',
+					config: { datasetId: 'datasetId1', datasetType: 'std:machine-identity' },
+					displayAttribute: 'name',
+					identityAttribute: 'id',
+					groupAttribute: 'group',
+					attributes: [{ name: 'foo', description: '', type: 'string' }],
+				},
+				dataset2: {
+					name: 'Dataset 2',
+					config: { datasetId: 'datasetId2', datasetType: 'std:machine-identity' },
+					displayAttribute: 'displayName',
+					identityAttribute: 'identifier',
+					groupAttribute: 'group',
+					attributes: [{ name: 'firstname', description: '', type: 'string' }],
+				},
+			}
+
+			const connector = createConnector().stdMachineIdentityList(async (_context, input) => {
+				datasetIds.push(input.datasetId)
+				receivedSchemas.push(input.datasetSchema)
+			})
+
+			await connector._exec(
+				'std:machine-identity:list',
+				MOCK_CONTEXT,
+				{
+					datasetIds: ['dataset1', 'dataset2', 'dataset1'],
+					datasetSchemas: mockSchemas,
+				},
+				new PassThrough({ objectMode: true })
+			)
+
+			expect(datasetIds).toEqual(['dataset1', 'dataset2'])
+			expect(receivedSchemas).toEqual([mockSchemas.dataset1, mockSchemas.dataset2])
+		})
+	})
+
 	it('should execute stdEntitlementListHandler', async () => {
 		const connector = createConnector().stdEntitlementList(async (context, input, res) => {
 			expect(context).toBeDefined()
