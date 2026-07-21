@@ -51,8 +51,8 @@ import {
 	StdMachineIdentityListDatasetsOutput,
 	StdMachineIdentityListInput,
 	StdMachineIdentityListOutput,
-	StdResourceListInput,
-	StdResourceListOutput,
+	ResourceInput,
+	ResourceOutput,
 } from './commands'
 import { RawResponse, ResponseStream, ResponseType, Response, ResponseStreamTransform } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
@@ -422,26 +422,7 @@ export class Connector {
 	 * @param handler handler
 	 */
 	stdResourceList(handler: StdResourceListHandler): this {
-		return this.command(
-			StandardCommand.StdResourceList,
-			async (
-				context: Context,
-				input: StdResourceListInput,
-				res: Response<StdResourceListOutput>
-			): Promise<void> => {
-				const datasetRes = new ResponseStreamTransform<
-					StdResourceListOutput,
-					any
-				>(res, (v: StdResourceListOutput): any => {
-					return {
-						...v,
-						datasetId: input.datasetId,
-					}
-				})
-
-				await handler(context, input, datasetRes)
-			}
-		)
+		return this.command(StandardCommand.StdResourceList, this.injectDatasetId(handler))
 	}
 
 	/**
@@ -449,7 +430,7 @@ export class Connector {
 	 * @param handler handler
 	 */
 	stdResourceDelete(handler: StdResourceDeleteHandler): this {
-		return this.command(StandardCommand.StdResourceDelete, handler)
+		return this.command(StandardCommand.StdResourceDelete, this.injectDatasetId(handler))
 	}
 
 	/**
@@ -457,7 +438,7 @@ export class Connector {
 	 * @param handler handler
 	 */
 	stdResourceDisable(handler: StdResourceDisableHandler): this {
-		return this.command(StandardCommand.StdResourceDisable, handler)
+		return this.command(StandardCommand.StdResourceDisable, this.injectDatasetId(handler))
 	}
 
 	/**
@@ -465,7 +446,29 @@ export class Connector {
 	 * @param handler handler
 	 */
 	stdResourceEnable(handler: StdResourceEnableHandler): this {
-		return this.command(StandardCommand.StdResourceEnable, handler)
+		return this.command(StandardCommand.StdResourceEnable, this.injectDatasetId(handler))
+	}
+
+	/**
+	 * Wrap a std:resource:* handler so the SDK stamps datasetId from the command input
+	 * onto every emitted output object. datasetId is a required input for these commands,
+	 * so this guarantees each resource is attributed to its dataset without requiring
+	 * connector authors to set it explicitly on every output.
+	 * @param handler handler
+	 */
+	private injectDatasetId<I extends ResourceInput, O extends ResourceOutput>(
+		handler: (context: Context, input: I, res: Response<O>) => Promise<void>
+	): (context: Context, input: I, res: Response<O>) => Promise<void> {
+		return async (context: Context, input: I, res: Response<O>): Promise<void> => {
+			const datasetRes = new ResponseStreamTransform<O, any>(res, (v: O): any => {
+				return {
+					...v,
+					datasetId: input.datasetId,
+				}
+			})
+
+			await handler(context, input, datasetRes)
+		}
 	}
 
 	/**

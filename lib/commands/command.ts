@@ -235,6 +235,7 @@ export type ResourceClassification = 'human' | 'machine' | null
  */
 export type ResourceOutput = {
 	identity: string
+	datasetId: string
 	resourceId: string
 	attributes: Record<string, any>
 	uuid?: string
