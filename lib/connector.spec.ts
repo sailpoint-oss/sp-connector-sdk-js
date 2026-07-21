@@ -969,9 +969,10 @@ describe('exec handlers', () => {
 			expect(input.identity).toStrictEqual('mockIdentity')
 			expect(input.datasetId).toStrictEqual('aws:account')
 			expect(input.resourceId).toStrictEqual('aws:iam-role')
-			expect(res).toBeInstanceOf(ResponseStream)
+			expect(res).toBeInstanceOf(ResponseStreamTransform)
 			res.send({
 				identity: input.identity,
+				datasetId: input.datasetId,
 				resourceId: input.resourceId,
 				attributes: { id: input.identity },
 				deleted: true,
@@ -986,7 +987,16 @@ describe('exec handlers', () => {
 				datasetId: 'aws:account',
 				resourceId: 'aws:iam-role',
 			},
-			new PassThrough({ objectMode: true })
+			new PassThrough({ objectMode: true }).on('data', (chunk) => {
+				expect(chunk.type).toEqual('output')
+				expect(chunk.data).toEqual({
+					identity: 'mockIdentity',
+					datasetId: 'aws:account',
+					resourceId: 'aws:iam-role',
+					attributes: { id: 'mockIdentity' },
+					deleted: true,
+				})
+			})
 		)
 	})
 
@@ -996,9 +1006,10 @@ describe('exec handlers', () => {
 			expect(input.identity).toStrictEqual('mockIdentity')
 			expect(input.datasetId).toStrictEqual('aws:account')
 			expect(input.resourceId).toStrictEqual('aws:iam-role')
-			expect(res).toBeInstanceOf(ResponseStream)
+			expect(res).toBeInstanceOf(ResponseStreamTransform)
 			res.send({
 				identity: input.identity,
+				datasetId: input.datasetId,
 				resourceId: input.resourceId,
 				attributes: { id: input.identity },
 				disabled: true,
@@ -1013,7 +1024,16 @@ describe('exec handlers', () => {
 				datasetId: 'aws:account',
 				resourceId: 'aws:iam-role',
 			},
-			new PassThrough({ objectMode: true })
+			new PassThrough({ objectMode: true }).on('data', (chunk) => {
+				expect(chunk.type).toEqual('output')
+				expect(chunk.data).toEqual({
+					identity: 'mockIdentity',
+					datasetId: 'aws:account',
+					resourceId: 'aws:iam-role',
+					attributes: { id: 'mockIdentity' },
+					disabled: true,
+				})
+			})
 		)
 	})
 
@@ -1023,9 +1043,10 @@ describe('exec handlers', () => {
 			expect(input.identity).toStrictEqual('mockIdentity')
 			expect(input.datasetId).toStrictEqual('aws:account')
 			expect(input.resourceId).toStrictEqual('aws:iam-role')
-			expect(res).toBeInstanceOf(ResponseStream)
+			expect(res).toBeInstanceOf(ResponseStreamTransform)
 			res.send({
 				identity: input.identity,
+				datasetId: input.datasetId,
 				resourceId: input.resourceId,
 				attributes: { id: input.identity },
 				disabled: false,
@@ -1040,7 +1061,16 @@ describe('exec handlers', () => {
 				datasetId: 'aws:account',
 				resourceId: 'aws:iam-role',
 			},
-			new PassThrough({ objectMode: true })
+			new PassThrough({ objectMode: true }).on('data', (chunk) => {
+				expect(chunk.type).toEqual('output')
+				expect(chunk.data).toEqual({
+					identity: 'mockIdentity',
+					datasetId: 'aws:account',
+					resourceId: 'aws:iam-role',
+					attributes: { id: 'mockIdentity' },
+					disabled: false,
+				})
+			})
 		)
 	})
 
