@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import express from 'express'
-import { pipeline, Transform, TransformCallback } from 'stream'
+import { Transform, TransformCallback } from 'stream'
 import path from 'path'
 import { inspect } from 'util'
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
@@ -108,14 +108,33 @@ function runDev() {
 		}
 	}
 
+	const isPrematureClose = (err: unknown): boolean =>
+		typeof err === 'object' &&
+		err !== null &&
+		'code' in err &&
+		(err as { code?: string }).code === 'ERR_STREAM_PREMATURE_CLOSE'
+
 	const app = express()
-		.use(express.json({ strict: true }))
+		.use(express.json({ strict: true, limit: '100mb' }))
 		.post('/', async (req, res) => {
 			try {
-				res.type('application/x-ndjson')
 				const cmd: Command = req.body as Command
 				await _withConfig(cmd.config, async () => {
 					const c = await loadConnector(connectorPath)
+					// text/event-stream (not application/x-ndjson): Caddy and nginx only
+					// disable buffering for SSE, so keepAlive chunks leave the reverse proxy.
+					// The body is still one JSON object per line.
+					res.status(200)
+					res.set({
+						'Content-Type': 'text/event-stream; charset=utf-8',
+						'Cache-Control': 'no-cache, no-transform',
+						Connection: 'keep-alive',
+						'X-Accel-Buffering': 'no',
+					})
+					res.flushHeaders()
+					if (res.socket && typeof res.socket.setNoDelay === 'function') {
+						res.socket.setNoDelay(true)
+					}
 					const out = new Transform({
 						writableObjectMode: true,
 						transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback) {
@@ -128,15 +147,36 @@ function runDev() {
 						},
 					})
 
-					pipeline(out, res, (err) => {
-						if (err) {
+					// pipe() rather than pipeline(): Caddy/fetch closing the HTTP
+					// socket after a complete body is not an error, but pipeline()
+					// reports it as ERR_STREAM_PREMATURE_CLOSE.
+					const ignorePrematureClose = (err: unknown) => {
+						if (err && !isPrematureClose(err)) {
 							console.error(err)
 						}
-					})
+					}
+					res.on('error', ignorePrematureClose)
+					out.pipe(res, { end: true })
 
 					await new Promise<void>(async (resolve, reject) => {
-						out.on('finish', () => resolve())
-						out.on('error', (e) => reject(e))
+						let settled = false
+						const finish = () => {
+							if (!settled) {
+								settled = true
+								resolve()
+							}
+						}
+						out.on('finish', finish)
+						out.on('error', (e) => {
+							if (isPrematureClose(e)) {
+								finish()
+								return
+							}
+							if (!settled) {
+								settled = true
+								reject(e)
+							}
+						})
 
 						try {
 							if (c.connector == null && c.connectorCustomizer == null) {
@@ -156,11 +196,20 @@ function runDev() {
 						} catch (e) {
 							reject(e)
 						} finally {
-							out.end()
+							if (!out.writableEnded) {
+								out.end()
+							}
 						}
 					})
 
-					res.status(200)
+					await new Promise<void>((resolve) => {
+						if (res.writableEnded || res.destroyed) {
+							resolve()
+							return
+						}
+						res.once('finish', () => resolve())
+						res.once('close', () => resolve())
+					})
 				})
 			} catch (e: any) {
 				console.error(typeof e === "string" ? e : e?.message)
@@ -169,9 +218,16 @@ function runDev() {
 				if (e instanceof ConnectorError) {
 					errorType = e.type
 				}
-				res.status(500).write(`${errorType} error: \n + ${inspect(e)}`)
+				if (!res.headersSent) {
+					res.status(500)
+				}
+				if (!res.writableEnded) {
+					res.write(`${errorType} error: \n + ${inspect(e)}`)
+				}
 			} finally {
-				res.end()
+				if (!res.writableEnded) {
+					res.end()
+				}
 			}
 		})
 
