@@ -113,6 +113,7 @@ describe('class properties and methods', () => {
 			.stdSsfStreamCreate(async (context, input, res) => {})
 			.stdSsfStreamDelete(async (context, input, res) => {})
 			.stdSsfStreamDiscover(async (context, input, res) => {})
+			.stdSsfStreamJwks(async (context, input, res) => {})
 			.stdSsfStreamRead(async (context, input, res) => {})
 			.stdSsfStreamReplace(async (context, input, res) => {})
 			.stdSsfStreamStatusUpdate(async (context, input, res) => {})
@@ -126,7 +127,7 @@ describe('class properties and methods', () => {
 			.stdResourceEnable(async (context, input, res) => {})
 			.command('mock:custom:command', async (context, input, res) => {})
 
-		expect(connector.handlers.size).toBe(31)
+		expect(connector.handlers.size).toBe(32)
 	})
 })
 
