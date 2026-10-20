@@ -1384,6 +1384,26 @@ describe('secret scan commands', () => {
 		frames.forEach((f) => expect(Buffer.byteLength(f.data.content.text)).toBeLessThanOrEqual(16384))
 	})
 
+	it('passes maxBlobBytes from the input to the ScanResponse', async () => {
+		const results: any[] = []
+		const connector = createConnector().stdSecretScanDelta(async (context, input, res) => {
+			for (const size of [100, 101]) {
+				results.push(
+					await res.scan({
+						unitId: `u${size}`,
+						location: { type: 'T', source: 's', scanTarget: 'incidents', recordType: 'r', recordId: '1', field: 'attachments/a/f.bin', displayId: '1', visibility: 'internal' },
+						content: { encoding: 'base64', text: Buffer.alloc(size).toString('base64') },
+						mimeType: 'application/octet-stream',
+					})
+				)
+			}
+		})
+		const { stream, frames } = sink()
+		await connector._exec(StandardCommand.StdSecretScanDelta, MOCK_CONTEXT, { ...scanInput, maxBlobBytes: 100 }, stream)
+		expect(results).toEqual([{ accepted: true, chunks: 1 }, { accepted: false, chunks: 0, skipped: 'oversize' }])
+		expect(frames.map((f) => f.data.sizeBytes)).toEqual([100])
+	})
+
 	it('lets a later command() replace a scan handler', async () => {
 		let ran = ''
 		const connector = createConnector()

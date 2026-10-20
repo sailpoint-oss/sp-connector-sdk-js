@@ -2,7 +2,15 @@
 
 import { Writable } from 'stream'
 import type { ScanResult, ScanUnit, ScanUnitFrame } from '../commands/std-secret-scan'
-import { chunkUtf8, DEFAULT_MAX_IN_FLIGHT_SCAN_BYTES, MAX_SCAN_UNIT_BYTES, MIN_SCAN_UNIT_BYTES, SCAN_CHUNK_OVERLAP_BYTES } from './scan-chunk'
+import {
+	chunkUtf8,
+	DEFAULT_MAX_IN_FLIGHT_SCAN_BYTES,
+	DEFAULT_MAX_SCAN_BLOB_BYTES,
+	MAX_SCAN_BLOB_BYTES,
+	MAX_SCAN_UNIT_BYTES,
+	MIN_SCAN_UNIT_BYTES,
+	SCAN_CHUNK_OVERLAP_BYTES,
+} from './scan-chunk'
 
 /**
  * Response interface
@@ -145,7 +153,7 @@ const DRAIN_RECHECK_MS = 50
 
 export type ScanResponseOptions = {
 	maxUnitBytes?: number
-	extraction?: { documents?: boolean; pdf?: boolean; ocr?: boolean }
+	maxBlobBytes?: number
 	maxInFlightBytes?: number
 }
 
@@ -155,7 +163,8 @@ export type ScanResponseOptions = {
  *
  * `scan()` must be awaited: it resolves once the unit is taken by the response stream, which is how backpressure
  * reaches the connector's fetch loop when detection is slower than fetching. The cap on bytes in flight is
- * approximate: it counts frames still buffered in the stream, not bytes the runtime has yet to scan.
+ * approximate: it counts frames still buffered in the stream, not bytes the runtime has yet to scan. A frame larger than
+ * the cap is written alone, once nothing else is in flight.
  *
  * The ScanResponse must be the only writer of its stream while the command runs; it tracks what it wrote by the
  * stream's buffered-object count.
@@ -165,7 +174,7 @@ export class ScanResponse {
 	private readonly _maxUnitBytes: number
 	private readonly _overlapBytes: number
 	private readonly _maxInFlightBytes: number
-	private readonly _binaryAllowed: boolean
+	private readonly _maxBlobBytes: number
 	private _pending = false
 	// Sizes of the frames written and not yet taken by the stream, oldest first. The stream's own buffered-object count
 	// (writableLength) says how many of them are still waiting; it does not depend on write callbacks, which some
@@ -183,8 +192,8 @@ export class ScanResponse {
 		this._maxUnitBytes = Math.min(MAX_SCAN_UNIT_BYTES, Math.max(MIN_SCAN_UNIT_BYTES, Math.floor(requested)))
 		this._overlapBytes = Math.min(SCAN_CHUNK_OVERLAP_BYTES, Math.floor(this._maxUnitBytes / 4))
 		this._maxInFlightBytes = Math.max(this._maxUnitBytes, Number(options.maxInFlightBytes) || DEFAULT_MAX_IN_FLIGHT_SCAN_BYTES)
-		const extraction = options.extraction ?? {}
-		this._binaryAllowed = Boolean(extraction.documents || extraction.pdf || extraction.ocr)
+		const requestedBlob = Number(options.maxBlobBytes) || DEFAULT_MAX_SCAN_BLOB_BYTES
+		this._maxBlobBytes = Math.min(MAX_SCAN_BLOB_BYTES, Math.max(1, Math.floor(requestedBlob)))
 
 		this._writable.on('close', this._onClose)
 		this._writable.on('finish', this._onFinish)
@@ -193,8 +202,8 @@ export class ScanResponse {
 
 	/**
 	 * Hand one unit of content to the detection stage. Text larger than `maxUnitBytes` is split into overlapping
-	 * chunks. A binary (base64) unit is not sent while extraction is off, or when it is larger than `maxUnitBytes`;
-	 * the result says so, and the connector should count it as skipped.
+	 * chunks. A binary (base64) unit is sent whole as one frame, for the runtime to extract; one larger than
+	 * `maxBlobBytes` once decoded is not sent. The result says so, and the connector should count it as skipped.
 	 */
 	async scan(unit: ScanUnit): Promise<ScanResult> {
 		if (this._pending) {
@@ -238,16 +247,20 @@ export class ScanResponse {
 		this._throwIfFailed()
 
 		const { encoding, text } = unit.content
-		if (encoding === 'base64' && !this._binaryAllowed) {
-			return { accepted: false, chunks: 0, skipped: 'binaryNotExtracted' }
+		// Binary content cannot be split at arbitrary byte offsets, so it is one frame, sized by its decoded bytes.
+		let chunks: Array<{ text: string; offset: number; sizeBytes: number }>
+		if (encoding === 'base64') {
+			const sizeBytes = Buffer.byteLength(text, 'base64')
+			if (sizeBytes > this._maxBlobBytes) {
+				return { accepted: false, chunks: 0, skipped: 'oversize' }
+			}
+			chunks = [{ text, offset: 0, sizeBytes }]
+		} else {
+			chunks = chunkUtf8(text, this._maxUnitBytes, this._overlapBytes).map((chunk) => ({
+				...chunk,
+				sizeBytes: Buffer.byteLength(chunk.text, 'utf8'),
+			}))
 		}
-		// Binary content cannot be split at arbitrary byte offsets; one larger than a unit is not sent.
-		if (encoding === 'base64' && Buffer.byteLength(text, 'utf8') > this._maxUnitBytes) {
-			return { accepted: false, chunks: 0, skipped: 'binaryTooLarge' }
-		}
-
-		const sizeBytes = unit.sizeBytes ?? Buffer.byteLength(text, encoding === 'base64' ? 'base64' : 'utf8')
-		const chunks = encoding === 'utf8' ? chunkUtf8(text, this._maxUnitBytes, this._overlapBytes) : [{ text, offset: 0 }]
 
 		for (let index = 0; index < chunks.length; index++) {
 			const chunk = chunks[index]
@@ -256,7 +269,8 @@ export class ScanResponse {
 				unitId: unit.unitId,
 				location: unit.location,
 				mimeType: unit.mimeType,
-				sizeBytes,
+				// The size of this frame's content, not of the whole unit.
+				sizeBytes: chunk.sizeBytes,
 				content: { encoding, text: chunk.text },
 				chunk: {
 					index,
@@ -277,6 +291,11 @@ export class ScanResponse {
 	}
 
 	private async _write(frame: RawResponse, bytes: number): Promise<void> {
+		this._throwIfFailed()
+		// A frame larger than the cap could never fit beside others: it goes alone, once nothing else is in flight.
+		while (bytes > this._maxInFlightBytes && !this._failed() && this._inFlightBytes() > 0) {
+			await this._waitFor('poll')
+		}
 		this._throwIfFailed()
 		this._sizes.push(bytes)
 		const accepted = this._writable.write(frame)

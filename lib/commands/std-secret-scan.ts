@@ -20,8 +20,14 @@ export type StdSecretScanInput = {
 	state?: any
 	rules: SecretScanRules
 	maxUnitBytes?: number
+	/** Largest binary unit `scan()` sends, in decoded bytes. Default 10 MiB, at most 11 MiB. */
+	maxBlobBytes?: number
 	validation?: { enabled: boolean }
-	extraction?: { documents?: boolean; pdf?: boolean; ocr?: boolean }
+	/**
+	 * Which kinds of file the runtime extracts text from. The runtime applies these switches; connectors use `pdf` and
+	 * `ocr` only to skip PDFs and images before downloading them.
+	 */
+	extraction?: { documents?: boolean; archives?: boolean; pdf?: boolean; ocr?: boolean }
 }
 
 export type StdSecretScanFullInput = StdSecretScanInput
@@ -55,18 +61,26 @@ export type ScanUnitLocation = {
 /**
  * A piece of customer content to scan. It is consumed by the runtime's detection stage inside the execution and never
  * leaves it. Chunking is done by `ScanResponse.scan()`, not by the connector.
+ *
+ * Text is sent as `utf8`. A file is sent as its raw bytes in `base64`, with the content type the source reports as
+ * `mimeType`; the runtime extracts its text. For a file, the runtime takes the file name from the last `/`-separated
+ * segment of `location.field`.
  */
 export type ScanUnit = {
 	unitId: string
 	location: ScanUnitLocation
 	content: { encoding: 'utf8' | 'base64'; text: string }
 	mimeType: string
+	/** Informational. `scan()` computes the `sizeBytes` of each frame itself. */
 	sizeBytes?: number
 }
 
 /**
  * The `data` of a scanUnit frame, as `ScanResponse.scan()` writes it for each chunk of a unit. The runtime's detection
  * stage reads it; connectors do not build it.
+ *
+ * `sizeBytes` is the size of this frame's content: the UTF-8 byte length of the chunk text, or the decoded byte length
+ * of a base64 unit. A base64 unit is always one frame.
  */
 export type ScanUnitFrame = {
 	unitId: string
@@ -77,7 +91,8 @@ export type ScanUnitFrame = {
 	chunk: { index: number; count: number; overlapBytes: number; offset: number }
 }
 
-export type ScanSkipReason = 'binaryNotExtracted' | 'binaryTooLarge'
+/** `oversize`: a base64 unit larger than `maxBlobBytes` once decoded. */
+export type ScanSkipReason = 'oversize'
 
 /**
  * Result of `ScanResponse.scan()`. A unit that is not accepted was not sent for scanning; the connector should count

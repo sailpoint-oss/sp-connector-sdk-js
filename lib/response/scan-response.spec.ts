@@ -135,16 +135,90 @@ describe('ScanResponse', () => {
 		await expect(third).resolves.toEqual({ accepted: true, chunks: 1 })
 	})
 
-	it('skips binary units while extraction is off, without writing anything', async () => {
-		const sink = new GatedSink()
-		const res = new ScanResponse(sink, { extraction: { documents: false, pdf: false, ocr: false } })
+	it('sends a base64 unit whole as one frame, sized by its decoded bytes', async () => {
+		const sink = new PassThrough({ objectMode: true })
+		const frames: RawResponse[] = []
+		sink.on('data', (f) => frames.push(f))
+		// Larger than maxUnitBytes: binary content is never chunked.
+		const bytes = Buffer.alloc(40000, 7)
+		const text = bytes.toString('base64')
+		const res = new ScanResponse(sink, { maxUnitBytes: 16384 })
 
 		const result = await res.scan(
-			unit('UEsDBA==', { content: { encoding: 'base64', text: 'UEsDBA==' }, mimeType: 'application/zip' })
+			unit(text, {
+				content: { encoding: 'base64', text },
+				mimeType: 'application/zip',
+				location: { ...unit('').location, field: 'attachments/a1/bundle.zip' },
+				sizeBytes: 1, // informational; the frame carries the decoded size
+			})
 		)
 
-		expect(result).toEqual({ accepted: false, chunks: 0, skipped: 'binaryNotExtracted' })
+		expect(result).toEqual({ accepted: true, chunks: 1 })
+		expect(frames).toHaveLength(1)
+		const data: any = frames[0].data
+		expect(data.content).toEqual({ encoding: 'base64', text })
+		expect(data.sizeBytes).toBe(40000)
+		expect(data.mimeType).toBe('application/zip')
+		expect(data.location.field).toBe('attachments/a1/bundle.zip')
+		expect(data.chunk).toEqual({ index: 0, count: 1, overlapBytes: 0, offset: 0 })
+	})
+
+	it('skips a base64 unit larger than maxBlobBytes once decoded, without writing anything', async () => {
+		const sink = new GatedSink()
+		const res = new ScanResponse(sink, { maxBlobBytes: 1000 })
+		const blob = (n: number) => {
+			const text = Buffer.alloc(n).toString('base64')
+			return unit(text, { content: { encoding: 'base64', text }, mimeType: 'application/octet-stream' })
+		}
+
+		await expect(res.scan(blob(1001))).resolves.toEqual({ accepted: false, chunks: 0, skipped: 'oversize' })
 		expect(sink.frames).toHaveLength(0)
+
+		const p = res.scan(blob(1000)) // the limit itself is sent
+		await until(() => sink.frames.length === 1)
+		sink.release()
+		await expect(p).resolves.toEqual({ accepted: true, chunks: 1 })
+	})
+
+	it('defaults maxBlobBytes to 10 MiB and never allows more than 11 MiB', async () => {
+		const blob = (n: number) => {
+			const text = Buffer.alloc(n).toString('base64')
+			return unit(text, { content: { encoding: 'base64', text }, mimeType: 'application/octet-stream' })
+		}
+		const sink = new PassThrough({ objectMode: true })
+		sink.resume()
+		const MiB = 1024 * 1024
+
+		const byDefault = new ScanResponse(sink)
+		await expect(byDefault.scan(blob(10 * MiB + 1))).resolves.toMatchObject({ skipped: 'oversize' })
+		await expect(byDefault.scan(blob(10 * MiB))).resolves.toEqual({ accepted: true, chunks: 1 })
+		byDefault.dispose()
+
+		const capped = new ScanResponse(sink, { maxBlobBytes: 64 * MiB })
+		await expect(capped.scan(blob(11 * MiB + 1))).resolves.toMatchObject({ skipped: 'oversize' })
+		await expect(capped.scan(blob(11 * MiB))).resolves.toEqual({ accepted: true, chunks: 1 })
+	}, 20000)
+
+	it('admits a unit larger than maxInFlightBytes alone instead of waiting forever', async () => {
+		const sink = new GatedSink(1000) // object high-water mark never reached
+		const res = new ScanResponse(sink, { maxUnitBytes: 16384, maxInFlightBytes: 16384 })
+		const text = Buffer.alloc(30000).toString('base64') // 40000 base64 bytes, over twice the cap
+
+		await res.scan(unit('a'.repeat(6000)))
+		let resolved = false
+		const p = res
+			.scan(unit(text, { content: { encoding: 'base64', text }, mimeType: 'application/octet-stream' }))
+			.then(() => (resolved = true))
+		await settle()
+		expect(sink.writableLength).toBe(1) // it waits for what is already in flight
+		expect(resolved).toBe(false)
+
+		sink.release(1)
+		await until(() => sink.writableLength === 1) // then it is written on its own
+		expect((sink.frames[1].data as any).content.encoding).toBe('base64')
+		sink.release()
+		await p
+		expect(resolved).toBe(true)
 	})
 
 	it('chunks large text with overlap so a secret on a boundary is found whole', async () => {
@@ -166,7 +240,7 @@ describe('ScanResponse', () => {
 			expect(c.chunk.index).toBe(i)
 			expect(c.chunk.count).toBe(frames.length)
 			expect(c.chunk.overlapBytes).toBe(SCAN_CHUNK_OVERLAP_BYTES) // never smaller than the documented overlap
-			expect(c.sizeBytes).toBe(Buffer.byteLength(text))
+			expect(c.sizeBytes).toBe(Buffer.byteLength(c.content.text, 'utf8')) // the size of this chunk, not the unit
 			expect(c.unitId).toBe('servicenow:incident:1:description') // identity does not depend on chunking
 		})
 		expect(chunks.some((c: any) => c.content.text.includes(secret))).toBe(true)
@@ -360,15 +434,17 @@ describe('ScanResponse stream handling', () => {
 		expect(['close', 'finish', 'error'].map((e) => sink.listenerCount(e))).toEqual(before)
 	})
 
-	it('skips binary units larger than a unit instead of sending one oversized frame', async () => {
-		const sink = new GatedSink()
-		const res = new ScanResponse(sink, { maxUnitBytes: 16384, extraction: { documents: true } })
-		const text = 'A'.repeat(20000)
-		const result = await res.scan(
-			unit(text, { content: { encoding: 'base64', text }, mimeType: 'application/pdf' })
-		)
-		expect(result).toEqual({ accepted: false, chunks: 0, skipped: 'binaryTooLarge' })
-		expect(sink.frames).toHaveLength(0)
+	it('sizes each chunk of multi-byte text by its own UTF-8 bytes', async () => {
+		const sink = new PassThrough({ objectMode: true })
+		const frames: RawResponse[] = []
+		sink.on('data', (f) => frames.push(f))
+		const res = new ScanResponse(sink, { maxUnitBytes: 16384 })
+		const text = '€😀'.repeat(6000) // 42000 bytes in 3- and 4-byte characters
+
+		const result = await res.scan(unit(text, { sizeBytes: Buffer.byteLength(text) }))
+
+		expect(result.chunks).toBeGreaterThan(1)
+		frames.forEach((f: any) => expect(f.data.sizeBytes).toBe(Buffer.byteLength(f.data.content.text, 'utf8')))
 	})
 
 	it('sends only the unit fields of the frame contract', async () => {

@@ -554,7 +554,7 @@ export class Connector {
 			if (customizer) {
 				logger.warn(`customizer is not applied to ${type}`)
 			}
-			const scanResponse = new ScanResponse(res, { maxUnitBytes: input?.maxUnitBytes, extraction: input?.extraction })
+			const scanResponse = new ScanResponse(res, { maxUnitBytes: input?.maxUnitBytes, maxBlobBytes: input?.maxBlobBytes })
 			try {
 				await contextState.run(context, () => scanHandler(context, input, scanResponse))
 			} finally {

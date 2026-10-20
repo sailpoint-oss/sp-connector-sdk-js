@@ -13,6 +13,10 @@ export const MIN_SCAN_UNIT_BYTES = 16 * 1024
 export const SCAN_CHUNK_OVERLAP_BYTES = 4096
 /** Default cap on scan bytes written but not yet taken by the stream, per command. */
 export const DEFAULT_MAX_IN_FLIGHT_SCAN_BYTES = 4 * 1024 * 1024
+/** Default largest binary unit, in decoded bytes (the `maxBlobBytes` input). */
+export const DEFAULT_MAX_SCAN_BLOB_BYTES = 10 * 1024 * 1024
+/** Largest allowed `maxBlobBytes`. A binary unit is sent as one base64 frame, which must stay under 16 MiB. */
+export const MAX_SCAN_BLOB_BYTES = 11 * 1024 * 1024
 
 /**
  * Split text into chunks of at most maxBytes UTF-8 bytes, each overlapping the previous one by at least overlapBytes.
