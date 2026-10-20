@@ -85,11 +85,25 @@ export const connector: Connector = createConnector()
                 content: { encoding: 'utf8', text: record.description },
                 mimeType: 'text/plain',
             })
-            // result.accepted is false for a unit that was skipped (for example binary content); count it as skipped.
+            // result.accepted is false for a unit that was skipped; count it as skipped.
         }
         res.saveState({ targets: { /* cursor per scan target */ } })
     })
 ```
+
+Text is sent with `encoding: 'utf8'`. `scan()` splits text larger than `maxUnitBytes` into overlapping chunks; every
+frame's `sizeBytes` is the UTF-8 byte length of that frame's own text.
+
+A file (an attachment, for example) is sent as its raw bytes with `encoding: 'base64'` and the content type the source
+reports as `mimeType`. The connector does not decode or extract it: the runtime detects the format and extracts the
+text (archives, office documents, email, text in any character set), applying the command's `extraction` switches.
+`scan()` sends a base64 unit whole, as one frame whose `sizeBytes` is the decoded byte length. A file larger than the
+command's `maxBlobBytes` (default 10 MiB, at most 11 MiB) once decoded is not sent: `scan()` resolves
+`{ accepted: false, chunks: 0, skipped: 'oversize' }`. A connector that knows a file's size before downloading it
+should skip it then, and count it as `oversize` too.
+
+The runtime takes a file's name from the last `/`-separated segment of `location.field`, so use a field that names the
+file, identifies it within its parent record and contains no `#`, for example `attachments/<id>/<file name>`.
 
 ### Logging
 
