@@ -68,6 +68,41 @@ export const connector: Connector = createConnector()
         // TODO: implement me!
     })
 ```
+### Secret scan commands
+
+Handlers for `std:secret-scan:full` and `std:secret-scan:delta` receive a `ScanResponse` instead of a `Response`. It has
+no `send()`: content is handed to the runtime's detection stage with `res.scan()`, and only findings leave the
+execution. Await every `res.scan()` call; it resolves once the stream has taken the unit, which is how backpressure
+reaches the fetch loop. Customizers are not applied to these commands.
+
+```typescript
+export const connector: Connector = createConnector()
+    .stdSecretScanDelta(async (context: Context, input: StdSecretScanDeltaInput, res: ScanResponse) => {
+        for (const record of await fetchChangedRecords(input)) {
+            const result = await res.scan({
+                unitId: `incident:${record.sys_id}:description`,
+                location: { /* where the content came from, never the content itself */ },
+                content: { encoding: 'utf8', text: record.description },
+                mimeType: 'text/plain',
+            })
+            // result.accepted is false for a unit that was skipped (for example binary content); count it as skipped.
+        }
+        res.saveState({ targets: { /* cursor per scan target */ } })
+    })
+```
+
+For files (attachments, uploads), decide from the file's metadata before downloading it, so unsupported or oversized
+files are never fetched. `classifyScanFile` and `scanFileSkipReason` apply the same policy in every connector:
+
+```typescript
+import { classifyScanFile, scanFileSkipReason } from '@sailpoint/connector-sdk'
+
+const skip = scanFileSkipReason(classifyScanFile(file.contentType, file.name), file.sizeBytes, maxFileBytes, input.extraction)
+if (skip) {
+    coverage.skipped[skip]++ // 'unsupportedType' or 'oversize'; don't download the file
+}
+```
+
 ### Logging
 
 Use SDK provided logger to ensure log statements will include command execution context fields.

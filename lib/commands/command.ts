@@ -37,6 +37,8 @@ export enum StandardCommand {
     StdSsfStreamDelete = 'std:ssf-stream:delete',
     StdSsfStreamVerify = 'std:ssf-stream:verify',
     StdSsfStreamReplace = 'std:ssf-stream:replace',
+    StdSecretScanFull = 'std:secret-scan:full',
+    StdSecretScanDelta = 'std:secret-scan:delta',
 }
 
 /**

@@ -4,11 +4,11 @@ import { Connector, createConnector } from './connector'
 import { readConfig } from './config'
 import { DatasetSchema, Schema, StandardCommand } from './commands'
 import { PassThrough } from 'stream'
-import { ResponseStream, ResponseStreamTransform } from './response'
+import { ResponseStream, ResponseStreamTransform, ScanResponse } from './response'
 import { major } from 'semver'
 
 import packageJson from '../package.json'
-import { createConnectorCustomizer } from './connector-customizer'
+import { createConnectorCustomizer, CustomizerType } from './connector-customizer'
 import {
 	Context,
 	AssumeAwsRoleRequest,
@@ -1308,5 +1308,132 @@ describe('read config', () => {
 		} catch (e) {
 			expect(e).toStrictEqual(new Error(`unexpected runtime error: failed to parse connector config`))
 		}
+	})
+})
+
+describe('secret scan commands', () => {
+	const scanInput = { scanTargets: ['incidents'], stateful: true as const }
+	const sink = () => {
+		const frames: any[] = []
+		const stream = new PassThrough({ objectMode: true }).on('data', (f) => frames.push(f))
+		return { stream, frames }
+	}
+
+	it('registers both commands as supported', () => {
+		const connector = createConnector()
+			.stdSecretScanFull(async () => {})
+			.stdSecretScanDelta(async () => {})
+		expect(connector.handlers.has(StandardCommand.StdSecretScanFull)).toBe(true)
+		expect(connector.handlers.has(StandardCommand.StdSecretScanDelta)).toBe(true)
+	})
+
+	it('gives scan handlers a ScanResponse and never runs customizer hooks', async () => {
+		const seen: string[] = []
+		const connector = createConnector().stdSecretScanFull(async (context, input, res) => {
+			expect(res).toBeInstanceOf(ScanResponse)
+			expect((res as any).send).toBeUndefined()
+			await res.scan({
+				unitId: 'u1',
+				location: { type: 'T', source: 's', scanTarget: 'incidents', recordType: 'r', recordId: '1', field: 'f', displayId: '1', visibility: 'internal' },
+				content: { encoding: 'utf8', text: 'secret content' },
+				mimeType: 'text/plain',
+			})
+			res.saveState({ targets: { incidents: { cursor: 'c' } } })
+		})
+		const customizer = createConnectorCustomizer()
+		// Hooks registered for scan commands through the raw handler map must still never run.
+		customizer.handlers.set(customizer.handlerKey(CustomizerType.Before, StandardCommand.StdSecretScanFull), async (_c: any, i: any) => {
+			seen.push('before')
+			return i
+		})
+		customizer.handlers.set(customizer.handlerKey(CustomizerType.After, StandardCommand.StdSecretScanFull), async (_c: any, o: any) => {
+			seen.push('after')
+			return o
+		})
+
+		const { stream, frames } = sink()
+		await connector._exec(StandardCommand.StdSecretScanFull, MOCK_CONTEXT, scanInput, stream, customizer)
+
+		expect(seen).toEqual([])
+		expect(frames.map((f) => f.type)).toEqual(['scanUnit', 'state'])
+		expect(frames[0].data.content.text).toBe('secret content')
+	})
+
+	it('runs a scan type registered through command() on the scan path too', async () => {
+		let response: any
+		const connector = createConnector().command(StandardCommand.StdSecretScanDelta, async (context, input, res) => {
+			response = res
+		})
+		const { stream } = sink()
+		await connector._exec(StandardCommand.StdSecretScanDelta, MOCK_CONTEXT, scanInput, stream, createConnectorCustomizer())
+		expect(response).toBeInstanceOf(ScanResponse)
+	})
+
+	it('passes maxUnitBytes from the input to the ScanResponse', async () => {
+		const connector = createConnector().stdSecretScanDelta(async (context, input, res) => {
+			await res.scan({
+				unitId: 'u1',
+				location: { type: 'T', source: 's', scanTarget: 'incidents', recordType: 'r', recordId: '1', field: 'f', displayId: '1', visibility: 'internal' },
+				content: { encoding: 'utf8', text: 'z'.repeat(40000) },
+				mimeType: 'text/plain',
+			})
+		})
+		const { stream, frames } = sink()
+		await connector._exec(StandardCommand.StdSecretScanDelta, MOCK_CONTEXT, { ...scanInput, maxUnitBytes: 16384 }, stream)
+		expect(frames.length).toBeGreaterThan(1)
+		frames.forEach((f) => expect(Buffer.byteLength(f.data.content.text)).toBeLessThanOrEqual(16384))
+	})
+
+	it('lets a later command() replace a scan handler', async () => {
+		let ran = ''
+		const connector = createConnector()
+			.stdSecretScanFull(async () => {
+				ran = 'first'
+			})
+			.command(StandardCommand.StdSecretScanFull, async () => {
+				ran = 'second'
+			})
+		const { stream } = sink()
+		await connector._exec(StandardCommand.StdSecretScanFull, MOCK_CONTEXT, scanInput, stream)
+		expect(ran).toBe('second')
+	})
+
+	it('fails another casing of a scan type closed instead of running it with a Response', async () => {
+		const connector = createConnector().stdSecretScanFull(async () => {})
+		const { stream } = sink()
+		await expect(connector._exec('STD:SECRET-SCAN:FULL', MOCK_CONTEXT, scanInput, stream)).rejects.toThrow('unsupported command')
+	})
+
+	it('releases its stream listeners when the handler returns or throws', async () => {
+		const { stream } = sink()
+		const before = stream.listenerCount('error')
+		await createConnector()
+			.stdSecretScanFull(async () => {})
+			._exec(StandardCommand.StdSecretScanFull, MOCK_CONTEXT, scanInput, stream)
+		await expect(
+			createConnector()
+				.stdSecretScanDelta(async () => {
+					throw new Error('boom')
+				})
+				._exec(StandardCommand.StdSecretScanDelta, MOCK_CONTEXT, scanInput, stream)
+		).rejects.toThrow('boom')
+		expect(stream.listenerCount('error')).toBe(before)
+	})
+
+	it('still rejects unregistered scan commands', async () => {
+		const { stream } = sink()
+		await expect(createConnector()._exec(StandardCommand.StdSecretScanFull, MOCK_CONTEXT, scanInput, stream)).rejects.toThrow(
+			'unsupported command: std:secret-scan:full'
+		)
+	})
+
+	it('leaves customizers working for other commands', async () => {
+		const connector = createConnector().stdTestConnection(async (context, input, res) => {
+			res.send({})
+		})
+		const customizer = createConnectorCustomizer().afterStdTestConnection(async (context, output) => ({ ...output, customized: true }))
+		const { stream, frames } = sink()
+		await connector._exec(StandardCommand.StdTestConnection, MOCK_CONTEXT, {}, stream, customizer)
+		expect(frames[0]).toEqual({ type: 'output', data: { customized: true } })
 	})
 })

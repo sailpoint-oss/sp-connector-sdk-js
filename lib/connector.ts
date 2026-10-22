@@ -36,6 +36,9 @@ import {
 	StdResourceDeleteHandler,
 	StdResourceDisableHandler,
 	StdResourceEnableHandler,
+	StdSecretScanFullHandler,
+	StdSecretScanDeltaHandler,
+	ScanCommandHandler,
 } from './connector-handler'
 import { StdSpecReadDefaultHandler } from './connector-spec'
 import {
@@ -54,14 +57,24 @@ import {
 	ResourceInput,
 	ResourceOutput,
 } from './commands'
-import { RawResponse, ResponseStream, ResponseType, Response, ResponseStreamTransform } from './response'
+import { RawResponse, ResponseStream, ResponseType, Response, ResponseStreamTransform, ScanResponse } from './response'
 import { Transform, TransformCallback, Writable } from 'stream'
 import { contextState } from './async-context';
 import { ConnectorCustomizer, CustomizerType as CustomizerType } from './connector-customizer'
 import { ConnectorCustomizerHandler } from './connector-customizer-handler'
 import { uniqueDatasetIds } from './dataset-ids'
+import { logger } from './logger'
 
 const SDK_VERSION = 1
+
+const SECRET_SCAN_COMMAND_PREFIX = 'std:secret-scan:'
+
+/**
+ * Whether a command type belongs to the secret scan family. The check ignores case so that anything that looks like a
+ * scan takes the scan path; the handler itself is still looked up by the exact type, so another casing fails as an
+ * unsupported command instead of running with a plain Response.
+ */
+const isSecretScanCommand = (type: string): boolean => type.toLowerCase().startsWith(SECRET_SCAN_COMMAND_PREFIX)
 
 /**
  * Connector to build by attaching handlers for supported commands.
@@ -70,9 +83,11 @@ export class Connector {
 	public static readonly SDK_VERSION = SDK_VERSION
 	private readonly _sdkVersion = Connector.SDK_VERSION
 	private readonly _handlers: Map<string, CommandHandler>
+	private readonly _scanHandlers: Map<string, ScanCommandHandler>
 
 	constructor() {
 		this._handlers = new Map<string, CommandHandler>()
+		this._scanHandlers = new Map<string, ScanCommandHandler>()
 		this.command(StandardCommand.StdSpecRead, StdSpecReadDefaultHandler)
 	}
 
@@ -472,12 +487,41 @@ export class Connector {
 	}
 
 	/**
+	 * Add a handler for 'std:secret-scan:full' command
+	 * @param handler handler
+	 */
+	stdSecretScanFull(handler: StdSecretScanFullHandler): this {
+		return this.scanCommand(StandardCommand.StdSecretScanFull, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:secret-scan:delta' command
+	 * @param handler handler
+	 */
+	stdSecretScanDelta(handler: StdSecretScanDeltaHandler): this {
+		return this.scanCommand(StandardCommand.StdSecretScanDelta, handler)
+	}
+
+	/**
+	 * Register a scan handler. It is also listed in `handlers` so the command shows as supported, but `_exec` always
+	 * runs it on the scan path with a ScanResponse. A later `command()` for the same type replaces it.
+	 */
+	private scanCommand(type: string, handler: ScanCommandHandler): this {
+		this._scanHandlers.set(type, handler)
+		this._handlers.set(type, async () => {
+			throw new Error(`${type} must run through the secret scan path`)
+		})
+		return this
+	}
+
+	/**
 	 * Add a handler for a command of specified type
 	 * @param type command type
 	 * @param handler handler
 	 */
 	command(type: string, handler: CommandHandler): this {
 		this._handlers.set(type, handler)
+		this._scanHandlers.delete(type)
 		return this
 	}
 
@@ -498,6 +542,27 @@ export class Connector {
 		res: Writable,
 		customizer?: ConnectorCustomizer
 	): Promise<void> {
+		// Secret scans never run customizers: a before-hook would see scan input and an after-hook interceptor would both
+		// see content and break backpressure (it ignores write()'s return value). The customizer argument is ignored.
+		if (isSecretScanCommand(type)) {
+			// A scan type registered through command() also runs here: its handler gets a ScanResponse, not a Response.
+			const scanHandler: ScanCommandHandler | undefined =
+				this._scanHandlers.get(type) ?? (this._handlers.get(type) as ScanCommandHandler | undefined)
+			if (!scanHandler) {
+				throw new Error(`unsupported command: ${type}`)
+			}
+			if (customizer) {
+				logger.warn(`customizer is not applied to ${type}`)
+			}
+			const scanResponse = new ScanResponse(res, { maxUnitBytes: input?.maxUnitBytes, extraction: input?.extraction })
+			try {
+				await contextState.run(context, () => scanHandler(context, input, scanResponse))
+			} finally {
+				scanResponse.dispose()
+			}
+			return
+		}
+
 		let totalTime: number = 0
 		let roCount: number = 0
 		const handler: CommandHandler | undefined = this._handlers.get(type)
