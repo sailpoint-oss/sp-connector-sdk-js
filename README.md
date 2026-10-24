@@ -105,15 +105,18 @@ should skip it then, and count it as `oversize` too.
 The runtime takes a file's name from the last `/`-separated segment of `location.field`, so use a field that names the
 file, identifies it within its parent record and contains no `#`, for example `attachments/<id>/<file name>`.
 
-For files (attachments, uploads), decide from the file's metadata before downloading it, so unsupported or oversized
-files are never fetched. `classifyScanFile` and `scanFileSkipReason` apply the same policy in every connector:
+For files (attachments, uploads), decide from the file's metadata before downloading it, so files that would be dropped
+are never fetched. `classifyScanFile` and `scanFileSkipReason` apply the same policy in every connector: audio and
+video are skipped, PDFs and images are skipped unless the command's `extraction.pdf` or `extraction.ocr` is on, and a
+file over the size limit is skipped. Every other file, including archives, email and office documents, is downloaded
+and sent as described above; the runtime applies the `documents` and `archives` switches.
 
 ```typescript
 import { classifyScanFile, scanFileSkipReason } from '@sailpoint/connector-sdk'
 
 const skip = scanFileSkipReason(classifyScanFile(file.contentType, file.name), file.sizeBytes, maxFileBytes, input.extraction)
 if (skip) {
-    coverage.skipped[skip]++ // 'unsupportedType' or 'oversize'; don't download the file
+    coverage.skipped[skip]++ // 'policySkipped', 'pdfDisabled', 'ocrDisabled' or 'oversize'; don't download the file
 }
 ```
 
