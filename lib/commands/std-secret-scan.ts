@@ -1,24 +1,16 @@
 /* Copyright (c) 2026. SailPoint Technologies, Inc. All rights reserved. */
 
 /**
- * Rule pack reference. The runtime fetches and caches the pack by ETag; connectors never read it.
- */
-export type SecretScanRules = {
-	location: string
-	etag: string
-}
-
-/**
  * Input of std:secret-scan:full and std:secret-scan:delta.
  *
  * sp-connect always expands `scanTargets` to an explicit list and replaces `stateId` with the saved `state`,
- * so a connector sees the targets to scan and, for a delta, the state it saved last time.
+ * so a connector sees the targets to scan and, for a delta, the state it saved last time. The rule pack is not part
+ * of the input: the runtime loads it, and connectors never see it.
  */
 export type StdSecretScanInput = {
 	scanTargets: string[]
 	stateful: true
 	state?: any
-	rules: SecretScanRules
 	maxUnitBytes?: number
 	/** Largest binary unit `scan()` sends, in decoded bytes. Default 10 MiB, at most 11 MiB. */
 	maxBlobBytes?: number

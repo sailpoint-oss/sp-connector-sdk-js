@@ -1312,7 +1312,7 @@ describe('read config', () => {
 })
 
 describe('secret scan commands', () => {
-	const scanInput = { scanTargets: ['incidents'], stateful: true as const, rules: { location: 's3://r/p.json', etag: 'e' } }
+	const scanInput = { scanTargets: ['incidents'], stateful: true as const }
 	const sink = () => {
 		const frames: any[] = []
 		const stream = new PassThrough({ objectMode: true }).on('data', (f) => frames.push(f))

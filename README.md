@@ -105,6 +105,18 @@ should skip it then, and count it as `oversize` too.
 The runtime takes a file's name from the last `/`-separated segment of `location.field`, so use a field that names the
 file, identifies it within its parent record and contains no `#`, for example `attachments/<id>/<file name>`.
 
+For files (attachments, uploads), decide from the file's metadata before downloading it, so unsupported or oversized
+files are never fetched. `classifyScanFile` and `scanFileSkipReason` apply the same policy in every connector:
+
+```typescript
+import { classifyScanFile, scanFileSkipReason } from '@sailpoint/connector-sdk'
+
+const skip = scanFileSkipReason(classifyScanFile(file.contentType, file.name), file.sizeBytes, maxFileBytes, input.extraction)
+if (skip) {
+    coverage.skipped[skip]++ // 'unsupportedType' or 'oversize'; don't download the file
+}
+```
+
 ### Logging
 
 Use SDK provided logger to ensure log statements will include command execution context fields.
