@@ -2,6 +2,7 @@
 
 import { Writable } from 'stream'
 import type { ScanResult, ScanUnit, ScanUnitFrame } from '../commands/std-secret-scan'
+import { logger } from '../logger'
 import {
 	chunkUtf8,
 	DEFAULT_MAX_IN_FLIGHT_SCAN_BYTES,
@@ -252,6 +253,10 @@ export class ScanResponse {
 		if (encoding === 'base64') {
 			const sizeBytes = Buffer.byteLength(text, 'base64')
 			if (sizeBytes > this._maxBlobBytes) {
+				// Sizes only: the unit's content and location are the connector's data.
+				logger.debug(
+					`scan(): a binary unit of ${sizeBytes} bytes is over maxBlobBytes ${this._maxBlobBytes}; not sent`
+				)
 				return { accepted: false, chunks: 0, skipped: 'oversize' }
 			}
 			chunks = [{ text, offset: 0, sizeBytes }]
@@ -293,8 +298,14 @@ export class ScanResponse {
 	private async _write(frame: RawResponse, bytes: number): Promise<void> {
 		this._throwIfFailed()
 		// A frame larger than the cap could never fit beside others: it goes alone, once nothing else is in flight.
+		const waitStarted = Date.now()
+		let waited = false
 		while (bytes > this._maxInFlightBytes && !this._failed() && this._inFlightBytes() > 0) {
+			waited = true
 			await this._waitFor('poll')
+		}
+		if (waited) {
+			logger.debug(`scan(): a ${bytes}-byte frame waited ${Date.now() - waitStarted} ms to be written alone`)
 		}
 		this._throwIfFailed()
 		this._sizes.push(bytes)
