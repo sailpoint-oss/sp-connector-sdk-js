@@ -1,6 +1,7 @@
 /* Copyright (c) 2026. SailPoint Technologies, Inc. All rights reserved. */
 
-import { StdSecretScanInput } from './commands/std-secret-scan'
+import type { ScanExtraction, ScanFileSkipReason } from './commands/std-secret-scan'
+import { DEFAULT_MAX_SCAN_BLOB_BYTES, MAX_SCAN_BLOB_BYTES } from './response/scan-chunk'
 
 /**
  * What kind of file a scan handler is looking at, from its MIME type and name. Only the kinds a connector can rule out
@@ -11,11 +12,6 @@ import { StdSecretScanInput } from './commands/std-secret-scan'
  * - `pdf` and `image`: read only when the command's `extraction.pdf` or `extraction.ocr` is on.
  */
 export type ScanFileClass = 'media' | 'denylisted' | 'pdf' | 'image' | 'file'
-
-/**
- * Why a file is not downloaded. Connectors count these in their state's coverage.
- */
-export type ScanFileSkipReason = 'policySkipped' | 'pdfDisabled' | 'ocrDisabled' | 'oversize'
 
 // Audio and video extensions, used only when the source reports no MIME type or a generic one. `ts` is left out: it is
 // TypeScript far more often than MPEG-TS.
@@ -147,29 +143,57 @@ export const classifyScanFile = (contentType: string, fileName: string): ScanFil
 }
 
 /**
- * Returns why a file should not be downloaded, or undefined when it should be downloaded and sent to `scan()` as
- * base64. Call it with the file's metadata **before** downloading it. Only clear signals skip a file: media and the
- * denylist, a PDF or image while the command's `extraction.pdf` or `extraction.ocr` is off, and size. Everything else,
- * including text in any encoding, archives, email and office documents, is sent; the runtime detects the format and
- * applies the `documents` and `archives` switches itself.
+ * The largest file sent for a command's `maxBlobBytes`: 10 MiB when it is absent or invalid, and never more than
+ * 11 MiB, because a file is sent as one base64 frame that must stay under the runtime's 16 MiB frame limit.
  */
-export const scanFileSkipReason = (
-	fileClass: ScanFileClass,
-	sizeBytes: number,
-	maxBytes: number,
-	extraction?: StdSecretScanInput['extraction']
-): ScanFileSkipReason | undefined => {
+export const scanBlobLimit = (maxBlobBytes?: number): number => {
+	const requested = Number(maxBlobBytes)
+	const limit = Number.isFinite(requested) && requested > 0 ? Math.floor(requested) : DEFAULT_MAX_SCAN_BLOB_BYTES
+	return Math.min(MAX_SCAN_BLOB_BYTES, Math.max(1, limit))
+}
+
+/** Whether a file is downloaded and sent, and if not, why. */
+export type ScanFileDecision = { allow: true } | { allow: false; reason: ScanFileSkipReason }
+
+/**
+ * Decides whether a file is downloaded and sent for scanning. This is the file policy every connector applies, and
+ * `ScanResponse.scanFile()` applies it again to the bytes it is given. Call it with the file's metadata **before**
+ * downloading it, so files that would be dropped are never fetched.
+ *
+ * Only clear signals skip a file, in this order:
+ *
+ * - `unlicensed`: the command's `extraction.files` is `false`, so no file is read;
+ * - `policySkipped`: audio and video, and the scanner's denylist (see `classifyScanFile`);
+ * - `pdfDisabled`, `ocrDisabled`: a PDF or an image while `extraction.pdf` or `extraction.ocr` is off;
+ * - `oversize`: larger than `maxBlobBytes` (see `scanBlobLimit`). A size the source does not report is not checked
+ *   here; `scanFile()` checks the bytes.
+ *
+ * Everything else, including text in any encoding, archives, email and office documents, is sent; the runtime detects
+ * the format and applies the `documents` and `archives` switches itself.
+ */
+export const allowFile = (
+	name: string,
+	mimeType: string | undefined,
+	sizeBytes: number | undefined,
+	extraction?: ScanExtraction,
+	maxBlobBytes?: number
+): ScanFileDecision => {
+	if (extraction?.files === false) {
+		return { allow: false, reason: 'unlicensed' }
+	}
+	const fileClass = classifyScanFile(mimeType ?? '', name)
 	if (fileClass === 'media' || fileClass === 'denylisted') {
-		return 'policySkipped'
+		return { allow: false, reason: 'policySkipped' }
 	}
 	if (fileClass === 'pdf' && !extraction?.pdf) {
-		return 'pdfDisabled'
+		return { allow: false, reason: 'pdfDisabled' }
 	}
 	if (fileClass === 'image' && !extraction?.ocr) {
-		return 'ocrDisabled'
+		return { allow: false, reason: 'ocrDisabled' }
 	}
-	if (sizeBytes > maxBytes) {
-		return 'oversize'
+	const size = Number(sizeBytes)
+	if (sizeBytes !== undefined && Number.isFinite(size) && size > scanBlobLimit(maxBlobBytes)) {
+		return { allow: false, reason: 'oversize' }
 	}
-	return undefined
+	return { allow: true }
 }

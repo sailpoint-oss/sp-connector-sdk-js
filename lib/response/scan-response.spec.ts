@@ -3,18 +3,18 @@
 import { PassThrough, Transform, TransformCallback, Writable } from 'stream'
 import { ScanUnit } from '../commands'
 import { RawResponse, ResponseType, ScanResponse } from './index'
-import { chunkUtf8, SCAN_CHUNK_OVERLAP_BYTES } from './scan-chunk'
+import { chunkUtf8, countUtf8Chunks, SCAN_CHUNK_OVERLAP_BYTES } from './scan-chunk'
 
 const unit = (text: string, extra: Partial<ScanUnit> = {}): ScanUnit => ({
-	unitId: 'servicenow:incident:1:description',
+	unitId: 'example:item:1:body',
 	location: {
-		type: 'SERVICENOW_RECORD',
-		source: 'servicenow',
-		scanTarget: 'incidents',
-		recordType: 'incident',
+		type: 'EXAMPLE_ITEM',
+		source: 'example',
+		scanTarget: 'items',
+		recordType: 'item',
 		recordId: '1',
-		field: 'description',
-		displayId: 'INC1',
+		field: 'body',
+		displayId: 'ITEM-1',
 		visibility: 'internal',
 	},
 	content: { encoding: 'utf8', text },
@@ -80,8 +80,8 @@ describe('ScanResponse', () => {
 		expect(frames).toHaveLength(1)
 		expect(frames[0].type).toBe(ResponseType.ScanUnit)
 		const data: any = frames[0].data
-		expect(data.unitId).toBe('servicenow:incident:1:description')
-		expect(data.content).toEqual({ encoding: 'utf8', text: 'aws_secret_access_key=abc' })
+		expect(data.unitId).toBe('example:item:1:body')
+		expect(data.content).toEqual({ encoding: 'utf8', kind: 'text', text: 'aws_secret_access_key=abc' })
 		expect(data.sizeBytes).toBe(25)
 		expect(data.chunk).toEqual({ index: 0, count: 1, overlapBytes: 0, offset: 0 })
 	})
@@ -148,7 +148,7 @@ describe('ScanResponse', () => {
 			unit(text, {
 				content: { encoding: 'base64', text },
 				mimeType: 'application/zip',
-				location: { ...unit('').location, field: 'attachments/a1/bundle.zip' },
+				location: { ...unit('').location, field: 'files/a1/bundle.zip' },
 				sizeBytes: 1, // informational; the frame carries the decoded size
 			})
 		)
@@ -156,10 +156,10 @@ describe('ScanResponse', () => {
 		expect(result).toEqual({ accepted: true, chunks: 1 })
 		expect(frames).toHaveLength(1)
 		const data: any = frames[0].data
-		expect(data.content).toEqual({ encoding: 'base64', text })
+		expect(data.content).toEqual({ encoding: 'base64', kind: 'file', text })
 		expect(data.sizeBytes).toBe(40000)
 		expect(data.mimeType).toBe('application/zip')
-		expect(data.location.field).toBe('attachments/a1/bundle.zip')
+		expect(data.location.field).toBe('files/a1/bundle.zip')
 		expect(data.chunk).toEqual({ index: 0, count: 1, overlapBytes: 0, offset: 0 })
 	})
 
@@ -241,7 +241,7 @@ describe('ScanResponse', () => {
 			expect(c.chunk.count).toBe(frames.length)
 			expect(c.chunk.overlapBytes).toBe(SCAN_CHUNK_OVERLAP_BYTES) // never smaller than the documented overlap
 			expect(c.sizeBytes).toBe(Buffer.byteLength(c.content.text, 'utf8')) // the size of this chunk, not the unit
-			expect(c.unitId).toBe('servicenow:incident:1:description') // identity does not depend on chunking
+			expect(c.unitId).toBe('example:item:1:body') // identity does not depend on chunking
 		})
 		expect(chunks.some((c: any) => c.content.text.includes(secret))).toBe(true)
 	})
@@ -281,7 +281,7 @@ describe('ScanResponse', () => {
 })
 
 /**
- * Like shim-js's StreamMessageOutTransform: write() is overridden and passes on only the chunk, so write callbacks
+ * Like a runtime response transform that overrides write() and passes on only the chunk, so write callbacks
  * never fire. Backpressure still works, through write()'s return value and 'drain'.
  */
 class CallbackDroppingTransform extends Transform {
@@ -354,12 +354,12 @@ describe('ScanResponse on a stream that drops write callbacks', () => {
 
 describe('chunkUtf8', () => {
 	it('returns the text unchanged when it fits', () => {
-		expect(chunkUtf8('hello', 10, 2)).toEqual([{ text: 'hello', offset: 0 }])
+		expect([...chunkUtf8('hello', 10, 2)]).toEqual([{ text: 'hello', offset: 0, sizeBytes: 5 }])
 	})
 
 	it('never splits a multi-byte character and covers the whole text', () => {
 		const text = '€'.repeat(5000) + '😀'.repeat(3000) + 'end'
-		const chunks = chunkUtf8(text, 1024, 256)
+		const chunks = [...chunkUtf8(text, 1024, 256)]
 		const buf = Buffer.from(text)
 		for (const c of chunks) {
 			expect(Buffer.byteLength(c.text)).toBeLessThanOrEqual(1024)
@@ -376,9 +376,9 @@ describe('chunkUtf8', () => {
 	})
 
 	it('rejects sizes that could not hold a character or would not advance', () => {
-		expect(() => chunkUtf8('abcdef', 3, 0)).toThrow(RangeError)
-		expect(() => chunkUtf8('abcdef', 8, 8)).toThrow(RangeError)
-		expect(chunkUtf8('😀😀😀', 4, 0).map((c) => c.text)).toEqual(['😀', '😀', '😀'])
+		expect(() => [...chunkUtf8('abcdef', 3, 0)]).toThrow(RangeError)
+		expect(() => [...chunkUtf8('abcdef', 8, 8)]).toThrow(RangeError)
+		expect([...chunkUtf8('😀😀😀', 4, 0)].map((c) => c.text)).toEqual(['😀', '😀', '😀'])
 	})
 })
 
@@ -467,10 +467,257 @@ describe('ScanResponse stream handling', () => {
 describe('chunkUtf8 overlap', () => {
 	it('keeps the full overlap when a boundary falls inside a multi-byte character', () => {
 		const text = '😀'.repeat(20000) // 4-byte characters: most boundaries fall inside one
-		const chunks = chunkUtf8(text, 16384, SCAN_CHUNK_OVERLAP_BYTES)
+		const chunks = [...chunkUtf8(text, 16384, SCAN_CHUNK_OVERLAP_BYTES)]
 		for (let i = 1; i < chunks.length; i++) {
 			const prevEnd = chunks[i - 1].offset + Buffer.byteLength(chunks[i - 1].text)
 			expect(prevEnd - chunks[i].offset).toBeGreaterThanOrEqual(SCAN_CHUNK_OVERLAP_BYTES)
 		}
+	})
+})
+
+/** The byte-splitting chunker chunkUtf8 replaced, kept as the reference its boundaries must match. */
+function referenceChunks(text: string, maxBytes: number, overlapBytes: number): Array<{ text: string; offset: number }> {
+	const buf = Buffer.from(text, 'utf8')
+	if (buf.length <= maxBytes) {
+		return [{ text, offset: 0 }]
+	}
+	const isContinuation = (i: number) => i < buf.length && (buf[i] & 0xc0) === 0x80
+	const chunks: Array<{ text: string; offset: number }> = []
+	let start = 0
+	for (;;) {
+		let end = Math.min(start + maxBytes, buf.length)
+		while (end > start && isContinuation(end)) {
+			end--
+		}
+		chunks.push({ text: buf.toString('utf8', start, end), offset: start })
+		if (end >= buf.length) {
+			return chunks
+		}
+		let next = Math.max(end - overlapBytes, start + 1)
+		while (next > start + 1 && isContinuation(next)) {
+			next--
+		}
+		while (isContinuation(next)) {
+			next++
+		}
+		start = next
+	}
+}
+
+describe('chunkUtf8 as a generator', () => {
+	const alphabet = ['a', 'é', '€', '😀', ' ', '\n', 'ß', '中']
+	const randomText = (seed: number, length: number) => {
+		let x = seed
+		let text = ''
+		for (let i = 0; i < length; i++) {
+			x = (x * 1103515245 + 12345) % 2147483648
+			text += alphabet[x % alphabet.length]
+		}
+		return text
+	}
+
+	it.each([
+		[1, 4, 0],
+		[2, 7, 3],
+		[3, 16, 4],
+		[4, 64, 16],
+		[5, 100, 96],
+		[6, 1024, 256],
+	])('matches the byte-splitting chunker (seed %i, %i bytes, %i overlap)', (seed, maxBytes, overlapBytes) => {
+		const text = randomText(seed, 3000)
+		const chunks = [...chunkUtf8(text, maxBytes, overlapBytes)]
+		expect(chunks.map(({ text, offset }) => ({ text, offset }))).toEqual(referenceChunks(text, maxBytes, overlapBytes))
+		chunks.forEach((c) => expect(c.sizeBytes).toBe(Buffer.byteLength(c.text, 'utf8')))
+		expect(countUtf8Chunks(text, maxBytes, overlapBytes)).toBe(chunks.length)
+	})
+
+	it('produces chunks one at a time, without encoding the text', () => {
+		const text = 'x'.repeat(100000)
+		const from = jest.spyOn(Buffer, 'from')
+		try {
+			const chunks = chunkUtf8(text, 16384, 4096)
+			const first = chunks.next()
+			expect(first.done).toBe(false)
+			expect(first.value).toEqual({ text: 'x'.repeat(16384), offset: 0, sizeBytes: 16384 })
+			expect(from).not.toHaveBeenCalled()
+		} finally {
+			from.mockRestore()
+		}
+	})
+})
+
+describe('ScanResponse content kind and location', () => {
+	const collect = () => {
+		const sink = new PassThrough({ objectMode: true })
+		const frames: any[] = []
+		sink.on('data', (f) => frames.push(f.data))
+		return { sink, frames }
+	}
+
+	it('marks text units text, base64 units file, and keeps an explicit file kind for text', async () => {
+		const { sink, frames } = collect()
+		const res = new ScanResponse(sink)
+		const b64 = Buffer.from('bytes').toString('base64')
+		await res.scan(unit('plain'))
+		await res.scan(unit(b64, { content: { encoding: 'base64', text: b64 } }))
+		await res.scan(unit('a text file', { content: { encoding: 'utf8', kind: 'file', text: 'a text file' } }))
+		expect(frames.map((f) => f.content.kind)).toEqual(['text', 'file', 'file'])
+	})
+
+	it('rejects a base64 unit marked text and an unknown kind', async () => {
+		const res = new ScanResponse(new PassThrough({ objectMode: true }))
+		await expect(res.scan(unit('AA==', { content: { encoding: 'base64', kind: 'text', text: 'AA==' } }))).rejects.toThrow(
+			/content.kind/
+		)
+		await expect(res.scan(unit('x', { content: { encoding: 'utf8', kind: 'blob' as any, text: 'x' } }))).rejects.toThrow(
+			/content.kind/
+		)
+	})
+
+	it('does not send file units when extraction.files is false, and still sends text', async () => {
+		const { sink, frames } = collect()
+		const res = new ScanResponse(sink, { extraction: { files: false } })
+		const b64 = Buffer.from('bytes').toString('base64')
+		await expect(res.scan(unit(b64, { content: { encoding: 'base64', text: b64 } }))).resolves.toEqual({
+			accepted: false,
+			chunks: 0,
+			skipped: 'unlicensed',
+		})
+		await expect(res.scan(unit('text'))).resolves.toEqual({ accepted: true, chunks: 1 })
+		expect(frames).toHaveLength(1)
+	})
+
+	it('truncates location strings to the findings schema limits and leaves absent fields absent', async () => {
+		const { sink, frames } = collect()
+		const res = new ScanResponse(sink)
+		const long = (n: number) => 'l'.repeat(n)
+		const { displayId, ...withoutDisplayId } = unit('').location
+		await res.scan(
+			unit('x', {
+				location: {
+					...withoutDisplayId,
+					type: long(100),
+					source: long(100),
+					recordType: long(300),
+					recordId: long(2000),
+					field: long(3000),
+					url: long(3000),
+					container: long(2000),
+					owner: { type: 'email', value: long(600) },
+					extra: 'not sent',
+				} as any,
+			})
+		)
+		const location = frames[0].location
+		expect(location.type).toHaveLength(64)
+		expect(location.source).toHaveLength(64)
+		expect(location.recordType).toHaveLength(256)
+		expect(location.recordId).toHaveLength(1024)
+		expect(location.field).toHaveLength(2048)
+		expect(location.url).toHaveLength(2048)
+		expect(location.container).toHaveLength(1024)
+		expect(location.owner).toEqual({ type: 'email', value: long(512) })
+		expect('displayId' in location).toBe(false)
+		expect('extra' in location).toBe(false)
+	})
+
+	it('never cuts a surrogate pair when truncating', async () => {
+		const { sink, frames } = collect()
+		const res = new ScanResponse(sink)
+		await res.scan(unit('x', { location: { ...unit('').location, type: 'a'.repeat(63) + '😀' } }))
+		expect(frames[0].location.type).toBe('a'.repeat(63))
+	})
+
+	it('names the field at fault, never the unit id, in validation errors', async () => {
+		const res = new ScanResponse(new PassThrough({ objectMode: true }))
+		const bad = { ...unit('x'), unitId: 'customer-record-42', location: { ...unit('x').location, scanTarget: '' } }
+		await expect(res.scan(bad)).rejects.toThrow(/scanTarget/)
+		await expect(res.scan(bad)).rejects.not.toThrow(/customer-record-42/)
+	})
+})
+
+describe('ScanResponse.scanFile', () => {
+	const file = (name: string, mimeType?: string) => ({
+		unitId: 'example:file:1',
+		location: { ...unit('').location, type: 'EXAMPLE_FILE', field: `files/1/${name}` },
+		name,
+		mimeType,
+	})
+	const collect = (options = {}) => {
+		const sink = new PassThrough({ objectMode: true })
+		const frames: any[] = []
+		sink.on('data', (f) => frames.push(f.data))
+		return { res: new ScanResponse(sink, options), frames }
+	}
+
+	it('sends the bytes as one base64 file frame', async () => {
+		const { res, frames } = collect()
+		const bytes = Buffer.from('password=hunter2\n')
+		await expect(res.scanFile(file('notes.txt', 'text/plain'), bytes)).resolves.toEqual({ accepted: true, chunks: 1 })
+		expect(frames).toHaveLength(1)
+		expect(frames[0]).toEqual({
+			unitId: 'example:file:1',
+			location: file('notes.txt').location,
+			mimeType: 'text/plain',
+			sizeBytes: bytes.length,
+			content: { encoding: 'base64', kind: 'file', text: bytes.toString('base64') },
+			chunk: { index: 0, count: 1, overlapBytes: 0, offset: 0 },
+		})
+	})
+
+	it('takes a Uint8Array view without copying it first, and defaults the content type', async () => {
+		const { res, frames } = collect()
+		const backing = new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7])
+		const view = backing.subarray(2, 6)
+		await res.scanFile(file('blob.bin'), view)
+		expect(Buffer.from(frames[0].content.text, 'base64')).toEqual(Buffer.from([2, 3, 4, 5]))
+		expect(frames[0].mimeType).toBe('application/octet-stream')
+		expect(frames[0].sizeBytes).toBe(4)
+	})
+
+	it.each([
+		[{ files: false }, 'notes.txt', 'text/plain', 'unlicensed'],
+		[{}, 'call.mp3', 'audio/mpeg', 'policySkipped'],
+		[{}, 'photo.webp', 'image/webp', 'policySkipped'],
+		[{}, 'runbook.pdf', 'application/pdf', 'pdfDisabled'],
+		[{ pdf: true }, 'scan.png', 'image/png', 'ocrDisabled'],
+	])('applies the file policy %j to %s', async (extraction, name, mimeType, reason) => {
+		const { res, frames } = collect({ extraction })
+		await expect(res.scanFile(file(name, mimeType), Buffer.from('x'))).resolves.toEqual({
+			accepted: false,
+			chunks: 0,
+			skipped: reason,
+		})
+		expect(frames).toHaveLength(0)
+	})
+
+	it('sends PDFs and images when their extraction is on', async () => {
+		const { res, frames } = collect({ extraction: { pdf: true, ocr: true } })
+		await res.scanFile(file('runbook.pdf', 'application/pdf'), Buffer.from('%PDF'))
+		await res.scanFile(file('scan.png', 'image/png'), Buffer.from('png'))
+		expect(frames).toHaveLength(2)
+	})
+
+	it('refuses a file over maxBlobBytes', async () => {
+		const { res, frames } = collect({ maxBlobBytes: 10 })
+		await expect(res.scanFile(file('a.txt'), Buffer.alloc(11))).resolves.toMatchObject({ skipped: 'oversize' })
+		await expect(res.scanFile(file('a.txt'), Buffer.alloc(10))).resolves.toMatchObject({ accepted: true })
+		expect(frames).toHaveLength(1)
+	})
+
+	it('validates its arguments', async () => {
+		const { res } = collect()
+		await expect(res.scanFile(file('a.txt'), 'text' as any)).rejects.toThrow(/Buffer or Uint8Array/)
+		await expect(res.scanFile({ ...file('a.txt'), unitId: '' }, Buffer.alloc(1))).rejects.toThrow(/unitId/)
+		await expect(res.scanFile({ ...file('a.txt'), name: undefined as any }, Buffer.alloc(1))).rejects.toThrow(/name/)
+	})
+
+	it('shares the one-call-at-a-time rule with scan()', async () => {
+		const sink = new GatedSink(1)
+		const res = new ScanResponse(sink)
+		const first = res.scan(unit('one'))
+		await expect(res.scanFile(file('a.txt'), Buffer.alloc(1))).rejects.toThrow(/await every res.scan\(\) call/)
+		sink.release()
+		await first
 	})
 })

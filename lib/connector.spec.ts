@@ -1312,7 +1312,7 @@ describe('read config', () => {
 })
 
 describe('secret scan commands', () => {
-	const scanInput = { scanTargets: ['incidents'], stateful: true as const }
+	const scanInput = { scanTargets: ['items'], stateful: true as const }
 	const sink = () => {
 		const frames: any[] = []
 		const stream = new PassThrough({ objectMode: true }).on('data', (f) => frames.push(f))
@@ -1334,11 +1334,11 @@ describe('secret scan commands', () => {
 			expect((res as any).send).toBeUndefined()
 			await res.scan({
 				unitId: 'u1',
-				location: { type: 'T', source: 's', scanTarget: 'incidents', recordType: 'r', recordId: '1', field: 'f', displayId: '1', visibility: 'internal' },
+				location: { type: 'T', source: 's', scanTarget: 'items', recordType: 'r', recordId: '1', field: 'f', displayId: '1', visibility: 'internal' },
 				content: { encoding: 'utf8', text: 'secret content' },
 				mimeType: 'text/plain',
 			})
-			res.saveState({ targets: { incidents: { cursor: 'c' } } })
+			res.saveState({ targets: { items: { cursor: 'c' } } })
 		})
 		const customizer = createConnectorCustomizer()
 		// Hooks registered for scan commands through the raw handler map must still never run.
@@ -1373,7 +1373,7 @@ describe('secret scan commands', () => {
 		const connector = createConnector().stdSecretScanDelta(async (context, input, res) => {
 			await res.scan({
 				unitId: 'u1',
-				location: { type: 'T', source: 's', scanTarget: 'incidents', recordType: 'r', recordId: '1', field: 'f', displayId: '1', visibility: 'internal' },
+				location: { type: 'T', source: 's', scanTarget: 'items', recordType: 'r', recordId: '1', field: 'f', displayId: '1', visibility: 'internal' },
 				content: { encoding: 'utf8', text: 'z'.repeat(40000) },
 				mimeType: 'text/plain',
 			})
@@ -1391,7 +1391,7 @@ describe('secret scan commands', () => {
 				results.push(
 					await res.scan({
 						unitId: `u${size}`,
-						location: { type: 'T', source: 's', scanTarget: 'incidents', recordType: 'r', recordId: '1', field: 'attachments/a/f.bin', displayId: '1', visibility: 'internal' },
+						location: { type: 'T', source: 's', scanTarget: 'items', recordType: 'r', recordId: '1', field: 'files/a/f.bin', displayId: '1', visibility: 'internal' },
 						content: { encoding: 'base64', text: Buffer.alloc(size).toString('base64') },
 						mimeType: 'application/octet-stream',
 					})
@@ -1402,6 +1402,30 @@ describe('secret scan commands', () => {
 		await connector._exec(StandardCommand.StdSecretScanDelta, MOCK_CONTEXT, { ...scanInput, maxBlobBytes: 100 }, stream)
 		expect(results).toEqual([{ accepted: true, chunks: 1 }, { accepted: false, chunks: 0, skipped: 'oversize' }])
 		expect(frames.map((f) => f.data.sizeBytes)).toEqual([100])
+	})
+
+	it('passes extraction from the input to the ScanResponse, so files are refused when files is false', async () => {
+		const results: any[] = []
+		const connector = createConnector().stdSecretScanDelta(async (context, input, res) => {
+			const file = {
+				unitId: 'u1',
+				location: { type: 'T', source: 's', scanTarget: 'items', recordType: 'r', recordId: '1', field: 'files/a/notes.txt', visibility: 'internal' as const },
+				name: 'notes.txt',
+				mimeType: 'text/plain',
+			}
+			results.push(await res.scanFile(file, Buffer.from('a file')))
+			results.push(await res.scanFile({ ...file, name: 'runbook.pdf', mimeType: 'application/pdf' }, Buffer.from('%PDF')))
+		})
+		const { stream, frames } = sink()
+		await connector._exec(StandardCommand.StdSecretScanDelta, MOCK_CONTEXT, { ...scanInput, extraction: { files: false } }, stream)
+		await connector._exec(StandardCommand.StdSecretScanDelta, MOCK_CONTEXT, { ...scanInput, extraction: { pdf: true } }, stream)
+		expect(results).toEqual([
+			{ accepted: false, chunks: 0, skipped: 'unlicensed' },
+			{ accepted: false, chunks: 0, skipped: 'unlicensed' },
+			{ accepted: true, chunks: 1 },
+			{ accepted: true, chunks: 1 },
+		])
+		expect(frames.map((f) => f.data.content.kind)).toEqual(['file', 'file'])
 	})
 
 	it('lets a later command() replace a scan handler', async () => {
