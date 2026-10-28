@@ -8,7 +8,7 @@ import type { ScanUnitLocation } from '../commands/std-secret-scan'
  * The longest value the findings schema accepts for each location string, in characters. A finding whose location is
  * longer fails validation, so `ScanResponse` truncates before sending.
  */
-export const SCAN_LOCATION_LIMITS = {
+const SCAN_LOCATION_LIMITS = {
 	type: 64,
 	source: 64,
 	recordType: 256,
@@ -21,7 +21,7 @@ export const SCAN_LOCATION_LIMITS = {
 } as const
 
 /** Cuts a string to at most max code units, never between the two halves of a surrogate pair. */
-export const truncate = (value: string, max: number): string => {
+const truncate = (value: string, max: number): string => {
 	if (value.length <= max) {
 		return value
 	}

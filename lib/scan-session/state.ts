@@ -74,7 +74,7 @@ export const scanLogRef = (value: string): string => createHash('sha256').update
 const timeOf = (iso: string): number => Date.parse(iso)
 
 /** The later of two ISO instants (either may be absent). */
-export const laterCursor = (a: string | undefined, b: string | undefined): string | undefined =>
+const laterCursor = (a: string | undefined, b: string | undefined): string | undefined =>
 	a && b ? (timeOf(a) >= timeOf(b) ? a : b) : a ?? b
 
 /**

@@ -75,6 +75,12 @@ no `send()`: content is handed to the runtime's detection stage with `res.scan()
 and only findings leave the execution. Await every call; each resolves once the stream has taken the unit, which is how
 backpressure reaches the fetch loop. Customizers are not applied to these commands.
 
+The platform sends the complete input with every scan command: `contractVersion` (currently `1`), the
+`scanTargets`, `maxUnitBytes` and `maxBlobBytes`, and the whole `extraction` object (`documents`, `archives`, `pdf`,
+`ocr` and `files`). For a tenant that is not licensed for file scanning, `extraction.files` is `false`: `allowFile`,
+`scanFile()` and `ScanSession` then download and send no file, and count each one as `unlicensed`. The runtime still
+enforces the licence itself.
+
 Most connectors should let a `ScanSession` drive the scan (see below) and supply only enumeration and file downloads.
 The lower-level calls look like this:
 

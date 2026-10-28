@@ -238,7 +238,7 @@ export class ScanSession<P = unknown> {
 		}
 	}
 
-	private previousState(): ScanState<P> | undefined {
+	private previousState(): Pick<ScanState<P>, 'targets' | 'resumeTarget'> | undefined {
 		// A full scan starts over: the platform loads no state for it.
 		if (this.mode === 'full' || this.input.state == null) {
 			return undefined
@@ -248,12 +248,7 @@ export class ScanSession<P = unknown> {
 			throw new Error(`Invalid secret scan state: ${problem}`)
 		}
 		const state = this.input.state as Partial<ScanState<P>>
-		return {
-			v: SCAN_STATE_VERSION,
-			targets: state.targets ?? {},
-			coverage: state.coverage as ScanCoverage,
-			resumeTarget: state.resumeTarget,
-		}
+		return { targets: state.targets ?? {}, resumeTarget: state.resumeTarget }
 	}
 
 	private checkTargets(targets: ScanSessionTarget[]): void {

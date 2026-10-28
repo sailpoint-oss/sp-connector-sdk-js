@@ -190,11 +190,13 @@ describe('ScanResponse', () => {
 		const MiB = 1024 * 1024
 
 		const byDefault = new ScanResponse(sink)
+		expect(byDefault.maxBlobBytes).toBe(10 * MiB)
 		await expect(byDefault.scan(blob(10 * MiB + 1))).resolves.toMatchObject({ skipped: 'oversize' })
 		await expect(byDefault.scan(blob(10 * MiB))).resolves.toEqual({ accepted: true, chunks: 1 })
 		byDefault.dispose()
 
 		const capped = new ScanResponse(sink, { maxBlobBytes: 64 * MiB })
+		expect(capped.maxBlobBytes).toBe(11 * MiB)
 		await expect(capped.scan(blob(11 * MiB + 1))).resolves.toMatchObject({ skipped: 'oversize' })
 		await expect(capped.scan(blob(11 * MiB))).resolves.toEqual({ accepted: true, chunks: 1 })
 	}, 20000)

@@ -134,7 +134,8 @@ export type ScanUnitFrame = {
 }
 
 /**
- * Why a file is not downloaded or not sent. Connectors count these in their state's coverage.
+ * Why a file is not downloaded or not sent (`allowFile`, and the `skipped` of `scan()` and `scanFile()`). Connectors
+ * count these in their state's coverage. `scan()` itself reports only `oversize` and `unlicensed`.
  *
  * - `policySkipped`: audio, video, or a file on the scanner's denylist.
  * - `pdfDisabled`, `ocrDisabled`: a PDF or an image while `extraction.pdf` or `extraction.ocr` is off.
@@ -142,9 +143,6 @@ export type ScanUnitFrame = {
  * - `unlicensed`: `extraction.files` is `false`, so no file is read.
  */
 export type ScanFileSkipReason = 'policySkipped' | 'pdfDisabled' | 'ocrDisabled' | 'oversize' | 'unlicensed'
-
-/** Why `scan()` or `scanFile()` did not send a unit. `scan()` itself only ever reports `oversize`. */
-export type ScanSkipReason = ScanFileSkipReason
 
 /**
  * Result of `ScanResponse.scan()` and `scanFile()`. A unit that is not accepted was not sent for scanning; the
@@ -154,5 +152,5 @@ export type ScanSkipReason = ScanFileSkipReason
 export type ScanResult = {
 	accepted: boolean
 	chunks: number
-	skipped?: ScanSkipReason
+	skipped?: ScanFileSkipReason
 }

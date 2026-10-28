@@ -1,7 +1,11 @@
 /* Copyright (c) 2026. SailPoint Technologies, Inc. All rights reserved. */
 
 import type { ScanExtraction, ScanFileSkipReason } from './commands/std-secret-scan'
-import { DEFAULT_MAX_SCAN_BLOB_BYTES, MAX_SCAN_BLOB_BYTES } from './response/scan-chunk'
+
+/** Default largest file, in bytes (the `maxBlobBytes` input). */
+const DEFAULT_MAX_SCAN_BLOB_BYTES = 10 * 1024 * 1024
+/** Largest allowed `maxBlobBytes`. A file is sent as one base64 frame, which must stay under 16 MiB. */
+const MAX_SCAN_BLOB_BYTES = 11 * 1024 * 1024
 
 /**
  * What kind of file a scan handler is looking at, from its MIME type and name. Only the kinds a connector can rule out
