@@ -12,7 +12,15 @@ describe('scan file policy', () => {
 		['application/pdf', 'runbook.pdf', 'pdf'],
 		['application/octet-stream', 'RUNBOOK.PDF', 'file'],
 		['image/png', 'screenshot.png', 'image'],
-		['image/svg+xml', 'diagram.svg', 'file'],
+		['image/svg+xml', 'diagram.svg', 'denylisted'],
+		['text/xml', 'diagram.svg', 'file'],
+		['image/webp', 'photo.webp', 'denylisted'],
+		['image/png', 'photo.webp', 'image'],
+		['application/vnd.ms-excel', 'budget.xls', 'file'],
+		['', 'budget.xls', 'denylisted'],
+		['application/octet-stream', 'budget.xls', 'denylisted'],
+		['image/vnd.microsoft.icon', 'favicon.ico', 'image'],
+		['image/x-icon', 'favicon.ico', 'image'],
 		['text/plain', 'notes.txt', 'file'],
 		['application/octet-stream', 'deploy.env', 'file'],
 		['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'a.docx', 'file'],
@@ -41,6 +49,12 @@ describe('scan file policy', () => {
 
 	it('leaves the documents and archives switches to the runtime', () => {
 		expect(scanFileSkipReason('file', 10, 100, { documents: false, archives: false })).toBeUndefined()
+	})
+
+	it('skips denylisted files whatever the extraction switches', () => {
+		expect(
+			scanFileSkipReason('denylisted', 10, 100, { documents: true, archives: true, pdf: true, ocr: true })
+		).toBe('policySkipped')
 	})
 
 	it('reports the type before the size', () => {

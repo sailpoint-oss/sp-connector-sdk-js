@@ -106,10 +106,16 @@ The runtime takes a file's name from the last `/`-separated segment of `location
 file, identifies it within its parent record and contains no `#`, for example `attachments/<id>/<file name>`.
 
 For files (attachments, uploads), decide from the file's metadata before downloading it, so files that would be dropped
-are never fetched. `classifyScanFile` and `scanFileSkipReason` apply the same policy in every connector: audio and
-video are skipped, PDFs and images are skipped unless the command's `extraction.pdf` or `extraction.ocr` is on, and a
-file over the size limit is skipped. Every other file, including archives, email and office documents, is downloaded
-and sent as described above; the runtime applies the `documents` and `archives` switches.
+are never fetched. `classifyScanFile` and `scanFileSkipReason` apply the same policy in every connector:
+
+- audio and video are skipped, by MIME type, or by extension when the MIME type is missing or generic;
+- files on the scanner's denylist (some image, icon and media formats, such as `.webp`, `.svg` and `.ico`) are skipped
+  when both the extension and the MIME type are listed; with only one of the two known, that one decides;
+- PDFs and images are skipped unless the command's `extraction.pdf` or `extraction.ocr` is on;
+- a file over the size limit is skipped.
+
+Every other file, including archives, email and office documents, is downloaded and sent as described above; the
+runtime applies the `documents` and `archives` switches.
 
 ```typescript
 import { classifyScanFile, scanFileSkipReason } from '@sailpoint/connector-sdk'
