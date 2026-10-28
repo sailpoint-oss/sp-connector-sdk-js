@@ -11,6 +11,7 @@ export * from './response'
 export * from './logger'
 export * from './partitionAdapter'
 export * from './scan-file-policy'
+export * from './scan-session'
 export * from './filter';
 export * from './unescape';
 export * from './cache';
