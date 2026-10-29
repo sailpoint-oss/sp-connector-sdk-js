@@ -454,8 +454,10 @@ export class ScanResponse {
 	/** Whether the stream can no longer take frames. A destroy without 'close' (emitClose: false) is caught here. */
 	private _failed(): boolean {
 		if (!this._failure && (this._writable.destroyed || this._writable.writableEnded)) {
-			// errored (Node 18+) is the error the stream was destroyed with; it is not in this package's Node typings.
-			const errored = (this._writable as Writable & { errored?: Error | null }).errored
+			// errored is the error the stream was destroyed with; it is not in this package's Node typings. Node 16 has
+			// no public getter, only the internal _writableState.errored, which the release workflow's Node 16 needs.
+			const w = this._writable as Writable & { errored?: Error | null; _writableState?: { errored?: Error | null } }
+			const errored = w.errored ?? w._writableState?.errored
 			this._failure = errored ?? new Error(this._writable.destroyed ? 'response stream closed' : 'response stream ended')
 		}
 		return this._failure !== undefined
