@@ -65,8 +65,10 @@ export interface ScanSource<P = unknown> {
 	 * The items of a target, in ascending `modifiedAt` order. `since` (ISO) is an inclusive lower bound on
 	 * `modifiedAt`; `resumeAfter` is the item to resume right after, in the same order. With neither, enumerate
 	 * everything. Throw when the target cannot be enumerated: a full scan must not complete while skipping scope.
-	 * Throw `ScanTargetUnavailableError` for a sub-target that cannot be read right now: a delta keeps its state and
-	 * moves on, and a full scan fails.
+	 * Throw `ScanTargetUnavailableError` for a sub-target that cannot be read right now (gone since it was listed, or
+	 * access refused), also part-way through: a delta keeps the state it had and moves on; a full scan counts it as
+	 * `unavailable`, keeps the target's earlier findings and moves on. When every listed sub-target is unavailable,
+	 * the scan fails, so a source that lost all access is not reported as scanned.
 	 */
 	enumerate(
 		target: ScanTargetRef,
@@ -312,6 +314,7 @@ export class ScanSession<P = unknown> {
 		commit()
 		const resumeChild = names.find((name) => previousChildren[name]?.resumeAfter)
 		logger.info(`Secret scan target ${target.id}: ${names.length} sub-targets`)
+		let unavailable = 0
 		for (const name of rotate(names, resumeChild, (n) => n)) {
 			try {
 				await this.scanTarget({ id: target.id, child: name }, previousChildren[name], source, (state) => {
@@ -319,16 +322,41 @@ export class ScanSession<P = unknown> {
 					commit()
 				})
 			} catch (error) {
-				if (!(error instanceof ScanTargetUnavailableError) || this.mode === 'full') {
+				if (!(error instanceof ScanTargetUnavailableError)) {
 					throw error
 				}
-				logger.warn(`Secret scan target ${target.id}/${scanLogRef(name)} is unavailable; keeping its state`)
+				unavailable++
+				if (this.mode === 'full') {
+					// The rest of the scan goes on; the target's earlier findings are kept, as for a file it could not
+					// download, and the next delta reads this sub-target from its start.
+					delete children[name]
+					this.skip('unavailable', target.id)
+					logger.warn(
+						`Secret scan target ${target.id}/${scanLogRef(
+							name
+						)} is unavailable; skipped, and the target's earlier findings are kept`
+					)
+				} else {
+					// Undo any checkpoint it made: the next delta reads it again from where it was before.
+					if (previousChildren[name]) {
+						children[name] = previousChildren[name]
+					} else {
+						delete children[name]
+					}
+					logger.warn(`Secret scan target ${target.id}/${scanLogRef(name)} is unavailable; keeping its state`)
+				}
+				commit()
 			}
 			if (this.stopped) {
 				break
 			}
 		}
 		commit()
+		if (names.length > 0 && unavailable === names.length) {
+			// Nothing of this target could be read (for example the source lost all access): fail rather than report
+			// a scan that read nothing.
+			throw new Error(`None of the ${names.length} sub-targets of secret scan target ${target.id} could be read`)
+		}
 	}
 
 	private async scanTarget(

@@ -33,6 +33,8 @@ class MemorySource implements ScanSource<string> {
 	files = new Map<string, Buffer | Readable | undefined>()
 	failing = new Set<string>()
 	unavailable = new Set<string>()
+	/** Sub-target key -> items it yields before it becomes unavailable part-way through. */
+	unavailableAfter = new Map<string, number>()
 
 	constructor(public docs: Record<string, Doc[]>) {}
 
@@ -52,7 +54,11 @@ class MemorySource implements ScanSource<string> {
 		const sorted = [...(this.docs[key] ?? [])].sort(
 			(a, b) => Date.parse(a.at) - Date.parse(b.at) || a.id.localeCompare(b.id)
 		)
+		let yielded = 0
 		for (const doc of sorted) {
+			if (this.unavailableAfter.has(key) && yielded >= this.unavailableAfter.get(key)!) {
+				throw new ScanTargetUnavailableError()
+			}
 			const at = Date.parse(doc.at)
 			if (since && at < Date.parse(since)) {
 				continue
@@ -63,6 +69,7 @@ class MemorySource implements ScanSource<string> {
 					continue
 				}
 			}
+			yielded++
 			const source = this
 			yield {
 				id: doc.id,
@@ -451,7 +458,7 @@ describe('ScanSession sub-targets', () => {
 		expect(lastState().targets.tables.targets!.t2.cursor).toBe('2026-10-01T11:00:00Z')
 	})
 
-	it('fails a full scan whose sub-targets cannot be listed or read, and lets a delta keep their state', async () => {
+	it('fails a full scan whose sub-targets cannot be listed, and lets a delta keep their state', async () => {
 		const failing = async () => {
 			throw new Error('cannot list')
 		}
@@ -466,12 +473,6 @@ describe('ScanSession sub-targets', () => {
 
 		const source = new MemorySource({ 'tables/t2': [{ id: 'r2', at: '2026-10-01T11:00:00Z', text: 'two' }] })
 		source.unavailable.add('tables/t1')
-		await expect(
-			harness({ mode: 'full' }).session.run(
-				tables(async () => ['t1', 't2']),
-				source
-			)
-		).rejects.toThrow(ScanTargetUnavailableError)
 		const unavailable = harness({ mode: 'delta', input: { state: kept } })
 		await unavailable.session.run(
 			tables(async () => ['t1', 't2']),
@@ -481,6 +482,71 @@ describe('ScanSession sub-targets', () => {
 			t1: { cursor: '2026-10-01T09:00:00Z' },
 			t2: expect.objectContaining({ cursor: '2026-10-01T11:00:00Z' }),
 		})
+	})
+
+	it("skips an unavailable sub-target in a full scan and keeps the target's earlier findings", async () => {
+		const source = new MemorySource({ 'tables/t2': [{ id: 'r2', at: '2026-10-01T11:00:00Z', text: 'two' }] })
+		source.unavailable.add('tables/t1')
+		const { session, units, lastState } = harness({ mode: 'full' })
+		await session.run(
+			tables(async () => ['t1', 't2']),
+			source
+		)
+		expect(units().map((u: any) => u.unitId)).toEqual(['tables/t2:r2:body'])
+		expect(lastState().coverage.skipped).toEqual({ unavailable: 1 })
+		expect(lastState().retainedScope).toEqual(['tables'])
+		expect(Object.keys(lastState().targets.tables.targets!)).toEqual(['t2'])
+	})
+
+	it('skips a sub-target that becomes unavailable part-way, and a delta keeps the state it had', async () => {
+		const docs = {
+			'tables/t1': [
+				{ id: 'a', at: '2026-10-01T10:00:00Z', text: 'a' },
+				{ id: 'b', at: '2026-10-01T10:01:00Z', text: 'b' },
+				{ id: 'c', at: '2026-10-01T10:02:00Z', text: 'c' },
+			],
+			'tables/t2': [{ id: 'r2', at: '2026-10-01T11:00:00Z', text: 'two' }],
+		}
+		const full = new MemorySource(docs)
+		full.unavailableAfter.set('tables/t1', 1)
+		const f = harness({ mode: 'full', checkpointEvery: 1 })
+		await f.session.run(
+			tables(async () => ['t1', 't2']),
+			full
+		)
+		expect(f.lastState().retainedScope).toEqual(['tables'])
+		expect(f.lastState().targets.tables.targets!.t1).toBeUndefined()
+		expect(f.lastState().targets.tables.targets!.t2).toBeDefined()
+
+		const kept = { v: 1, targets: { tables: { targets: { t1: { cursor: '2026-10-01T09:00:00Z' } } } } }
+		const delta = new MemorySource(docs)
+		delta.unavailableAfter.set('tables/t1', 2)
+		const d = harness({ mode: 'delta', input: { state: kept }, checkpointEvery: 1 })
+		await d.session.run(
+			tables(async () => ['t1', 't2']),
+			delta
+		)
+		expect(d.lastState().targets.tables.targets!.t1).toEqual({ cursor: '2026-10-01T09:00:00Z' })
+		expect(d.lastState().retainedScope).toBeUndefined()
+	})
+
+	it('fails when every listed sub-target is unavailable', async () => {
+		const source = new MemorySource({})
+		source.unavailable.add('tables/t1')
+		source.unavailable.add('tables/t2')
+		await expect(
+			harness({ mode: 'full' }).session.run(
+				tables(async () => ['t1', 't2']),
+				source
+			)
+		).rejects.toThrow('None of the 2 sub-targets of secret scan target tables could be read')
+		const kept = { v: 1, targets: { tables: { targets: { t1: { cursor: '2026-10-01T09:00:00Z' } } } } }
+		await expect(
+			harness({ mode: 'delta', input: { state: kept } }).session.run(
+				tables(async () => ['t1', 't2']),
+				source
+			)
+		).rejects.toThrow('None of the 2 sub-targets')
 	})
 
 	it('resumes with the sub-target a delta stopped in', async () => {
