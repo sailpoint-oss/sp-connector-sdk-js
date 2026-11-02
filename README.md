@@ -199,8 +199,9 @@ The session:
   the targets it could not cover completely (PDFs or images while their extraction is off, a file it could not
   download), so their earlier findings are kept;
 - keeps targets split into sub-targets found at run time (`{ id, children: () => listChildren() }`), each with its own
-  cursor; a sub-target that no longer exists loses its state, and one that throws `ScanTargetUnavailableError` keeps its
-  state in a delta and fails a full scan;
+  cursor; a sub-target that no longer exists loses its state, and one that throws `ScanTargetUnavailableError` (also
+  part-way through) keeps its state in a delta, and in a full scan is skipped, counted as `unavailable` and keeps the
+  target's earlier findings (`retainedScope`); when every listed sub-target is unavailable, the scan fails;
 - checkpoints the state as it goes, sends keep-alives, and keeps the serialised state under 256 KiB by dropping the
   oldest `seen` entries first (those items are only scanned again).
 
