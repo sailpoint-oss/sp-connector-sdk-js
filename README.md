@@ -75,6 +75,23 @@ Use SDK provided logger to ensure log statements will include command execution 
 import {logger} from '@sailpoint/connector-sdk'
 ```
 
+### Application discovery resources (`std:resource:list`)
+
+Connectors that return discovered applications through `std:resource:list` can use the typed
+`StdApplicationResourceOutput` contract. `buildStdApplicationResourceOutput` sets
+`resourceType: 'std:application'` and `attributes.discovered: true`, defaults `resourceLinks` to `[]`, and
+validates the result (throwing a `ConnectorError` on invalid data). The helpers are opt-in; existing commands are unaffected.
+```typescript
+import {buildStdApplicationResourceOutput} from '@sailpoint/connector-sdk'
+
+const resource = buildStdApplicationResourceOutput({
+    identity: 'app-123',
+    datasetId: 'my-connector:applications',
+    resourceId: 'my-connector:applications',
+    attributes: {applicationName: 'GitHub', primaryAppName: 'GitHub', description: ''}
+})
+```
+
 ### Examples
 
 See complete examples in the [examples](examples) directory.
