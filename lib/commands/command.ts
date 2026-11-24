@@ -30,7 +30,7 @@ export enum StandardCommand {
 	StdConfigOptions = 'std:config-options:read',
 	StdApplicationDiscoveryList = 'std:application-discovery:list',
 	StdSsfStreamDiscover = 'std:ssf-stream:discover',
-    StdSsfStreamJwks = 'std:ssf-stream:jwks',
+    StdSsfStreamReadJwks = 'std:ssf-stream:read-jwks',
     StdSsfStreamRead = 'std:ssf-stream:read',
     StdSsfStreamCreate = 'std:ssf-stream:create',
     StdSsfStreamUpdate = 'std:ssf-stream:update',
