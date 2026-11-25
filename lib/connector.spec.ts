@@ -993,6 +993,25 @@ describe('exec handlers', () => {
 		expect(input).toEqual({ datasetIds: ['dataset1', 'dataset1', 'dataset2'], schemas })
 	})
 
+	it('should keep single-dataset behavior when both datasetId and datasetIds are provided', async () => {
+		const receivedDatasetIds: string[] = []
+		const outputs: any[] = []
+		const connector = createConnector().stdResourceList(async (context, input, res) => {
+			receivedDatasetIds.push(input.datasetId)
+			res.send({ identity: 'resource', datasetId: 'x', resourceId: 'resource', attributes: {} })
+		})
+
+		await connector._exec(
+			StandardCommand.StdResourceList,
+			MOCK_CONTEXT,
+			{ datasetId: 'dataset1', datasetIds: ['dataset1', 'dataset2'] },
+			new PassThrough({ objectMode: true }).on('data', (chunk) => outputs.push(chunk.data))
+		)
+
+		expect(receivedDatasetIds).toEqual(['dataset1'])
+		expect(outputs.map((output) => output.datasetId)).toEqual(['dataset1'])
+	})
+
 	it('should preserve single-dataset behavior when datasetIds is empty', async () => {
 		const connector = createConnector().stdResourceList(async (context, input, res) => {
 			expect(input.datasetId).toBe('dataset')

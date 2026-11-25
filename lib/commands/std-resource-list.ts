@@ -13,6 +13,7 @@ export type StdResourceListInput = ResourceInput & {
  * Input object of `std:resource:list` when the platform requests multiple datasets.
  *
  * The SDK invokes the standard single-dataset handler once for each unique dataset ID.
+ * Applies only when no `datasetId` is provided; input with a `datasetId` is handled as a single dataset.
  */
 export type StdResourceListDatasetsInput = {
 	datasetIds: string[]

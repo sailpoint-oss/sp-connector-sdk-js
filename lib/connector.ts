@@ -432,8 +432,14 @@ export class Connector {
 				input: StdResourceListInput | StdResourceListDatasetsInput,
 				res: Response<ResourceOutput>
 			): Promise<void> => {
+				// Backward compatible: any input that already carries a datasetId keeps the original
+				// single-dataset behavior, even if datasetIds is also present. Fan-out only applies when
+				// the platform supplies datasetIds without a datasetId.
+				const hasDatasetId = typeof (input as StdResourceListInput)?.datasetId === 'string' &&
+					(input as StdResourceListInput).datasetId !== ''
 				if (
 					!input ||
+					hasDatasetId ||
 					!('datasetIds' in input) ||
 					!Array.isArray(input.datasetIds) ||
 					input.datasetIds.length === 0
