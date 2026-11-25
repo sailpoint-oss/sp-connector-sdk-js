@@ -75,6 +75,36 @@ Use SDK provided logger to ensure log statements will include command execution 
 import {logger} from '@sailpoint/connector-sdk'
 ```
 
+### Application discovery resources (`std:resource:list`)
+
+Connectors that return **discovered applications** through `std:resource:list` can use the typed
+`StdDiscoveredApplicationResourceOutput` contract. It applies to discovered applications only, i.e. resources with
+`resourceType: 'std:application'` and `attributes.discovered: true`. `std:application` is also used by connectors that
+are not discovery connectors; those resources must not use these helpers, and `isDiscoveredApplicationResource(value)`
+returns `true` only for discovered applications so validation can be gated on it.
+
+`buildStdDiscoveredApplicationResourceOutput` sets `resourceType: 'std:application'` and `attributes.discovered: true`,
+defaults `resourceLinks` to `[]`, and validates the result (throwing a `ConnectorError` on invalid data; the input is
+not mutated). To log and skip an invalid source record instead of failing the whole command, use
+`tryBuildStdDiscoveredApplicationResourceOutput`, which returns `{success: true, value}` or `{success: false, error}`.
+The helpers are opt-in; existing commands are unaffected.
+
+Validation rules worth knowing: `from.id` of every `resourceLinks` entry must equal the resource `identity`; `to.id`
+may be empty when the platform resolves the target; numeric attributes must be finite; the top-level `classification`
+is not supported (use `attributes.dataClassification`). Use the canonical attribute names exported as
+`STD_DISCOVERED_APPLICATION_ATTRIBUTE_NAMES`; connector-specific attributes are allowed, and look-alike spellings
+(for example `appURL` instead of `appUrl`) are logged as a warning.
+```typescript
+import {buildStdDiscoveredApplicationResourceOutput} from '@sailpoint/connector-sdk'
+
+const resource = buildStdDiscoveredApplicationResourceOutput({
+    identity: 'app-123',
+    datasetId: input.datasetId, // the SDK stamps the command's datasetId onto every output anyway
+    resourceId: 'my-connector:applications',
+    attributes: {applicationName: 'GitHub', primaryAppName: 'GitHub', description: ''}
+})
+```
+
 ### Examples
 
 See complete examples in the [examples](examples) directory.
