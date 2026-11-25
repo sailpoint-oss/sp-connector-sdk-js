@@ -25,6 +25,7 @@ import {
 	StdApplicationDiscoveryDatasetListHandler,
 	StdSsfStreamCreateHandler,
 	StdSsfStreamDiscoverHandler,
+	StdSsfStreamReadJwksHandler,
 	StdSsfStreamReadHandler,
 	StdSsfStreamUpdateHandler,
 	StdSsfStreamStatusUpdateHandler,
@@ -290,6 +291,14 @@ export class Connector {
 	 */
 	stdSsfStreamDiscover(handler: StdSsfStreamDiscoverHandler): this {
 		return this.command(StandardCommand.StdSsfStreamDiscover, handler)
+	}
+
+	/**
+	 * Add a handler for 'std:ssf-stream:read-jwks' command
+	 * @param handler handler
+	 */
+	stdSsfStreamReadJwks(handler: StdSsfStreamReadJwksHandler): this {
+		return this.command(StandardCommand.StdSsfStreamReadJwks, handler)
 	}
 
 	/**

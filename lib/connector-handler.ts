@@ -54,6 +54,8 @@ import {
 	StdSsfStreamDeleteOutput,
 	StdSsfStreamDiscoverInput,
 	StdSsfStreamDiscoverOutput,
+	StdSsfStreamReadJwksInput,
+	StdSsfStreamReadJwksOutput,
 	StdSsfStreamReadInput,
 	StdSsfStreamReadOutput,
 	StdSsfStreamReplaceInput,
@@ -251,6 +253,11 @@ export type StdSsfStreamDiscoverHandler = (
     context: Context,
     input: StdSsfStreamDiscoverInput,
     res: Response<StdSsfStreamDiscoverOutput>
+) => Promise<void>
+export type StdSsfStreamReadJwksHandler = (
+    context: Context,
+    input: StdSsfStreamReadJwksInput,
+    res: Response<StdSsfStreamReadJwksOutput>
 ) => Promise<void>
 export type StdSsfStreamReadHandler = (
     context: Context,
