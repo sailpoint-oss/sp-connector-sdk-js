@@ -105,13 +105,6 @@ const resource = buildStdDiscoveredApplicationResourceOutput({
 })
 ```
 
-`stdResourceList` also accepts a multi-dataset command input with `datasetIds` when no `datasetId` is provided. The
-SDK invokes the registered single-dataset handler once for each unique, non-empty string ID, in first-seen order, and
-stamps that ID onto every output. Each call receives only the `schemas` whose `configuration.datasetId` matches its
-dataset (and no singular `schema`); schemas without a `configuration.datasetId` are forwarded only when a single
-dataset is requested. This mode is stateless: the datasets share one response, so do not rely on `saveState` per
-dataset. Input that carries a `datasetId` (with or without `datasetIds`) behaves exactly as before.
-
 ### Examples
 
 See complete examples in the [examples](examples) directory.

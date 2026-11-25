@@ -51,8 +51,6 @@ import {
 	StdMachineIdentityListDatasetsOutput,
 	StdMachineIdentityListInput,
 	StdMachineIdentityListOutput,
-	StdResourceListDatasetsInput,
-	StdResourceListInput,
 	ResourceInput,
 	ResourceOutput,
 } from './commands'
@@ -62,7 +60,6 @@ import { contextState } from './async-context';
 import { ConnectorCustomizer, CustomizerType as CustomizerType } from './connector-customizer'
 import { ConnectorCustomizerHandler } from './connector-customizer-handler'
 import { uniqueDatasetIds } from './dataset-ids'
-import { logger } from './logger'
 
 const SDK_VERSION = 1
 
@@ -425,58 +422,7 @@ export class Connector {
 	 * @param handler handler
 	 */
 	stdResourceList(handler: StdResourceListHandler): this {
-		const singleDatasetHandler = this.injectDatasetId(handler)
-		return this.command(
-			StandardCommand.StdResourceList,
-			async (
-				context: Context,
-				input: StdResourceListInput | StdResourceListDatasetsInput,
-				res: Response<ResourceOutput>
-			): Promise<void> => {
-				// Backward compatible: any input that already carries a datasetId keeps the original
-				// single-dataset behavior, even if datasetIds is also present. Fan-out only applies when
-				// the platform supplies datasetIds without a datasetId.
-				const singleDatasetId = (input as StdResourceListInput | undefined)?.datasetId
-				const hasDatasetId = typeof singleDatasetId === 'string' && singleDatasetId !== ''
-				if (
-					!input ||
-					hasDatasetId ||
-					!('datasetIds' in input) ||
-					!Array.isArray(input.datasetIds) ||
-					input.datasetIds.length === 0
-				) {
-					await singleDatasetHandler(context, input as StdResourceListInput, res)
-					return
-				}
-
-				// Fan-out is intentionally stateless: every call shares the same response, so handlers
-				// should not rely on saveState/state when invoked with datasetIds.
-				const { datasetIds, schemas } = input
-				const validDatasetIds = datasetIds.filter(
-					(datasetId): datasetId is string => typeof datasetId === 'string' && datasetId !== ''
-				)
-				if (validDatasetIds.length !== datasetIds.length) {
-					logger.warn(
-						`std:resource:list ignored ${datasetIds.length - validDatasetIds.length} datasetIds entries that are not non-empty strings`
-					)
-				}
-
-				const uniqueIds = uniqueDatasetIds(validDatasetIds)
-				for (const datasetId of uniqueIds) {
-					// Never forward another dataset's schemas (or a singular schema) to this dataset's handler.
-					// Schemas without configuration.datasetId are ambiguous across datasets, so they are only
-					// forwarded when there is a single dataset.
-					const datasetSchemas = (schemas ?? []).filter((schema) =>
-						schema.configuration?.datasetId === undefined
-							? uniqueIds.length === 1
-							: schema.configuration.datasetId === datasetId
-					)
-					const handlerInput: StdResourceListInput =
-						datasetSchemas.length > 0 ? { datasetId, schemas: datasetSchemas } : { datasetId }
-					await singleDatasetHandler(context, handlerInput, res)
-				}
-			}
-		)
+		return this.command(StandardCommand.StdResourceList, this.injectDatasetId(handler))
 	}
 
 	/**
