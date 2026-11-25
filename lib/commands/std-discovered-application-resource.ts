@@ -80,7 +80,9 @@ export type StdDiscoveredApplicationResourceOutput = Omit<ResourceOutput, 'class
 
 /**
  * Input accepted by `buildStdDiscoveredApplicationResourceOutput`. `resourceType` and `discovered`
- * are set by the builder; `resourceLinks` defaults to an empty array.
+ * are set by the builder; `resourceLinks` defaults to an empty array. `datasetId` is required here (pass the
+ * handler's `input.datasetId`); `stdResourceList` and the other `std:resource:*` handlers overwrite it with the
+ * command's `datasetId` on every output.
  */
 export type StdDiscoveredApplicationResourceBuilderInput = Omit<ResourceOutput, 'attributes' | 'classification'> & {
 	attributes: Omit<StdDiscoveredApplicationKnownAttributes, 'discovered'> & {

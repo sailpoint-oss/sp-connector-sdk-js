@@ -985,12 +985,70 @@ describe('exec handlers', () => {
 			new PassThrough({ objectMode: true }).on('data', (chunk) => outputs.push(chunk.data))
 		)
 
-		expect(receivedInputs).toEqual([
-			{ datasetId: 'dataset1', schemas },
-			{ datasetId: 'dataset2', schemas },
-		])
+		expect(receivedInputs).toEqual([{ datasetId: 'dataset1' }, { datasetId: 'dataset2' }])
 		expect(outputs.map((output) => output.datasetId)).toEqual(['dataset1', 'dataset2'])
 		expect(input).toEqual({ datasetIds: ['dataset1', 'dataset1', 'dataset2'], schemas })
+	})
+
+	describe('stdResourceList multi-dataset schema scoping', () => {
+		const buildSchema = (datasetId?: string, name = `schema-${datasetId ?? 'unscoped'}`): Schema => ({
+			name,
+			identityAttribute: `${name}-identity`,
+			displayAttribute: 'name',
+			attributes: [{ name: 'name', description: 'Name', type: 'string' }],
+			...(datasetId ? { configuration: { datasetId, resourceId: 'r', resourceType: 'std:application' } } : {}),
+		})
+
+		const run = async (input: any): Promise<any[]> => {
+			const receivedInputs: any[] = []
+			const connector = createConnector().stdResourceList(async (context, handlerInput) => {
+				receivedInputs.push(handlerInput)
+			})
+			await connector._exec(StandardCommand.StdResourceList, MOCK_CONTEXT, input, new PassThrough({ objectMode: true }))
+			return receivedInputs
+		}
+
+		it('should only forward each dataset its own schemas and drop the singular schema', async () => {
+			const schemaA = buildSchema('ds:a')
+			const schemaB = buildSchema('ds:b')
+
+			const receivedInputs = await run({
+				datasetIds: ['ds:a', 'ds:b'],
+				schemas: [schemaA, schemaB],
+				schema: schemaA,
+			})
+
+			expect(receivedInputs).toEqual([
+				{ datasetId: 'ds:a', schemas: [schemaA] },
+				{ datasetId: 'ds:b', schemas: [schemaB] },
+			])
+			expect(receivedInputs.every((handlerInput) => !('schema' in handlerInput))).toBe(true)
+		})
+
+		it('should not forward schemas without a dataset scope when multiple datasets are requested', async () => {
+			const scoped = buildSchema('ds:a')
+
+			const receivedInputs = await run({
+				datasetIds: ['ds:a', 'ds:b'],
+				schemas: [scoped, buildSchema()],
+			})
+
+			expect(receivedInputs).toEqual([{ datasetId: 'ds:a', schemas: [scoped] }, { datasetId: 'ds:b' }])
+		})
+
+		it('should forward schemas without a dataset scope when only one dataset is requested', async () => {
+			const unscoped = buildSchema()
+
+			const receivedInputs = await run({ datasetIds: ['ds:a', 'ds:a'], schemas: [unscoped] })
+
+			expect(receivedInputs).toEqual([{ datasetId: 'ds:a', schemas: [unscoped] }])
+		})
+
+		it('should skip datasetIds entries that are not non-empty strings', async () => {
+			const receivedInputs = await run({ datasetIds: ['ds:a', null, undefined, '', 5, 'ds:b'] })
+
+			expect(receivedInputs).toEqual([{ datasetId: 'ds:a' }, { datasetId: 'ds:b' }])
+		})
 	})
 
 	it('should keep single-dataset behavior when both datasetId and datasetIds are provided', async () => {

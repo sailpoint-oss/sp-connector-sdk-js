@@ -62,6 +62,7 @@ import { contextState } from './async-context';
 import { ConnectorCustomizer, CustomizerType as CustomizerType } from './connector-customizer'
 import { ConnectorCustomizerHandler } from './connector-customizer-handler'
 import { uniqueDatasetIds } from './dataset-ids'
+import { logger } from './logger'
 
 const SDK_VERSION = 1
 
@@ -448,9 +449,31 @@ export class Connector {
 					return
 				}
 
-				const { datasetIds, ...sharedInput } = input
-				for (const datasetId of uniqueDatasetIds(datasetIds)) {
-					await singleDatasetHandler(context, { ...sharedInput, datasetId }, res)
+				// Fan-out is intentionally stateless: every call shares the same response, so handlers
+				// should not rely on saveState/state when invoked with datasetIds.
+				const { datasetIds, schemas } = input
+				const validDatasetIds = datasetIds.filter(
+					(datasetId): datasetId is string => typeof datasetId === 'string' && datasetId !== ''
+				)
+				if (validDatasetIds.length !== datasetIds.length) {
+					logger.warn(
+						`std:resource:list ignored ${datasetIds.length - validDatasetIds.length} datasetIds entries that are not non-empty strings`
+					)
+				}
+
+				const uniqueIds = uniqueDatasetIds(validDatasetIds)
+				for (const datasetId of uniqueIds) {
+					// Never forward another dataset's schemas (or a singular schema) to this dataset's handler.
+					// Schemas without configuration.datasetId are ambiguous across datasets, so they are only
+					// forwarded when there is a single dataset.
+					const datasetSchemas = (schemas ?? []).filter((schema) =>
+						schema.configuration?.datasetId === undefined
+							? uniqueIds.length === 1
+							: schema.configuration.datasetId === datasetId
+					)
+					const handlerInput: StdResourceListInput =
+						datasetSchemas.length > 0 ? { datasetId, schemas: datasetSchemas } : { datasetId }
+					await singleDatasetHandler(context, handlerInput, res)
 				}
 			}
 		)

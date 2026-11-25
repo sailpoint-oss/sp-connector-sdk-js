@@ -99,15 +99,18 @@ import {buildStdDiscoveredApplicationResourceOutput} from '@sailpoint/connector-
 
 const resource = buildStdDiscoveredApplicationResourceOutput({
     identity: 'app-123',
-    datasetId: 'my-connector:applications',
+    datasetId: input.datasetId, // the SDK stamps the command's datasetId onto every output anyway
     resourceId: 'my-connector:applications',
     attributes: {applicationName: 'GitHub', primaryAppName: 'GitHub', description: ''}
 })
 ```
 
 `stdResourceList` also accepts a multi-dataset command input with `datasetIds` when no `datasetId` is provided. The
-SDK invokes the registered single-dataset handler once for each unique ID, in first-seen order, and stamps that ID
-onto every output. Input that carries a `datasetId` (with or without `datasetIds`) behaves exactly as before.
+SDK invokes the registered single-dataset handler once for each unique, non-empty string ID, in first-seen order, and
+stamps that ID onto every output. Each call receives only the `schemas` whose `configuration.datasetId` matches its
+dataset (and no singular `schema`); schemas without a `configuration.datasetId` are forwarded only when a single
+dataset is requested. This mode is stateless: the datasets share one response, so do not rely on `saveState` per
+dataset. Input that carries a `datasetId` (with or without `datasetIds`) behaves exactly as before.
 
 ### Examples
 
