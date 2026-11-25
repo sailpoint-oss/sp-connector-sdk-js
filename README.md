@@ -92,6 +92,10 @@ const resource = buildStdApplicationResourceOutput({
 })
 ```
 
+`stdResourceList` also accepts a multi-dataset command input with `datasetIds`. The SDK invokes the registered
+single-dataset handler once for each unique ID, in first-seen order, and stamps that ID onto every output. Existing
+`datasetId` input behavior is unchanged; an empty `datasetIds` array falls back to `datasetId`.
+
 ### Examples
 
 See complete examples in the [examples](examples) directory.

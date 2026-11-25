@@ -51,6 +51,8 @@ import {
 	StdMachineIdentityListDatasetsOutput,
 	StdMachineIdentityListInput,
 	StdMachineIdentityListOutput,
+	StdResourceListDatasetsInput,
+	StdResourceListInput,
 	ResourceInput,
 	ResourceOutput,
 } from './commands'
@@ -422,7 +424,30 @@ export class Connector {
 	 * @param handler handler
 	 */
 	stdResourceList(handler: StdResourceListHandler): this {
-		return this.command(StandardCommand.StdResourceList, this.injectDatasetId(handler))
+		const singleDatasetHandler = this.injectDatasetId(handler)
+		return this.command(
+			StandardCommand.StdResourceList,
+			async (
+				context: Context,
+				input: StdResourceListInput | StdResourceListDatasetsInput,
+				res: Response<ResourceOutput>
+			): Promise<void> => {
+				if (
+					!input ||
+					!('datasetIds' in input) ||
+					!Array.isArray(input.datasetIds) ||
+					input.datasetIds.length === 0
+				) {
+					await singleDatasetHandler(context, input as StdResourceListInput, res)
+					return
+				}
+
+				const { datasetIds, ...sharedInput } = input
+				for (const datasetId of uniqueDatasetIds(datasetIds)) {
+					await singleDatasetHandler(context, { ...sharedInput, datasetId }, res)
+				}
+			}
+		)
 	}
 
 	/**

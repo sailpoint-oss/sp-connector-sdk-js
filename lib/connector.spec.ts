@@ -963,6 +963,57 @@ describe('exec handlers', () => {
 		)
 	})
 
+	it('should execute stdResourceListHandler once for each unique dataset ID', async () => {
+		const receivedInputs: any[] = []
+		const outputs: any[] = []
+		const schemas: Schema[] = []
+		const input = { datasetIds: ['dataset1', 'dataset1', 'dataset2'], schemas }
+		const connector = createConnector().stdResourceList(async (context, handlerInput, res) => {
+			receivedInputs.push(handlerInput)
+			res.send({
+				identity: `${handlerInput.datasetId}-resource`,
+				datasetId: 'connector-value-is-overwritten',
+				resourceId: 'resource',
+				attributes: {},
+			})
+		})
+
+		await connector._exec(
+			StandardCommand.StdResourceList,
+			MOCK_CONTEXT,
+			input,
+			new PassThrough({ objectMode: true }).on('data', (chunk) => outputs.push(chunk.data))
+		)
+
+		expect(receivedInputs).toEqual([
+			{ datasetId: 'dataset1', schemas },
+			{ datasetId: 'dataset2', schemas },
+		])
+		expect(outputs.map((output) => output.datasetId)).toEqual(['dataset1', 'dataset2'])
+		expect(input).toEqual({ datasetIds: ['dataset1', 'dataset1', 'dataset2'], schemas })
+	})
+
+	it('should preserve single-dataset behavior when datasetIds is empty', async () => {
+		const connector = createConnector().stdResourceList(async (context, input, res) => {
+			expect(input.datasetId).toBe('dataset')
+			res.send({
+				identity: 'resource',
+				datasetId: 'connector-value-is-overwritten',
+				resourceId: 'resource',
+				attributes: {},
+			})
+		})
+
+		await connector._exec(
+			StandardCommand.StdResourceList,
+			MOCK_CONTEXT,
+			{ datasetId: 'dataset', datasetIds: [] },
+			new PassThrough({ objectMode: true }).on('data', (chunk) => {
+				expect(chunk.data.datasetId).toBe('dataset')
+			})
+		)
+	})
+
 	it('should execute stdResourceDeleteHandler', async () => {
 		const connector = createConnector().stdResourceDelete(async (context, input, res) => {
 			expect(context).toBeDefined()
