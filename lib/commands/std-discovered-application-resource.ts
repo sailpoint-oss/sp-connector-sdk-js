@@ -77,7 +77,9 @@ export type StdDiscoveredApplicationResourceOutput = Omit<
  * Input accepted by `buildStdDiscoveredApplicationResourceOutput`. `resourceType` and `discovered`
  * are set by the builder; `resourceLinks` defaults to an empty array. `datasetId` is required here (pass the
  * handler's `input.datasetId`); `stdResourceList` and the other `std:resource:*` handlers overwrite it with the
- * command's `datasetId` on every output.
+ * command's `datasetId` on every output. The non-empty check on `datasetId` is deliberate even though the SDK
+ * overwrites the value: it catches handler wiring that forgot to pass `input.datasetId` (for example in a unit
+ * test or a local run) instead of hiding the mistake behind the stamping.
  */
 export type StdDiscoveredApplicationResourceBuilderInput = Omit<
 	ResourceOutput,
@@ -137,7 +139,8 @@ export const STD_DISCOVERED_APPLICATION_ATTRIBUTE_NAMES: readonly string[] = [
 ]
 
 // Compile-time guard: adding a field to `StdApplicationDiscoveryListOutput` without teaching this
-// validator about it fails the build here, so the two cannot silently drift apart.
+// validator about it fails the build here, so the two cannot silently drift apart. Deliberately not
+// exported: it exists only for this static assertion and is not part of the SDK's public API.
 type ValidatedAttributeName =
 	| typeof stringAttributes[number]
 	| typeof numberAttributes[number]
@@ -145,7 +148,8 @@ type ValidatedAttributeName =
 	| typeof stringArrayAttributes[number]
 	| typeof otherValidatedAttributes[number]
 type AssertNever<T extends never> = T
-export type StdDiscoveredApplicationUnvalidatedDiscoveryFields = AssertNever<
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type StdDiscoveredApplicationUnvalidatedDiscoveryFields = AssertNever<
 	Exclude<keyof Omit<StdApplicationDiscoveryListOutput, 'id' | 'attributes'>, ValidatedAttributeName>
 >
 
@@ -268,12 +272,17 @@ function validateResourceLinks(value: unknown, identity: string): void {
  * Returns true only for a discovered application: `resourceType === 'std:application'` and
  * `attributes.discovered === true`.
  *
+ * This is a gate, not a validation: it checks only the two discriminators, so the narrowed type
+ * promises nothing about `identity`, `datasetId` or `resourceId`. Follow it with
+ * {@link validateStdDiscoveredApplicationResourceOutput} for a full check.
+ *
  * Use this as the gate before any validation, so resources that are not discovered applications
  * (non-discovery `std:application` resources, `discovered: false`, accounts, agents, ...) are left alone.
  */
-export function isDiscoveredApplicationResource(
-	value: unknown
-): value is ResourceOutput & { resourceType: typeof STD_APPLICATION_RESOURCE_TYPE; attributes: { discovered: true } } {
+export function isDiscoveredApplicationResource(value: unknown): value is Record<string, any> & {
+	resourceType: typeof STD_APPLICATION_RESOURCE_TYPE
+	attributes: Record<string, any> & { discovered: true }
+} {
 	return (
 		isRecord(value) &&
 		value.resourceType === STD_APPLICATION_RESOURCE_TYPE &&
@@ -337,7 +346,9 @@ export function validateStdDiscoveredApplicationResourceOutput(value: unknown): 
  * whole command; to skip an invalid record instead, use `tryBuildStdDiscoveredApplicationResourceOutput`
  * or catch per record.
  *
- * The input is not mutated, and the returned `attributes` and `resourceLinks` are copies.
+ * The input is not mutated, and the returned `attributes` and `resourceLinks` are shallow copies: the
+ * array and the attribute map are new objects, but the individual link objects (and any nested values)
+ * are still shared with the caller.
  */
 export function buildStdDiscoveredApplicationResourceOutput(
 	input: StdDiscoveredApplicationResourceBuilderInput
