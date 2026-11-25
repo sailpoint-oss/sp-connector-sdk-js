@@ -435,8 +435,8 @@ export class Connector {
 				// Backward compatible: any input that already carries a datasetId keeps the original
 				// single-dataset behavior, even if datasetIds is also present. Fan-out only applies when
 				// the platform supplies datasetIds without a datasetId.
-				const hasDatasetId = typeof (input as StdResourceListInput)?.datasetId === 'string' &&
-					(input as StdResourceListInput).datasetId !== ''
+				const singleDatasetId = (input as StdResourceListInput | undefined)?.datasetId
+				const hasDatasetId = typeof singleDatasetId === 'string' && singleDatasetId !== ''
 				if (
 					!input ||
 					hasDatasetId ||
