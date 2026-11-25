@@ -491,5 +491,28 @@ describe('StdDiscoveredApplicationResourceOutput', () => {
 				processed.forEach((resource, index) => expect(resource).toBe(accounts[index]))
 			})
 		})
+
+		describe('ResourceOutput resourceType / resourceLinks fields', () => {
+			it('a discovered application output is assignable to ResourceOutput', () => {
+				// Compile-time: ResourceOutput now declares resourceType / resourceLinks as optional
+				// fields, so connectors building resources by hand get typing for them.
+				const output: publicApi.ResourceOutput = buildStdDiscoveredApplicationResourceOutput(validInput())
+
+				expect(output.resourceType).toBe(STD_APPLICATION_RESOURCE_TYPE)
+				expect(output.resourceLinks).toHaveLength(1)
+			})
+
+			it('a plain resource output without resourceType or resourceLinks remains valid', () => {
+				const plain: publicApi.ResourceOutput = {
+					identity: 'agent-1',
+					datasetId: 'serviceNow:agent',
+					resourceId: 'serviceNow:agent',
+					attributes: {},
+				}
+
+				expect(plain.resourceType).toBeUndefined()
+				expect(plain.resourceLinks).toBeUndefined()
+			})
+		})
 	})
 })

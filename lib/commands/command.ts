@@ -231,7 +231,31 @@ export type ResourceInput = {
 export type ResourceClassification = 'human' | 'machine' | null
 
 /**
+ * One endpoint of a {@link ResourceLink}. `id` may be empty when the platform resolves the
+ * target later from `attributes`. The SDK does not constrain `resourceType` values.
+ */
+export type ResourceLinkEndpoint = {
+	id: string
+	resourceType: string
+	attributes?: Record<string, any>
+}
+
+/**
+ * A relationship embedded in a resource returned by `std:resource:*` commands, for example an
+ * `owned_by` link from a discovered application to an owner account.
+ */
+export type ResourceLink = {
+	type: string
+	from: ResourceLinkEndpoint
+	to: ResourceLinkEndpoint
+	attributes?: Record<string, any>
+}
+
+/**
  * Output object for std:resource:* commands
+ *
+ * `resourceType` and `resourceLinks` are optional: commands that do not use the resource-link
+ * model may omit them, and existing connectors are unaffected.
  */
 export type ResourceOutput = {
 	identity: string
@@ -242,6 +266,8 @@ export type ResourceOutput = {
 	classification?: ResourceClassification
 	deleted?: boolean
 	disabled?: boolean
+	resourceType?: string
+	resourceLinks?: ResourceLink[]
 }
 
 /**

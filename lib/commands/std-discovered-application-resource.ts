@@ -2,7 +2,7 @@
 
 import { ConnectorError } from '../error'
 import { logger } from '../logger'
-import { ResourceOutput } from './command'
+import { ResourceLink, ResourceLinkEndpoint, ResourceOutput } from './command'
 import { RiskLevel, StdApplicationDiscoveryListOutput } from './std-application-discovery-list'
 
 /**
@@ -47,11 +47,7 @@ export type StdDiscoveredApplicationResourceAttributes = StdDiscoveredApplicatio
 	[attribute: string]: any
 }
 
-export type StdDiscoveredApplicationResourceLinkEndpoint = {
-	id: string
-	resourceType: string
-	attributes?: Record<string, any>
-}
+export type StdDiscoveredApplicationResourceLinkEndpoint = ResourceLinkEndpoint
 
 /**
  * A link embedded in a discovered application resource.
@@ -59,20 +55,19 @@ export type StdDiscoveredApplicationResourceLinkEndpoint = {
  * `from.id` must equal the resource `identity`. `to.id` may be empty when the target is resolved later by
  * the platform. The `resourceType` values of both endpoints are not constrained by the SDK.
  */
-export type StdDiscoveredApplicationResourceLink = {
-	type: string
-	from: StdDiscoveredApplicationResourceLinkEndpoint
-	to: StdDiscoveredApplicationResourceLinkEndpoint
-	attributes?: Record<string, any>
-}
+export type StdDiscoveredApplicationResourceLink = ResourceLink
 
 /**
  * Typed Dataset 2.0 output for discovered applications (`attributes.discovered: true`).
  *
- * The top-level `classification` of `ResourceOutput` applies to accounts and is not supported here; use
+ * Narrows the optional `resourceType` / `resourceLinks` of `ResourceOutput` to required fields. The
+ * top-level `classification` of `ResourceOutput` applies to accounts and is not supported here; use
  * `attributes.dataClassification` for applications.
  */
-export type StdDiscoveredApplicationResourceOutput = Omit<ResourceOutput, 'classification'> & {
+export type StdDiscoveredApplicationResourceOutput = Omit<
+	ResourceOutput,
+	'classification' | 'resourceType' | 'resourceLinks' | 'attributes'
+> & {
 	resourceType: typeof STD_APPLICATION_RESOURCE_TYPE
 	attributes: StdDiscoveredApplicationResourceAttributes
 	resourceLinks: StdDiscoveredApplicationResourceLink[]
@@ -84,7 +79,10 @@ export type StdDiscoveredApplicationResourceOutput = Omit<ResourceOutput, 'class
  * handler's `input.datasetId`); `stdResourceList` and the other `std:resource:*` handlers overwrite it with the
  * command's `datasetId` on every output.
  */
-export type StdDiscoveredApplicationResourceBuilderInput = Omit<ResourceOutput, 'attributes' | 'classification'> & {
+export type StdDiscoveredApplicationResourceBuilderInput = Omit<
+	ResourceOutput,
+	'attributes' | 'classification' | 'resourceType' | 'resourceLinks'
+> & {
 	attributes: Omit<StdDiscoveredApplicationKnownAttributes, 'discovered'> & {
 		discovered?: true
 		[attribute: string]: any
