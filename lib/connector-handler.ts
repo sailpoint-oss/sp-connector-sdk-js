@@ -68,8 +68,11 @@ import {
 	StdSsfStreamVerifyOutput,
 	StdApplicationDiscoveryListInput,
 	StdApplicationDiscoveryListOutput,
+	StdSecretScanFullInput,
+	StdSecretScanDeltaInput,
+	StdSecretScanInput,
 } from './commands'
-import { Response } from './response'
+import { Response, ScanResponse } from './response'
 
 /**
  * Connector context object
@@ -314,3 +317,19 @@ export type StdResourceEnableHandler = (
 	input: StdResourceEnableInput,
 	res: Response<StdResourceEnableOutput>
 ) => Promise<void>
+
+/**
+ * Handlers for std:secret-scan:* commands. They receive a ScanResponse instead of Response: content can only be handed
+ * to the runtime's detection stage through `res.scan()`, never sent as output.
+ */
+export type StdSecretScanFullHandler = (
+	context: Context,
+	input: StdSecretScanFullInput,
+	res: ScanResponse
+) => Promise<void>
+export type StdSecretScanDeltaHandler = (
+	context: Context,
+	input: StdSecretScanDeltaInput,
+	res: ScanResponse
+) => Promise<void>
+export type ScanCommandHandler = (context: Context, input: StdSecretScanInput, res: ScanResponse) => Promise<void>

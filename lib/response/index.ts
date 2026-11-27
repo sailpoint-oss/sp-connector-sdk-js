@@ -1,6 +1,8 @@
 /* Copyright (c) 2021. SailPoint Technologies, Inc. All rights reserved. */
 
 import { Writable } from 'stream'
+import type { ScanResult, ScanUnit, ScanUnitFrame } from '../commands/std-secret-scan'
+import { chunkUtf8, DEFAULT_MAX_IN_FLIGHT_SCAN_BYTES, MAX_SCAN_UNIT_BYTES, MIN_SCAN_UNIT_BYTES, SCAN_CHUNK_OVERLAP_BYTES } from './scan-chunk'
 
 /**
  * Response interface
@@ -61,7 +63,8 @@ export enum ResponseType {
 	Output = 'output',
 	State = 'state',
 	KeepAlive = 'keepAlive',
-	Config = 'config'
+	Config = 'config',
+	ScanUnit = 'scanUnit'
 }
 
 /**
@@ -132,5 +135,256 @@ export class ResponseStreamTransform<I, O> implements Response<I> {
 
 	patchConfig(patches: Patch[]): void {
 		this._inner.patchConfig(patches);
+	}
+}
+
+/** How often a scan waiting for the in-flight bytes to drop below the cap re-checks the stream. */
+const IN_FLIGHT_POLL_MS = 5
+/** How often a scan waiting for 'drain' re-checks that the stream was not destroyed without an event. */
+const DRAIN_RECHECK_MS = 50
+
+export type ScanResponseOptions = {
+	maxUnitBytes?: number
+	extraction?: { documents?: boolean; pdf?: boolean; ocr?: boolean }
+	maxInFlightBytes?: number
+}
+
+/**
+ * Response for std:secret-scan:* commands. Content goes only through `scan()`, which hands it to the runtime's
+ * detection stage; only findings leave the execution. There is deliberately no `send()`.
+ *
+ * `scan()` must be awaited: it resolves once the unit is taken by the response stream, which is how backpressure
+ * reaches the connector's fetch loop when detection is slower than fetching. The cap on bytes in flight is
+ * approximate: it counts frames still buffered in the stream, not bytes the runtime has yet to scan.
+ *
+ * The ScanResponse must be the only writer of its stream while the command runs; it tracks what it wrote by the
+ * stream's buffered-object count.
+ */
+export class ScanResponse {
+	private readonly _writable: Writable
+	private readonly _maxUnitBytes: number
+	private readonly _overlapBytes: number
+	private readonly _maxInFlightBytes: number
+	private readonly _binaryAllowed: boolean
+	private _pending = false
+	// Sizes of the frames written and not yet taken by the stream, oldest first. The stream's own buffered-object count
+	// (writableLength) says how many of them are still waiting; it does not depend on write callbacks, which some
+	// streams (for example shim-js's response transform) do not pass on.
+	private _sizes: number[] = []
+	private _failure?: Error
+	private _waiters: Array<() => void> = []
+	private readonly _onClose = () => this._fail(new Error('response stream closed'))
+	private readonly _onFinish = () => this._fail(new Error('response stream ended'))
+	private readonly _onError = (err: Error) => this._fail(err)
+
+	constructor(writable: Writable, options: ScanResponseOptions = {}) {
+		this._writable = writable
+		const requested = Number(options.maxUnitBytes) || MAX_SCAN_UNIT_BYTES
+		this._maxUnitBytes = Math.min(MAX_SCAN_UNIT_BYTES, Math.max(MIN_SCAN_UNIT_BYTES, Math.floor(requested)))
+		this._overlapBytes = Math.min(SCAN_CHUNK_OVERLAP_BYTES, Math.floor(this._maxUnitBytes / 4))
+		this._maxInFlightBytes = Math.max(this._maxUnitBytes, Number(options.maxInFlightBytes) || DEFAULT_MAX_IN_FLIGHT_SCAN_BYTES)
+		const extraction = options.extraction ?? {}
+		this._binaryAllowed = Boolean(extraction.documents || extraction.pdf || extraction.ocr)
+
+		this._writable.on('close', this._onClose)
+		this._writable.on('finish', this._onFinish)
+		this._writable.on('error', this._onError)
+	}
+
+	/**
+	 * Hand one unit of content to the detection stage. Text larger than `maxUnitBytes` is split into overlapping
+	 * chunks. A binary (base64) unit is not sent while extraction is off, or when it is larger than `maxUnitBytes`;
+	 * the result says so, and the connector should count it as skipped.
+	 */
+	async scan(unit: ScanUnit): Promise<ScanResult> {
+		if (this._pending) {
+			throw new Error('res.scan() was called while a previous call is still pending: await every res.scan() call')
+		}
+		this._pending = true
+		try {
+			return await this._scan(unit)
+		} finally {
+			this._pending = false
+		}
+	}
+
+	/**
+	 * Save the cursor state. The runtime forwards it only after every unit sent before it is scanned.
+	 */
+	saveState(state: any): void {
+		this._writeNow(new RawResponse(state, ResponseType.State))
+	}
+
+	keepAlive(): void {
+		this._writeNow(new RawResponse({}, ResponseType.KeepAlive))
+	}
+
+	patchConfig(patches: Patch[]): void {
+		this._writeNow(new RawResponse(patches, ResponseType.Config))
+	}
+
+	/**
+	 * Stop listening to the stream. Called by the SDK when the command handler returns.
+	 */
+	dispose(): void {
+		this._writable.off('close', this._onClose)
+		this._writable.off('finish', this._onFinish)
+		this._writable.off('error', this._onError)
+		this._wake()
+	}
+
+	private async _scan(unit: ScanUnit): Promise<ScanResult> {
+		validateScanUnit(unit)
+		this._throwIfFailed()
+
+		const { encoding, text } = unit.content
+		if (encoding === 'base64' && !this._binaryAllowed) {
+			return { accepted: false, chunks: 0, skipped: 'binaryNotExtracted' }
+		}
+		// Binary content cannot be split at arbitrary byte offsets; one larger than a unit is not sent.
+		if (encoding === 'base64' && Buffer.byteLength(text, 'utf8') > this._maxUnitBytes) {
+			return { accepted: false, chunks: 0, skipped: 'binaryTooLarge' }
+		}
+
+		const sizeBytes = unit.sizeBytes ?? Buffer.byteLength(text, encoding === 'base64' ? 'base64' : 'utf8')
+		const chunks = encoding === 'utf8' ? chunkUtf8(text, this._maxUnitBytes, this._overlapBytes) : [{ text, offset: 0 }]
+
+		for (let index = 0; index < chunks.length; index++) {
+			const chunk = chunks[index]
+			// Built field by field: anything else the connector put on the unit is not sent.
+			const data: ScanUnitFrame = {
+				unitId: unit.unitId,
+				location: unit.location,
+				mimeType: unit.mimeType,
+				sizeBytes,
+				content: { encoding, text: chunk.text },
+				chunk: {
+					index,
+					count: chunks.length,
+					overlapBytes: chunks.length > 1 ? this._overlapBytes : 0,
+					offset: chunk.offset,
+				},
+			}
+			await this._write(new RawResponse(data, ResponseType.ScanUnit), Buffer.byteLength(chunk.text, 'utf8'))
+		}
+		return { accepted: true, chunks: chunks.length }
+	}
+
+	private _writeNow(frame: RawResponse): boolean {
+		this._throwIfFailed()
+		this._sizes.push(0)
+		return this._writable.write(frame)
+	}
+
+	private async _write(frame: RawResponse, bytes: number): Promise<void> {
+		this._throwIfFailed()
+		this._sizes.push(bytes)
+		const accepted = this._writable.write(frame)
+		if (!accepted) {
+			await this._waitForDrain()
+		}
+		while (!this._failed() && this._inFlightBytes() > this._maxInFlightBytes) {
+			await this._waitFor('poll')
+		}
+		this._throwIfFailed()
+	}
+
+	/** Bytes of scan content written and still buffered in the stream. */
+	private _inFlightBytes(): number {
+		const length = this._writable.writableLength
+		// A stream without a buffered-object count gets no byte cap; write()'s return value and 'drain' still apply.
+		const buffered = Number.isFinite(length) ? length : 0
+		if (this._sizes.length > buffered) {
+			this._sizes.splice(0, this._sizes.length - buffered)
+		}
+		return this._sizes.reduce((total, size) => total + size, 0)
+	}
+
+	/**
+	 * Waits until the stream drained or failed. Where the stream reports writableNeedDrain, the wait re-checks it
+	 * periodically, so a stream destroyed without a 'close' event (emitClose: false) does not leave the scan waiting.
+	 */
+	private async _waitForDrain(): Promise<void> {
+		const needDrain = () => (this._writable as Writable & { writableNeedDrain?: boolean }).writableNeedDrain
+		if (needDrain() === undefined) {
+			await this._waitFor('drain')
+			return
+		}
+		while (!this._failed() && needDrain()) {
+			await this._waitFor('drain', DRAIN_RECHECK_MS)
+		}
+	}
+
+	/** Resolves on drain (or after a short poll), or as soon as the stream fails. */
+	private _waitFor(event: 'drain' | 'poll', recheckMs?: number): Promise<void> {
+		if (this._failed()) {
+			return Promise.resolve()
+		}
+		return new Promise<void>((resolve) => {
+			let timer: NodeJS.Timeout | undefined
+			const done = () => {
+				this._writable.off('drain', done)
+				if (timer) {
+					clearTimeout(timer)
+				}
+				this._waiters = this._waiters.filter((w) => w !== done)
+				resolve()
+			}
+			if (event === 'drain') {
+				this._writable.once('drain', done)
+				if (recheckMs) {
+					timer = setTimeout(done, recheckMs)
+				}
+			} else {
+				timer = setTimeout(done, IN_FLIGHT_POLL_MS)
+			}
+			this._waiters.push(done)
+		})
+	}
+
+	/** Whether the stream can no longer take frames. A destroy without 'close' (emitClose: false) is caught here. */
+	private _failed(): boolean {
+		if (!this._failure && (this._writable.destroyed || this._writable.writableEnded)) {
+			// errored is the error the stream was destroyed with; it is not in this package's Node typings. Node 16 has
+			// no public getter, only the internal _writableState.errored, which the release workflow's Node 16 needs.
+			const w = this._writable as Writable & { errored?: Error | null; _writableState?: { errored?: Error | null } }
+			const errored = w.errored ?? w._writableState?.errored
+			this._failure = errored ?? new Error(this._writable.destroyed ? 'response stream closed' : 'response stream ended')
+		}
+		return this._failure !== undefined
+	}
+
+	private _fail(err: Error): void {
+		if (!this._failure) {
+			this._failure = err
+		}
+		this._wake()
+	}
+
+	private _wake(): void {
+		for (const waiter of [...this._waiters]) {
+			waiter()
+		}
+	}
+
+	private _throwIfFailed(): void {
+		if (this._failed()) {
+			throw this._failure
+		}
+	}
+}
+
+function validateScanUnit(unit: ScanUnit): void {
+	if (!unit || typeof unit.unitId !== 'string' || unit.unitId === '') {
+		throw new TypeError('scan unit requires a unitId')
+	}
+	if (!unit.location || typeof unit.location.scanTarget !== 'string' || unit.location.scanTarget === '') {
+		throw new TypeError(`scan unit ${unit.unitId} requires location.scanTarget`)
+	}
+	if (!unit.content || typeof unit.content.text !== 'string') {
+		throw new TypeError(`scan unit ${unit.unitId} requires content.text`)
+	}
+	if (unit.content.encoding !== 'utf8' && unit.content.encoding !== 'base64') {
+		throw new TypeError(`scan unit ${unit.unitId} has unsupported encoding ${unit.content.encoding}`)
 	}
 }
