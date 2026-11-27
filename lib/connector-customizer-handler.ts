@@ -126,7 +126,7 @@ export type StdAccountListBeforeHandler = (
 
 export type StdAccountListAfterHandler = (
 	context: Context,
-	input: StdAccountListOutput
+	output: StdAccountListOutput
 ) => Promise<StdAccountListOutput>
 
 export type StdAuthenticateBeforeHandler = (
